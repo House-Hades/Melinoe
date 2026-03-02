@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "id": "${mod_id}",
+  "version": "${mod_version}",
+  "name": "${mod_name}",
+  "description": "${mod_description}",
+  "authors": ["NoWayItzJoey"],
+  "contact": {
+    "homepage": "https://github.com/NoWayItzJoey/Melinoe",
+    "sources": "https://github.com/NoWayItzJoey/Melinoe",
+    "issues": "https://github.com/NoWayItzJoey/Melinoe/issues"
+  },
+  "icon": "assets/melinoe/icon.png",
+  "license": "LGPL-3.0",
+  "environment": "client",
+  "entrypoints": {
+    "modmenu": [
+      "me.melinoe.clickgui.ModMenuIntegration"
+    ],
+    "client": [
+      {
+        "adapter": "kotlin",
+        "value": "me.melinoe.Melinoe"
+      }
+    ]
+  },
+  "mixins": [
+    "melinoe.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": ">=${fabric_api_version}",
+    "minecraft": "~${minecraft_version}",
+    "fabric-language-kotlin": ">=${fabric_kotlin_version}"
+  },
+  "custom": {
+    "modmenu": {
+      "links": {
+        "modmenu.discord": "https://discord.gg/yourdiscord"
+      },
+      "update_checker": true
+    }
+  }
+}

@@ -1,0 +1,19 @@
+package me.melinoe.utils.ui.animations
+
+/**
+ * Ease-out animation for smooth transitions.
+ */
+class EaseOutAnimation(duration: Long) : Animation<Float>(duration) {
+
+    override fun get(start: Float, end: Float, reverse: Boolean): Float {
+        val startVal = if (reverse) end else start
+        val endVal = if (reverse) start else end
+        if (!isAnimating()) return endVal
+        return startVal + (endVal - startVal) * easeOutQuad()
+    }
+
+    private fun easeOutQuad(): Float {
+        val percent = getPercent() / 100f
+        return 1 - (1 - percent) * (1 - percent)
+    }
+}

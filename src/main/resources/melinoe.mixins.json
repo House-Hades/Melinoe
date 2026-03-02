@@ -1,0 +1,31 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "me.melinoe.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "client": [
+    "mixins.KeyBindingMixin",
+    "mixins.MouseHandlerMixin",
+    "mixins.LightTextureMixin",
+    "mixins.ClientPlayNetworkHandlerMixin",
+    "mixins.AvatarRendererMixin",
+    "mixins.BossHealthOverlayMixin",
+    "mixins.MessageHandlerMixin",
+    "mixins.GameRendererMixin",
+    "mixins.LocalPlayerMixin",
+    "mixins.HumanoidArmorLayerMixin",
+    "mixins.CustomHeadLayerMixin",
+    "mixins.AbstractContainerScreenMixin",
+    "mixins.ClientLevelMixin",
+    "mixins.SoundSystemMixin",
+    "accessors.AbstractContainerScreenAccessor",
+    "accessors.CompositeRenderTypeAccessor",
+    "accessors.ServerboundInteractPacketAccessor"
+  ],
+  "mixins": [
+    "mixins.ClientConnectionMixin"
+  ]
+}
