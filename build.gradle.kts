@@ -15,6 +15,7 @@ repositories {
     maven("https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1")
     maven("https://maven.terraformersmc.com/")
     maven("https://api.modrinth.com/maven")
+    maven("https://maven.firstdark.dev/releases")
 }
 
 dependencies {
@@ -24,7 +25,13 @@ dependencies {
     modImplementation("net.fabricmc:fabric-language-kotlin:${property("fabric_kotlin_version")}")
     modImplementation("net.fabricmc.fabric-api:fabric-api:${property("fabric_api_version")}")
 
+    modImplementation("net.kyori:adventure-platform-fabric:6.7.0")
+    include("net.kyori:adventure-platform-fabric:6.7.0")
+
     modRuntimeOnly("me.djtheredstoner:DevAuth-fabric:${property("devauth_version")}")
+
+    implementation("dev.firstdark.discordrpc:discord-rpc:1.0.4")
+    include("dev.firstdark.discordrpc:discord-rpc:1.0.4")
 
     property("commodore_version").let {
         implementation("com.github.stivais:Commodore:$it")

@@ -173,6 +173,7 @@ object ModuleManager {
             me.melinoe.features.impl.tracking.bosstracker.TrackerModule,
             
             // Misc
+            me.melinoe.features.impl.misc.DiscordRPCModule,
             me.melinoe.features.impl.misc.KeybindsModule,
             
             // Utility

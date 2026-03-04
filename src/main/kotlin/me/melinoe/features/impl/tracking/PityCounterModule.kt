@@ -47,16 +47,6 @@ object PityCounterModule : Module(
     // Compact mode - show only icons
     private val compactMode by BooleanSetting("Compact Mode", false, desc = "Show only item icons without names")
     
-    // Rarity color settings (text color for item names)
-    private val irradiatedTextColor by ColorSetting("Irradiated Text", Color(0xFF15CD15.toInt()), desc = "Text color for Irradiated items")
-    private val gildedTextColor by ColorSetting("Gilded Text", Color(0xFFDF5320.toInt()), desc = "Text color for Gilded items")
-    private val royalTextColor by ColorSetting("Royal Text", Color(0xFFAA00AA.toInt()), desc = "Text color for Royal items")
-    private val bloodshotTextColor by ColorSetting("Bloodshot Text", Color(0xFFAA0000.toInt()), desc = "Text color for Bloodshot items")
-    private val voidboundTextColor by ColorSetting("Voidbound Text", Color(0xFF4169E1.toInt()), desc = "Text color for Voidbound items")
-    private val unholyTextColor by ColorSetting("Unholy Text", Color(0xFFBFBFBF.toInt()), desc = "Text color for Unholy items")
-    private val companionTextColor by ColorSetting("Companion Text", Color(0xFFFFAA00.toInt()), desc = "Text color for Companion items")
-    private val runeTextColor by ColorSetting("Rune Text", Color(0xFF616161.toInt()), desc = "Text color for Rune items")
-    
     // Value color (always white by default, like Ttt)
     private val valueColor by ColorSetting("Value Color", Color(0xFFFFFFFF.toInt()), desc = "Color for pity counter values")
     
@@ -144,14 +134,14 @@ object PityCounterModule : Module(
      */
     private fun getTextColor(rarity: Item.Rarity): Int {
         return when (rarity) {
-            Item.Rarity.IRRADIATED -> irradiatedTextColor.rgba
-            Item.Rarity.GILDED -> gildedTextColor.rgba
-            Item.Rarity.ROYAL -> royalTextColor.rgba
-            Item.Rarity.BLOODSHOT -> bloodshotTextColor.rgba
-            Item.Rarity.VOIDBOUND -> voidboundTextColor.rgba
-            Item.Rarity.UNHOLY -> unholyTextColor.rgba
-            Item.Rarity.COMPANION -> companionTextColor.rgba
-            Item.Rarity.RUNE -> runeTextColor.rgba
+            Item.Rarity.IRRADIATED -> 0xFF15CD15.toInt()
+            Item.Rarity.GILDED -> 0xFFDF5320.toInt()
+            Item.Rarity.ROYAL -> 0xFFAA00AA.toInt()
+            Item.Rarity.BLOODSHOT -> 0xFFAA0000.toInt()
+            Item.Rarity.VOIDBOUND -> 0xFF4169E1.toInt()
+            Item.Rarity.UNHOLY -> 0xFFBFBFBF.toInt()
+            Item.Rarity.COMPANION -> 0xFFFFAA00.toInt()
+            Item.Rarity.RUNE -> 0xFF616161.toInt()
         }
     }
     
@@ -339,13 +329,5 @@ object PityCounterModule : Module(
         }
         
         Pair(boxWidth, boxHeight)
-    }
-    
-    override fun onEnable() {
-        super.onEnable()
-    }
-    
-    override fun onDisable() {
-        super.onDisable()
     }
 }

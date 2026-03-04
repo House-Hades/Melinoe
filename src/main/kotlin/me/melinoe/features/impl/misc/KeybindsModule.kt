@@ -1,23 +1,17 @@
 package me.melinoe.features.impl.misc
 
-import me.melinoe.Melinoe
-import me.melinoe.Melinoe.mc
+import me.melinoe.clickgui.settings.Setting.Companion.withDependency
+import me.melinoe.clickgui.settings.impl.DropdownSetting
+import me.melinoe.clickgui.settings.impl.KeybindSetting
 import me.melinoe.features.Category
 import me.melinoe.features.Module
-import me.melinoe.clickgui.settings.impl.KeybindSetting
-import me.melinoe.utils.BossBarUtils
-import me.melinoe.utils.LocalAPI
-import me.melinoe.utils.ItemUtils
-import me.melinoe.utils.Message
-import me.melinoe.utils.equalsOneOf
+import me.melinoe.mixin.accessors.AbstractContainerScreenAccessor
+import me.melinoe.utils.*
 import me.melinoe.utils.data.DungeonData
 import me.melinoe.utils.ui.RealmSelectorScreen
-import me.melinoe.events.InputEvent
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents
-import net.minecraft.ChatFormatting
-import net.minecraft.client.gui.screens.Screen
-import net.minecraft.network.chat.Component
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -29,45 +23,114 @@ object KeybindsModule : Module(
     description = "Configurable keybinds for commands and menus"
 ) {
 
-    // Keybind settings with onPress callbacks
-    private val realmSelectorKey by KeybindSetting("Realm Selector", GLFW.GLFW_KEY_C, desc = "Open the realm selector menu")
-        .onPress { handleRealmSelector() }
-    
-    private val togglePlayersKey by KeybindSetting("Toggle Players", GLFW.GLFW_KEY_P, desc = "Toggle player visibility")
-        .onPress { handleTogglePlayers() }
-    
-    private val spawnMountKey by KeybindSetting("Spawn Mount", GLFW.GLFW_KEY_V, desc = "Spawn your mount")
-        .onPress { handleSpawnMount() }
-    
     private val bossPhaseKey by KeybindSetting("Boss Phase", GLFW.GLFW_KEY_F6, desc = "Send Ophanim/True Ophan phase message")
         .onPress { handleBossPhase() }
-    
+
+    private val mountsMenuKey by KeybindSetting("Mounts Menu", GLFW.GLFW_KEY_UNKNOWN, desc = "Open mounts menu")
+        .onPress { sendTelosCommand("mounts", "Mounts menu") }
+
     private val petsMenuKey by KeybindSetting("Pets Menu", GLFW.GLFW_KEY_UNKNOWN, desc = "Open pets menu")
-        .onPress { handlePetsMenu() }
-    
-    private val itemInfoKeySetting = KeybindSetting("Item Info", GLFW.GLFW_KEY_I, desc = "Show item ID info for hovered item in any GUI")
-    
+        .onPress { sendTelosCommand("pets", "Pets menu") }
+
+    private val realmSelectorKey by KeybindSetting(
+        "Realm Selector",
+        GLFW.GLFW_KEY_C,
+        desc = "Open the realm selector menu"
+    )
+        .onPress { handleRealmSelector() }
+
+    private val spawnMountKey by KeybindSetting("Spawn Mount", GLFW.GLFW_KEY_V, desc = "Spawn your mount")
+        .onPress { sendTelosCommand("spawnmount", "Spawn mount") }
+
+    private val useStickerKey by KeybindSetting("Use Sticker", GLFW.GLFW_KEY_UNKNOWN, desc = "Use your sticker")
+        .onPress { sendTelosCommand("showtheselectedsticker", "Use sticker") }
+
+    private val togglesDropdown by DropdownSetting("Toggles", false)
+
+    private val toggleMountsKey by KeybindSetting(
+        "Toggle Mounts",
+        GLFW.GLFW_KEY_UNKNOWN,
+        desc = "Toggle mount visibility"
+    )
+        .withDependency { togglesDropdown }
+        .onPress { sendTelosCommand("togglemounts", "Toggle mounts") }
+
+    private val togglePetsKey by KeybindSetting("Toggle Pets", GLFW.GLFW_KEY_UNKNOWN, desc = "Toggle pet visibility")
+        .withDependency { togglesDropdown }
+        .onPress { sendTelosCommand("togglepets", "Toggle pets") }
+
+    private val togglePlayersKey by KeybindSetting("Toggle Players", GLFW.GLFW_KEY_P, desc = "Toggle player visibility")
+        .withDependency { togglesDropdown }
+        .onPress { sendTelosCommand("toggleplayers", "Toggle players") }
+
+    private val toggleStickersKey by KeybindSetting(
+        "Toggle Stickers",
+        GLFW.GLFW_KEY_UNKNOWN,
+        desc = "Toggle sticker visibility"
+    )
+        .withDependency { togglesDropdown }
+        .onPress { sendTelosCommand("togglestickers", "Toggle stickers") }
+
+    private val supporterDropdown by DropdownSetting("Supporter", false)
+
+    private val openStashKey by KeybindSetting("Open Stash", GLFW.GLFW_KEY_UNKNOWN, desc = "Open your stash")
+        .withDependency { supporterDropdown }
+        .onPress { sendTelosCommand("stash", "Stash") }
+
+    private val teleportCentreKey by KeybindSetting(
+        "Teleport (Centre)",
+        GLFW.GLFW_KEY_UNKNOWN,
+        desc = "Teleport to the centre"
+    )
+        .withDependency { supporterDropdown }
+        .onPress { sendTelosCommand("centre", "Teleport (Centre)") }
+
+    private val teleportSpawnKey by KeybindSetting(
+        "Teleport (Spawn)",
+        GLFW.GLFW_KEY_UNKNOWN,
+        desc = "Teleport to spawn"
+    )
+        .withDependency { supporterDropdown }
+        .onPress { sendTelosCommand("spawn", "Teleport (Spawn)") }
+
+    private val itemInfoKeySetting =
+        KeybindSetting("Item Info (Dev)", GLFW.GLFW_KEY_I, desc = "Show item ID info for hovered item in any GUI")
+
     init {
         // Register the item info keybind setting
         registerSetting(itemInfoKeySetting)
-        
+
         // Register screen keyboard event handler for GUI keybinds
-        // This will be registered for each screen when it opens
-        net.fabricmc.fabric.api.client.screen.v1.ScreenEvents.AFTER_INIT.register { _, screen, _, _ ->
-            if (screen is net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<*>) {
+        ScreenEvents.AFTER_INIT.register { _, screen, _, _ ->
+            if (screen is AbstractContainerScreen<*>) {
                 ScreenKeyboardEvents.afterKeyPress(screen).register { _, keyInput ->
                     handleScreenKeyPress(screen, keyInput.key())
                 }
             }
         }
     }
-    
+
+    /**
+     * Handle telos related commands
+     */
+    private fun sendTelosCommand(command: String, featureName: String) {
+        if (!enabled) return
+        val player = mc.player ?: return
+
+        if (!ServerUtils.isOnTelos()) {
+            sendTelosOnlyError(featureName)
+            return
+        }
+
+        player.connection.sendCommand(command)
+    }
+
     /**
      * Handle keyboard input in screens (GUIs)
      */
-    private fun handleScreenKeyPress(screen: net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<*>, key: Int) {
+    private fun handleScreenKeyPress(screen: AbstractContainerScreen<*>, key: Int) {
         if (!enabled) return
-        
+
         // Item info keybind - works in any container screen
         if (key == itemInfoKeySetting.value.value) {
             handleItemInfo()
@@ -79,48 +142,17 @@ object KeybindsModule : Module(
      */
     private fun handleRealmSelector() {
         if (!enabled) return
-        
         if (mc.player == null) return
-        
-        if (!me.melinoe.utils.ServerUtils.isOnTelos()) {
+
+        if (!ServerUtils.isOnTelos()) {
             sendTelosOnlyError("Realm selector")
             return
         }
-        
+
         // Open realm selector screen on the render thread
         mc.execute {
             mc.setScreen(RealmSelectorScreen)
         }
-    }
-
-    /**
-     * Handle toggle players keybind
-     */
-    private fun handleTogglePlayers() {
-        if (!enabled) return
-        val player = mc.player ?: return
-        
-        if (!me.melinoe.utils.ServerUtils.isOnTelos()) {
-            sendTelosOnlyError("Toggle players")
-            return
-        }
-        
-        player.connection.sendCommand("toggleplayers")
-    }
-
-    /**
-     * Handle spawn mount keybind
-     */
-    private fun handleSpawnMount() {
-        if (!enabled) return
-        val player = mc.player ?: return
-        
-        if (!me.melinoe.utils.ServerUtils.isOnTelos()) {
-            sendTelosOnlyError("Mount")
-            return
-        }
-        
-        player.connection.sendCommand("spawnmount")
     }
 
     /**
@@ -129,33 +161,33 @@ object KeybindsModule : Module(
     private fun handleBossPhase() {
         if (!enabled) return
         val player = mc.player ?: return
-        
-        if (!me.melinoe.utils.ServerUtils.isOnTelos()) {
+
+        if (!ServerUtils.isOnTelos()) {
             sendTelosOnlyError("Boss phase")
             return
         }
-        
+
         // Check if in correct dungeon
         val currentArea = LocalAPI.getCurrentCharacterArea()
         val currentDungeon = DungeonData.findByKey(currentArea)
-        
-        if (currentDungeon == null || 
+
+        if (currentDungeon == null ||
             !currentDungeon.equalsOneOf(DungeonData.RUSTBORN_KINGDOM, DungeonData.DAWN_OF_CREATION)) {
             Message.error("No True Ophan or Ophanim phase detected.")
             return
         }
-        
+
         // Get current boss
         val currentBoss = LocalAPI.getCurrentCharacterFighting()
         if (currentBoss.isEmpty() || !currentBoss.equalsOneOf("Ophanim", "True Ophan")) {
             Message.error("No True Ophan or Ophanim phase detected.")
             return
         }
-        
+
         // Get boss health percentage
         val healthPercentage = getBossHealthPercentage()
         val currentPhase = getCurrentPhase(healthPercentage)
-        
+
         // Send message to chat
         val message = "$currentBoss is at $healthPercentage% HP - $currentPhase"
         player.connection.sendChat(message)
@@ -166,14 +198,14 @@ object KeybindsModule : Module(
      */
     private fun getBossHealthPercentage(): Int {
         val bossBars = BossBarUtils.getBossBarMap().values.toList()
-        
+
         // The boss bar is typically at index 1 when there are 5 boss bars
         if (bossBars.size == 5) {
             val bossBar = bossBars[1]
             val progress = bossBar.progress
             return (progress * 100).toInt()
         }
-        
+
         // Fallback: search through all boss bars for one with health info
         for (bossBar in bossBars) {
             val progress = bossBar.progress
@@ -181,7 +213,7 @@ object KeybindsModule : Module(
                 return (progress * 100).toInt()
             }
         }
-        
+
         return 100 // Default to 100% if we can't determine health
     }
 
@@ -200,76 +232,61 @@ object KeybindsModule : Module(
     }
 
     /**
-     * Handle pets menu keybind
-     */
-    private fun handlePetsMenu() {
-        if (!enabled) return
-        val player = mc.player ?: return
-        
-        if (!me.melinoe.utils.ServerUtils.isOnTelos()) {
-            sendTelosOnlyError("Pets menu")
-            return
-        }
-        
-        player.connection.sendCommand("pets")
-    }
-    
-    /**
      * Handle item info keybind - shows item ID info for hovered item
      */
     private fun handleItemInfo() {
         val player = mc.player ?: return
-        
+
         // Check if we're in a screen with slots
         val screen = mc.screen
-        if (screen !is net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<*>) {
+        if (screen !is AbstractContainerScreen<*>) {
             return
         }
-        
+
         // Get the hovered slot using accessor
-        val accessor = screen as me.melinoe.mixin.accessors.AbstractContainerScreenAccessor
+        val accessor = screen as AbstractContainerScreenAccessor
         val hoveredSlot = accessor.hoveredSlot ?: return
-        
+
         val heldItem = hoveredSlot.item
         if (heldItem.isEmpty) {
             return
         }
-        
+
         // Get the item's base ID
         val itemId = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(heldItem.item).toString()
-        
+
         // Get custom model data if present
         val customModel = heldItem.get(net.minecraft.core.component.DataComponents.ITEM_MODEL)
-        
+
         // Get plain name (no formatting, but keeps Unicode)
-        val plainName = me.melinoe.utils.ItemUtils.getPlainName(heldItem)
-        
+        val plainName = ItemUtils.getPlainName(heldItem)
+
         // Get display name without Unicode characters
-        val displayName = me.melinoe.utils.ItemUtils.getDisplayName(heldItem)
-        
+        val displayName = ItemUtils.getDisplayName(heldItem)
+
         // Extract Unicode character from plain name
         val unicodeChar = if (plainName.length >= 2) {
             plainName.substring(1, plainName.length - 1)
         } else {
             null
         }
-        
+
         // Check if this matches an ItemType
-        val itemType = me.melinoe.utils.ItemUtils.ItemType.fromItemStack(heldItem)
-        
+        val itemType = ItemUtils.ItemType.fromItemStack(heldItem)
+
         // Parse range from lore if available
-        val parsedRange = me.melinoe.utils.ItemUtils.parseItemRange(heldItem)
-        
+        val parsedRange = ItemUtils.parseItemRange(heldItem)
+
         // Build the message
         val message = buildString {
             append("§7Item ID Information\n")
             append("§8§l› §r§6Display Name: §f$displayName\n")
             append("§8§l› §r§6Base ID: §f$itemId\n")
-            
+
             // Show Unicode character info
             if (unicodeChar != null && unicodeChar.isNotEmpty()) {
                 append("§8§l› §r§6Unicode Char: §f$unicodeChar\n")
-                
+
                 // Show Unicode escape sequence (properly handle surrogate pairs)
                 val codePoints = unicodeChar.codePoints().toArray()
                 val escapeSequence = if (codePoints.size == 1 && codePoints[0] > 0xFFFF) {
@@ -280,18 +297,18 @@ object KeybindsModule : Module(
                     "\\u${String.format("%04X", high)}\\u${String.format("%04X", low)}"
                 } else {
                     // Regular character or already surrogate pairs
-                    unicodeChar.toCharArray().joinToString("") { 
-                        "\\u${String.format("%04X", it.code)}" 
+                    unicodeChar.toCharArray().joinToString("") {
+                        "\\u${String.format("%04X", it.code)}"
                     }
                 }
                 append("§8§l› §r§6Unicode Escape: §f$escapeSequence\n")
             }
-            
+
             // Show parsed range from lore
             if (parsedRange > 0) {
                 append("§8§l› §r§6Lore Range: §a${parsedRange}f\n")
             }
-            
+
             // Show ItemType match status
             if (itemType != null) {
                 append("§8§l› §r§6ItemType: §a${itemType.name}\n")
@@ -300,12 +317,12 @@ object KeybindsModule : Module(
             } else {
                 append("§8§l› §r§6ItemType: §7Not found\n")
             }
-            
+
             // Show custom model info
             if (customModel != null) {
                 append("§8§l› §r§6Custom Model: §f$customModel\n")
             }
-            
+
             // Generate code snippets for ItemUtils if not already added
             if (itemType == null && unicodeChar != null && unicodeChar.isNotEmpty()) {
                 // Generate enum name suggestion
@@ -327,7 +344,7 @@ object KeybindsModule : Module(
                 } else {
                     "NEW_ITEM"
                 }
-                
+
                 // Show simplified message with enum name and unicode
                 val codePoints = unicodeChar.codePoints().toArray()
                 val escapeSequence = if (codePoints.size == 1 && codePoints[0] > 0xFFFF) {
@@ -336,8 +353,8 @@ object KeybindsModule : Module(
                     val low = ((codePoint - 0x10000) and 0x3FF) + 0xDC00
                     "\\u${String.format("%04X", high)}\\u${String.format("%04X", low)}"
                 } else {
-                    unicodeChar.toCharArray().joinToString("") { 
-                        "\\u${String.format("%04X", it.code)}" 
+                    unicodeChar.toCharArray().joinToString("") {
+                        "\\u${String.format("%04X", it.code)}"
                     }
                 }
                 append("\n§7$enumName §8-> §7\"$escapeSequence\"")
@@ -345,7 +362,7 @@ object KeybindsModule : Module(
                 append("\n§a✔ Item matched with utils")
             }
         }
-        
+
         Message.dev(message)
     }
 
@@ -356,4 +373,3 @@ object KeybindsModule : Module(
         Message.error("$featureName is only available on §nᴛᴇʟᴏѕʀᴇᴀʟᴍѕ.ᴄᴏᴍ§r")
     }
 }
-
