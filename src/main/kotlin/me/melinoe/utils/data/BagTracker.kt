@@ -1,6 +1,7 @@
 package me.melinoe.utils.data
 
 import me.melinoe.Melinoe
+import me.melinoe.features.impl.tracking.PityCounterModule
 import me.melinoe.utils.LocalAPI
 import me.melinoe.utils.Message
 import me.melinoe.utils.TabListUtils
@@ -8,7 +9,6 @@ import me.melinoe.utils.data.persistence.TrackingKey
 import me.melinoe.utils.data.persistence.TypeSafeDataAccess
 import me.melinoe.utils.toNative
 import net.minecraft.client.GuiMessageTag
-import net.minecraft.network.chat.Component
 import net.minecraft.world.entity.item.ItemEntity
 
 /**
@@ -33,7 +33,6 @@ import net.minecraft.world.entity.item.ItemEntity
 object BagTracker {
 
     private var currentBoss: String = ""
-    private var chatNotificationsEnabled = true
 
     // Item scanning state
     private var ticksRemaining = 0
@@ -178,13 +177,6 @@ object BagTracker {
     // ==================== UTILITY METHODS ====================
 
     /**
-     * Enable or disable chat notifications
-     */
-    fun setChatNotificationsEnabled(enabled: Boolean) {
-        chatNotificationsEnabled = enabled
-    }
-
-    /**
      * Get current boss being fought
      */
     fun getCurrentBoss(): String = currentBoss
@@ -247,7 +239,7 @@ object BagTracker {
                 recentPityCacheTime[droppedItem] = System.currentTimeMillis()
 
                 // Send chat notification
-                if (chatNotificationsEnabled) {
+                if (PityCounterModule.useCustomMsg) {
                     sendPityResetMessage(droppedItem, preResetPity)
                 }
 
@@ -324,7 +316,7 @@ object BagTracker {
         recentPityCacheTime[droppedItem] = System.currentTimeMillis()
 
         // Send chat notification
-        if (chatNotificationsEnabled) {
+        if (PityCounterModule.useCustomMsg) {
             sendPityResetMessage(droppedItem, preResetPity)
         }
 
@@ -439,34 +431,86 @@ object BagTracker {
         val lootboost = TabListUtils.getLootboostPercentage() ?: 0
 
         // Configuration for rarity styles
-        data class RarityConfig(val prefix: String, val gradientTag: String, val indicatorColor: Int, val symbol: String, val textColorTag: String)
+        data class RarityStyle(val indicatorColor: Int, val prefix: String, val itemNameColor: String, val logName: String)
 
-        val config = when (item.rarity) {
-            Item.Rarity.BLOODSHOT -> RarityConfig("BLOODSHOT", "<bold><gradient:#9D0000:#FF1A1A>", 0x9D0000, "𕌜", "<#9D0000>")
-            Item.Rarity.UNHOLY -> RarityConfig("UNHOLY", "<bold><gradient:#5D6069:#DCE8D5>", 0x5D6069, "𕑦", "<#5D6069>")
-            Item.Rarity.VOIDBOUND -> RarityConfig("NIHILITY", "<bold><gradient:#56167C:#DDA0DD>", 0x56167C, "𖈵", "<#56167C>")
-            Item.Rarity.ROYAL -> RarityConfig("ROYAL", "<bold><#7d1775>", 0x7d1775, "𕑩", "<#7d1775>")
-            Item.Rarity.COMPANION -> RarityConfig("COMPANION", "<bold><#ae9000>", 0xae9000, "𕑰", "<#ae9000>")
-            Item.Rarity.RUNE -> RarityConfig("RUNE", "<bold><#555555>", 0x555555, "𕑱", "<#555555>")
-            else -> RarityConfig(item.rarity.name, "<bold><white>", 0xFFFFFF, "", "<white>")
+        val style = when (item.rarity) {
+            Item.Rarity.IRRADIATED -> RarityStyle(
+                0x189506,
+                "<white>\uD814\uDF19 </white><bold><gradient:#189506:#15cd15>IRRADIATED</bold>",
+                "<#189506>",
+                "ROYAL"
+            )
+            Item.Rarity.GILDED -> RarityStyle(
+                0xb93f12,
+                "<white>\uD818\uDCF1 </white><bold><gradient:#b93f12:#df5320>GILDED</bold>",
+                "<#b93f12>",
+                "ROYAL"
+            )
+            Item.Rarity.ROYAL -> RarityStyle(
+                0x7d1775,
+                "<white>\uD814\uDF1B </white><bold><gradient:#7d1775:#aa00aa>ROYAL</bold>",
+                "<#7d1775>",
+                "ROYAL"
+            )
+            Item.Rarity.BLOODSHOT -> RarityStyle(
+                0x9D0000,
+                "<white>\uD814\uDF1C </white><bold><gradient:#9D0000:#FF1A1A>BLOODSHOT</gradient></bold>",
+                "<#9D0000>",
+                "BLOODSHOT"
+            )
+            Item.Rarity.VOIDBOUND -> RarityStyle(
+                0x8d15f0,
+                "<white>\uD818\uDE35 </white><bold><gradient:#8d15f0:#be74fb>VOIDBOUND</gradient></bold>",
+                "<#8d15f0>",
+                "NIHILITY"
+            )
+            Item.Rarity.UNHOLY -> RarityStyle(
+                0x5D6069,
+                "<white>\uD815\uDC66 </white><bold><gradient:#5D6069:#DCE8D5>UNHOLY</gradient></bold>",
+                "<#5D6069>",
+                "UNHOLY"
+            )
+            Item.Rarity.COMPANION -> RarityStyle(
+                0xae9000,
+                "<white>\uD814\uDF1A </white><bold><gradient:#ae9000:#ffaa00>COMPANION</bold>",
+                "<#ae9000>",
+                "COMPANION"
+            )
+            Item.Rarity.RUNE -> RarityStyle(
+                0x555555,
+                "<white>\uD815\uDC65 </white><bold><gradient:#555555:#616161>RUNE</bold>",
+                "<#555555>",
+                "RUNE"
+            )
+            else -> RarityStyle(
+                0xFFFFFF,
+                "<bold><white>${item.rarity.name}</bold>",
+                "<white>",
+                item.rarity.name
+            )
         }
 
-        val lootBoostStr = if (lootboost > 0) " <yellow>[+$lootboost% Loot Boost]</yellow>" else ""
+        val lootBoostStr = if (lootboost > 0) " <yellow>[+$lootboost% LB]" else ""
+        val m = Message.Colors.MUTED
 
         // Build message using MiniMessage
-        val message = "<white>${config.symbol} </white>${config.gradientTag}${config.prefix}</gradient></bold> <gray>- Dropped </gray><underlined>${config.textColorTag}${item.displayName}</underlined></${config.textColorTag.substring(1)}><gray> at <yellow>$pityCount</yellow> <gray>pity$lootBoostStr".toNative()
+        var message = "${style.prefix} $m- <gray>Dropped <underlined>${style.itemNameColor}${item.displayName}</underlined> <gray>at <yellow>$pityCount</yellow> <gray>from ${style.itemNameColor} <gray>pity$lootBoostStr"
+        if (PityCounterModule.showAnnounceButton) {
+            val shareText = "[${item.rarity}] Dropped ${item.displayName} at ${pityCount} pity!"
 
-        // Create chat indicator
+            message += " <click:suggest_command:'${shareText}'><hover:show_text:\"<gray>Click to share in chat!</gray>\"><gray><b>\uD83D\uDCE8</b></gray></hover></click>"
+        }
+
         val chatIndicator = GuiMessageTag(
-            config.indicatorColor,
+            style.indicatorColor,
             null,
-            "${config.symbol} ${config.prefix} Drop".toNative(),
-            "${config.prefix} Drop"
+            "${style.prefix} Drop".toNative(),
+            "${style.logName} Drop"
         )
 
-        mc.gui?.chat?.addMessage(message, null, chatIndicator)
+        mc.gui?.chat?.addMessage(message.toNative(), null, chatIndicator)
 
-        val logMessage = "Sent pity reset message: [${config.prefix}] Dropped ${item.displayName} at $pityCount pity${if (lootboost > 0) " [+$lootboost% Loot Boost]" else ""}"
+        val logMessage = "Sent pity reset message: Dropped ${item.displayName} at $pityCount pity${if (lootboost > 0) " [+$lootboost% Loot Boost]" else ""}"
         Melinoe.logger.info(logMessage)
     }
 }

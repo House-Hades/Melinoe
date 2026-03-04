@@ -12,16 +12,36 @@ enum class BossData(
     val items: Array<Item> = emptyArray()
 ) {
     // World Bosses
-    ANUBIS("Anubis", BlockPos(458, 204, -467), BossType.WORLD),
-    ASTAROTH("Astaroth", BlockPos(250, 217, 60), BossType.WORLD),
-    CHUNGUS("Chungus", BlockPos(61, 256, -490), BossType.WORLD),
-    FREDDY("Freddy", BlockPos(-136, 200, 653), BossType.WORLD),
-    GLUMI("Glumi", BlockPos(339, 222, 552), BossType.WORLD),
-    ILLARIUS("Illarius", BlockPos(478, 200, -45), BossType.WORLD),
-    LOTIL("Lotil", BlockPos(-138, 214, 17), BossType.WORLD),
-    OOZUL("Oozul", BlockPos(-424, 195, 91), BossType.WORLD),
-    TIDOL("Tidol", BlockPos(-543, 190, 364), BossType.WORLD),
-    VALUS("Valus", BlockPos(35, 210, 307), BossType.WORLD),
+    ANUBIS("Anubis", BlockPos(458, 204, -467), BossType.WORLD, arrayOf(
+        Item.ANUBIS_STAFF, Item.JEWEL_OF_THE_NILE
+    )),
+    ASTAROTH("Astaroth", BlockPos(250, 217, 60), BossType.WORLD, arrayOf(
+        Item.ORB_OF_CONFLICT, Item.KUNAI_OF_CONFLICT
+    )),
+    CHUNGUS("Chungus", BlockPos(61, 256, -490), BossType.WORLD, arrayOf(
+        Item.CARROT_ON_A_STICK, Item.SPRING_SEASONED_SCRIPTURE
+    )),
+    FREDDY("Freddy", BlockPos(-136, 200, 653), BossType.WORLD, arrayOf(
+        Item.EXOSKELETON_HOOD, Item.FREDDYS_MICROPHONE
+    )),
+    GLUMI("Glumi", BlockPos(339, 222, 552), BossType.WORLD, arrayOf(
+        Item.CRYSTAL_POISON, Item.CRYSTAL_KUNAI
+    )),
+    ILLARIUS("Illarius", BlockPos(478, 200, -45), BossType.WORLD, arrayOf(
+        Item.BOW_OF_THE_FOREST, Item.CURSED_BRIGADINE
+    )),
+    LOTIL("Lotil", BlockPos(-138, 214, 17), BossType.WORLD, arrayOf(
+        Item.SHIELD_OF_OGMUR, Item.CLOAK_OF_THE_WARLORD
+    )),
+    OOZUL("Oozul", BlockPos(-424, 195, 91), BossType.WORLD, arrayOf(
+        Item.DIMENSIONAL_STAR, Item.DIRK_OF_CHRONOS
+    )),
+    TIDOL("Tidol", BlockPos(-543, 190, 364), BossType.WORLD, arrayOf(
+        Item.EMBLEM_OF_THE_JUGGERNAUT, Item.GREAVES_OF_THE_JUGGERNAUT
+    )),
+    VALUS("Valus", BlockPos(35, 210, 307), BossType.WORLD, arrayOf(
+        Item.CLOAK_OF_BLOODY_SURPRISES, Item.SPOOKY_SANDALS
+    )),
     HOLLOWBANE("Hollowbane", BlockPos(232, 150, 696), BossType.WORLD),
     CLAUS("Claus", BlockPos(10, 212, -121), BossType.WORLD),
     WARDEN("Warden", null, BossType.WORLD, arrayOf(
@@ -157,10 +177,10 @@ enum class BossData(
         Item.LUMINE, Item.ASTRALFLARE, Item.OBSERVER_RUNE
     )),
     TRUE_OPHAN("True Ophan", null, BossType.DUNGEON, arrayOf(
-        Item.H_VALERIONS_PONIARD, Item.H_VALERIONS_BANE, Item.H_CUSTODIANS_VISOR,
-        Item.H_NEBULAS_BATTLEAXE, Item.H_DUSK_WEAVER, Item.H_ARCHONS_GLARE,
-        Item.H_FINAL_DESTINATION, Item.H_ORACLES_END, Item.H_CROWN_OF_ETHEREAL_RADIANCE,
-        Item.PENDANT_OF_SIN, Item.H_LUMINE, Item.H_ASTRALFLARE, Item.H_OBSERVER_RUNE
+        Item.VALERIONS_PONIARD, Item.VALERIONS_BANE, Item.CUSTODIANS_VISOR,
+        Item.NEBULAS_BATTLEAXE, Item.DUSK_WEAVER, Item.ARCHONS_GLARE,
+        Item.FINAL_DESTINATION, Item.ORACLES_END, Item.CROWN_OF_ETHEREAL_RADIANCE,
+        Item.PENDANT_OF_SIN, Item.LUMINE, Item.ASTRALFLARE, Item.OBSERVER_RUNE
     )),
     SYLVARIS("Sylvaris", null, BossType.DUNGEON, arrayOf(
         Item.SCRIPTURE_OF_THE_TOTEM_MASTER, Item.NATURES_GIFT, Item.SPIRITBLOOM_GOWN,
@@ -174,9 +194,9 @@ enum class BossData(
         Item.THANATOS, Item.SERAPHIX, Item.SERAPH_RUNE
     )),
     TRUE_SERAPH("True Seraph", null, BossType.DUNGEON, arrayOf(
-        Item.H_VISAGE_OF_THE_NIGHT, Item.H_BAPHOMETS_BOMB, Item.H_BLOOD_OF_THE_HERETICS,
-        Item.H_FEATHERS_OF_THE_SERAPH, Item.H_SERAPHIC_SHIV, Item.H_EMPYREAN_EPITOME,
-        Item.HOLY_CROSS, Item.H_THANATOS, Item.H_SERAPHIX, Item.H_SERAPH_RUNE
+        Item.VISAGE_OF_THE_NIGHT, Item.BAPHOMETS_BOMB, Item.BLOOD_OF_THE_HERETICS,
+        Item.FEATHERS_OF_THE_SERAPH, Item.SERAPHIC_SHIV, Item.EMPYREAN_EPITOME,
+        Item.HOLY_CROSS, Item.THANATOS, Item.SERAPHIX, Item.SERAPH_RUNE
     )),
     UNREST("Unrest", null, BossType.DUNGEON, arrayOf(
         Item.SONIC_DOOM, Item.ECHOLURKATOR, Item.SPINESTONE,

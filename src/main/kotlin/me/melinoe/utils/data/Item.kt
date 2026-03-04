@@ -280,19 +280,7 @@ enum class Item(
     OBSERVER_RUNE(Rarity.RUNE, "Rune (Observer)", "telos:material/rune/shatters", 120),
 
     // Dawn of Creation (True Ophan) - Hardmode versions
-    H_VALERIONS_PONIARD(Rarity.BLOODSHOT, "Valerion's Poniard", "telos:material/weapon/dagger/ut-poniard", 120),
-    H_VALERIONS_BANE(Rarity.BLOODSHOT, "Valerion's Bane", "telos:material/weapon/katana/ut-bane", 120),
-    H_CUSTODIANS_VISOR(Rarity.BLOODSHOT, "Custodian's Visor", "telos:material/armour/light/helmet/ut-sentinel", 120),
-    H_NEBULAS_BATTLEAXE(Rarity.BLOODSHOT, "Nebula's Battleaxe", "telos:material/weapon/sword/ut-battleaxe", 120),
-    H_DUSK_WEAVER(Rarity.BLOODSHOT, "Dusk Weaver", "telos:material/weapon/sceptre/ut-dusk", 120),
-    H_ARCHONS_GLARE(Rarity.BLOODSHOT, "Archon's Glare", "telos:material/armour/magical/helmet/ut-mage", 120),
-    H_FINAL_DESTINATION(Rarity.BLOODSHOT, "Final Destination", "telos:material/weapon/staff/ut-destination", 120),
-    H_ORACLES_END(Rarity.BLOODSHOT, "Oracle's End", "telos:material/weapon/bow/ut-oracle", 120),
-    H_CROWN_OF_ETHEREAL_RADIANCE(Rarity.BLOODSHOT, "Crown of Ethereal Radiance", "telos:material/armour/heavy/helmet/ut-crown", 120),
     PENDANT_OF_SIN(Rarity.UNHOLY, "The Pendant of Sin", "telos:material/fragment/cross2", 120),
-    H_LUMINE(Rarity.COMPANION, "Lumine", "telos:material/pet/shatters", 100),
-    H_ASTRALFLARE(Rarity.COMPANION, "Astralflare", "telos:material/mount/shatters", 100),
-    H_OBSERVER_RUNE(Rarity.RUNE, "Rune (Observer)", "telos:material/rune/shatters", 120),
 
     // Shadowlands World Bosses
     WARDENS_FACEGUARD(Rarity.ROYAL, "Warden's Faceguard", "telos:material/armour/heavy/helmet/ut-faceguard", 120),
@@ -336,16 +324,7 @@ enum class Item(
     SERAPH_RUNE(Rarity.RUNE, "Rune (Seraph)", "telos:material/rune/celestials_province", 120),
 
     // Seraph's Domain (True Seraph) - Hardmode versions
-    H_VISAGE_OF_THE_NIGHT(Rarity.BLOODSHOT, "Visage of the Night", "telos:material/ability/emblem/ut-visage", 120),
-    H_BAPHOMETS_BOMB(Rarity.BLOODSHOT, "Baphomet's Bomb", "telos:material/ability/bomb/ut-baphomet", 120),
-    H_BLOOD_OF_THE_HERETICS(Rarity.BLOODSHOT, "Blood of the Heretics", "telos:material/ability/poison/ut-heretics", 120),
-    H_FEATHERS_OF_THE_SERAPH(Rarity.BLOODSHOT, "Feathers of the Seraph", "telos:material/ability/kunai/ut-feathers", 120),
-    H_SERAPHIC_SHIV(Rarity.BLOODSHOT, "Seraphic Shiv", "telos:material/weapon/dagger/ut-seraphic", 120),
-    H_EMPYREAN_EPITOME(Rarity.BLOODSHOT, "Empyrean Epitome", "telos:material/ability/skull/ut-epitome", 120),
-    HOLY_CROSS(Rarity.UNHOLY, "The Holy Cross", "telos:material/fragment/cross", 120),
-    H_THANATOS(Rarity.COMPANION, "Thanatos", "telos:material/pet/shatters", 100),
-    H_SERAPHIX(Rarity.COMPANION, "Seraphix", "telos:material/mount/shatters", 100),
-    H_SERAPH_RUNE(Rarity.RUNE, "Rune (Seraph)", "telos:material/rune/celestials_province", 120);
+    HOLY_CROSS(Rarity.UNHOLY, "The Holy Cross", "telos:material/fragment/cross", 120);
 
     /**
      * Item rarity enum.

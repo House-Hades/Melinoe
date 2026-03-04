@@ -8,6 +8,7 @@ import me.melinoe.features.impl.visual.dungeontimer.TimerModule
 import me.melinoe.utils.ChatManager.hideMessage
 import me.melinoe.utils.Color
 import me.melinoe.utils.Message
+import me.melinoe.utils.ServerUtils
 import me.melinoe.utils.data.BagTracker
 import me.melinoe.utils.data.BossData
 import me.melinoe.utils.data.BossType
@@ -38,7 +39,7 @@ object BossDefeatHandler {
         EventBus.subscribe(this)
         
         on<ChatPacketEvent> {
-            if (!me.melinoe.utils.ServerUtils.isOnTelos() || !TimerModule.enabled) return@on
+            if (!ServerUtils.isOnTelos()) return@on
             handleMessage(value)
         }
     }

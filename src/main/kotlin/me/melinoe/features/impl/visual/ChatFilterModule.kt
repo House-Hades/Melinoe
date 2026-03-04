@@ -34,12 +34,4 @@ object ChatFilterModule : Module(
             }
         }
     }
-
-    override fun onEnable() {
-        super.onEnable()
-    }
-
-    override fun onDisable() {
-        super.onDisable()
-    }
 }

@@ -49,6 +49,9 @@ object PityCounterModule : Module(
     
     // Value color (always white by default, like Ttt)
     private val valueColor by ColorSetting("Value Color", Color(0xFFFFFFFF.toInt()), desc = "Color for pity counter values")
+
+    val useCustomMsg by BooleanSetting("Custom Drop", default = true, desc = "Show custom drop messages which include pity")
+    val showAnnounceButton by BooleanSetting("Announce Button", true, desc = "Show the announce button at the end of drop messages")
     
     // Current boss tracking
     private var currentBossData: BossData? = null

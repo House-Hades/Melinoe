@@ -22,7 +22,7 @@ object PityCounterConfig {
     )
     
     // Common pity displays
-    private val BLOODSHOT = PityDisplay(Constants.ICON_BLOODSHOT, "§4", "Bloodshot", "")
+    private val BLOODSHOT = PityDisplay(Constants.ICON_BLOODSHOT, "<red>", "Bloodshot", "")
     
     /**
      * Maps dungeons to their pity counter displays.
@@ -32,15 +32,15 @@ object PityCounterConfig {
         // Endgame dungeons with both bloodshot and special drops
         DungeonData.SERAPHS_DOMAIN to listOf(
             BLOODSHOT.copy(trackingKey = "True Seraph Bloodshot"),
-            PityDisplay("𕑦", "§f", "Holy Cross", "True Seraph")
+            PityDisplay("𕑦", "<white>", "Holy Cross", "True Seraph")
         ),
         DungeonData.DAWN_OF_CREATION to listOf(
             BLOODSHOT.copy(trackingKey = "True Ophan Bloodshot"),
-            PityDisplay("𕑦", "§f", "Pendant of Sin", "True Ophan")
+            PityDisplay("𕑦", "<white>", "Pendant of Sin", "True Ophan")
         ),
         DungeonData.TENEBRIS to listOf(
             BLOODSHOT.copy(trackingKey = "Voided Omnipotent"),
-            PityDisplay("𖈵", "§d", "Nihility", "Nihility")
+            PityDisplay("𖈵", "<pink>", "Nihility", "Nihility")
         ),
         
         // Endgame dungeons with bloodshot only
@@ -105,9 +105,9 @@ object PityCounterConfig {
         
         if (displays.isEmpty()) return ""
         
-        return displays.joinToString(" §8| §r") { display ->
+        return displays.joinToString(" <dark_gray>| <reset>") { display ->
             val pity = TypeSafeDataAccess.get(TrackingKey.PityCounter(display.trackingKey)) ?: 0
-            "${display.icon} ${display.color}${display.label} §7($pity)"
+            "${display.icon} ${display.color}${display.label} <gray>($pity)"
         }
     }
 }
