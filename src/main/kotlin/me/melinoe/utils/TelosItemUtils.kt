@@ -24,7 +24,13 @@ object TelosItemUtils {
     val BOSS_TIDOL = ResourceLocation.fromNamespaceAndPath("telos", "material/boss/tidol")
     val BOSS_VALUS = ResourceLocation.fromNamespaceAndPath("telos", "material/boss/valus")
     val BOSS_HOLLOWBANE = ResourceLocation.fromNamespaceAndPath("telos", "material/boss/hollowbane")
+    val BOSS_CLAUS = ResourceLocation.fromNamespaceAndPath("telos", "material/boss/claus")
     val BOSS_RAPHAEL = ResourceLocation.fromNamespaceAndPath("telos", "material/pet/onyx")
+    val BOSS_DEFENDER = ResourceLocation.fromNamespaceAndPath("telos", "material/boss/defender")
+
+    val BOSS_REAPER = ResourceLocation.fromNamespaceAndPath("telos", "material/boss/reaper")
+    val BOSS_HERALD = ResourceLocation.fromNamespaceAndPath("telos", "material/boss/herald")
+    val BOSS_WARDEN = ResourceLocation.fromNamespaceAndPath("telos", "material/boss/warden")
     
     // ==================== POUCH/TOTEM RESOURCE LOCATIONS ====================
     
@@ -52,8 +58,14 @@ object TelosItemUtils {
         "tidol" to BOSS_TIDOL,
         "valus" to BOSS_VALUS,
         "hollowbane" to BOSS_HOLLOWBANE,
+        "claus" to BOSS_CLAUS,
         "raphael" to BOSS_RAPHAEL,
-        
+        "defender" to BOSS_DEFENDER,
+
+        "reaper" to BOSS_REAPER,
+        "herald" to BOSS_HERALD,
+        "warden" to BOSS_WARDEN,
+
         // Pouches/Totems
         "royal" to POUCH_ROYAL,
         "bloodshot" to POUCH_BLOODSHOT,

@@ -2,6 +2,7 @@ package me.melinoe.features.impl.tracking.bosstracker
 
 import me.melinoe.Melinoe
 import me.melinoe.Melinoe.mc
+import me.melinoe.utils.Message
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
 import net.minecraft.core.GlobalPos
@@ -30,6 +31,16 @@ object BossState {
         for (state in State.values()) {
             trackedBossesByState[state] = mutableSetOf()
         }
+        initShadowlandsBosses()
+    }
+
+    /**
+     * Initializes specific logic for shadowlands bosses which are present at all times
+     */
+    private fun initShadowlandsBosses() {
+        updateBoss("Reaper", State.SHADOWLANDS_IDLE)
+        updateBoss("Warden", State.SHADOWLANDS_IDLE)
+        updateBoss("Herald", State.SHADOWLANDS_IDLE)
     }
     
     /**
@@ -90,6 +101,11 @@ object BossState {
         trackedBossesByState[boss.state]?.remove(boss)
         boss.state = newState
         trackedBossesByState[newState]?.add(boss)
+
+        // Clear called player if it's returning to idle
+        if (newState == State.SHADOWLANDS_IDLE) {
+            boss.calledPlayerName = null
+        }
     }
     
     /**
@@ -100,6 +116,7 @@ object BossState {
         for (state in State.values()) {
             trackedBossesByState[state]?.clear()
         }
+        initShadowlandsBosses()
     }
     
     /**
@@ -194,7 +211,7 @@ object BossState {
                     updateBoss(name, state)
                 }
                 
-                me.melinoe.utils.Message.actionBar("§aBoss Tracker Updated")
+                Message.actionBar("<green>Boss Tracker Updated")
             }
         } catch (e: Exception) {
             Melinoe.logger.error("Error scanning bosses menu: ${e.message}", e)
@@ -207,7 +224,8 @@ object BossState {
     enum class State {
         ALIVE,
         DEFEATED_PORTAL_ACTIVE,
-        DEFEATED
+        DEFEATED,
+        SHADOWLANDS_IDLE
     }
     
     /**

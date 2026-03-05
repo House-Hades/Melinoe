@@ -279,13 +279,13 @@ object KeybindsModule : Module(
 
         // Build the message
         val message = buildString {
-            append("§7Item ID Information\n")
-            append("§8§l› §r§6Display Name: §f$displayName\n")
-            append("§8§l› §r§6Base ID: §f$itemId\n")
+            append("<gray>Item ID Information\n")
+            append("<dark_gray><bold>›</bold> <gold>Display Name: <white>$displayName\n")
+            append("<dark_gray><bold>›</bold> <gold>Base ID: <white>$itemId\n")
 
             // Show Unicode character info
             if (unicodeChar != null && unicodeChar.isNotEmpty()) {
-                append("§8§l› §r§6Unicode Char: §f$unicodeChar\n")
+                append("<dark_gray><bold>›</bold> <gold>Unicode Char: <white>$unicodeChar\n")
 
                 // Show Unicode escape sequence (properly handle surrogate pairs)
                 val codePoints = unicodeChar.codePoints().toArray()
@@ -301,26 +301,26 @@ object KeybindsModule : Module(
                         "\\u${String.format("%04X", it.code)}"
                     }
                 }
-                append("§8§l› §r§6Unicode Escape: §f$escapeSequence\n")
+                append("<dark_gray><bold>›</bold> <gold>Unicode Escape: <white>$escapeSequence\n")
             }
 
             // Show parsed range from lore
             if (parsedRange > 0) {
-                append("§8§l› §r§6Lore Range: §a${parsedRange}f\n")
+                append("<dark_gray><bold>›</bold> <gold>Lore Range: <green>${parsedRange}f\n")
             }
 
             // Show ItemType match status
             if (itemType != null) {
-                append("§8§l› §r§6ItemType: §a${itemType.name}\n")
-                val (range, offset) = me.melinoe.utils.ItemUtils.getItemRangeWithOffset(heldItem)
-                append("§8§l› §r§6Range: §a${range}f §7(offset: §a${offset}f§7)\n")
+                append("<dark_gray><bold>›</bold> <gold>ItemType: <green>${itemType.name}\n")
+                val (range, offset) = ItemUtils.getItemRangeWithOffset(heldItem)
+                append("<dark_gray><bold>›</bold> <gold>Range: <green>${range}f <gray>(offset: <green>${offset}f<gray>)\n")
             } else {
-                append("§8§l› §r§6ItemType: §7Not found\n")
+                append("<dark_gray><bold>›</bold> <gold>ItemType: <gray>Not found\n")
             }
 
             // Show custom model info
             if (customModel != null) {
-                append("§8§l› §r§6Custom Model: §f$customModel\n")
+                append("<dark_gray><bold>›</bold> <gold>Custom Model: <white>$customModel\n")
             }
 
             // Generate code snippets for ItemUtils if not already added
@@ -357,9 +357,9 @@ object KeybindsModule : Module(
                         "\\u${String.format("%04X", it.code)}"
                     }
                 }
-                append("\n§7$enumName §8-> §7\"$escapeSequence\"")
+                append("\n<gray>$enumName <dark_gray>-> <gray>\"$escapeSequence\"")
             } else if (itemType != null) {
-                append("\n§a✔ Item matched with utils")
+                append("\n<green>✔ Item matched with utils")
             }
         }
 

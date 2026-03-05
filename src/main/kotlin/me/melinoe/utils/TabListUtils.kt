@@ -2,7 +2,6 @@ package me.melinoe.utils
 
 import me.melinoe.Melinoe
 import java.util.regex.Pattern
-import java.util.ConcurrentModificationException
 
 /**
  * Tab list parsing utilities for extracting server information.
@@ -10,7 +9,7 @@ import java.util.ConcurrentModificationException
  */
 object TabListUtils {
     private val TPS_PATTERN = Pattern.compile("^TPS:\\s(\\d+)$")
-    private val FAME_PATTERN = Pattern.compile("^Fame:\\s(\\d+)$")
+    private val FAME_PATTERN = Pattern.compile("^Fame:\\s([\\d,]+)$")
     private val LEVEL_PATTERN = Pattern.compile("^Class:(.+)$")
     private val SERVER_PATTERN = Pattern.compile("^Server:\\s(.+)$")
     private val LOOTBOOST_PATTERN = Pattern.compile("^Loot Boost:\\s\\+(\\d+)$")
@@ -147,12 +146,13 @@ object TabListUtils {
             }
             
             // Early exit if we found everything
-            if (charInfo != null && server != null && tps != null && 
-                fame != null && lootboost != null && speed != null && evasion != null) {
+            if (charInfo != null && server != null && tps != null &&
+                fame != null && lootboost != null && speed != null && evasion != null
+            ) {
                 break
             }
         }
-        
+
         return TabListData(charInfo, server, tps, fame, lootboost, speed, evasion)
     }
 

@@ -12,6 +12,19 @@ object Constants {
     val POTENTIAL_BOSS_PATTERN: Pattern = Pattern.compile("^\\[(\\w+)]")
     val BOSS_ITEM_NAME_PATTERN: Pattern = Pattern.compile("^» \\[(\\w+)] «")
     
+    // Shadowlands Boss Patterns
+    val SHADOWLANDS_SPAWNS: Map<String, Pattern> = mapOf(
+        "Reaper" to Pattern.compile("^\\[Reaper] The spectres watch closely\\."),
+        "Warden" to Pattern.compile("^\\[Warden] The flag flies once more\\."),
+        "Herald" to Pattern.compile("^\\[Herald] The torch burns bright\\.")
+    )
+
+    val SHADOWLANDS_DEFEATS: Map<String, Pattern> = mapOf(
+        "Reaper" to Pattern.compile("^\\[Reaper] So we shall persist in spirit\\."),
+        "Warden" to Pattern.compile("^\\[Warden] Remember us, warriors\\."),
+        "Herald" to Pattern.compile("^\\[Herald] Never let go of the light\\.")
+    )
+
     // Timers (in ticks, 20 ticks = 1 second)
     const val PORTAL_TIMER_NORMAL = 600  // 30 seconds
     const val PORTAL_TIMER_RAPHAEL = 1200  // 60 seconds

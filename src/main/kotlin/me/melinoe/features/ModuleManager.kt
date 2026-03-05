@@ -1,9 +1,9 @@
 package me.melinoe.features
 
 import me.melinoe.Melinoe
-import me.melinoe.config.ModuleConfig
 import me.melinoe.clickgui.settings.impl.HUDSetting
 import me.melinoe.clickgui.settings.impl.KeybindSetting
+import me.melinoe.config.ModuleConfig
 import me.melinoe.events.InputEvent
 import me.melinoe.events.core.on
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry
@@ -155,7 +155,7 @@ object ModuleManager {
             me.melinoe.features.impl.combat.NaturesGiftModule,
             me.melinoe.features.impl.combat.AbilityCooldownModule,
             me.melinoe.features.impl.combat.AssassinStacksModule,
-            
+
             // Visual
             me.melinoe.features.impl.visual.FullbrightModule,
             me.melinoe.features.impl.visual.PerformanceHUDModule,
@@ -171,16 +171,17 @@ object ModuleManager {
             me.melinoe.features.impl.tracking.LifetimeStatsModule,
             me.melinoe.features.impl.tracking.PityCounterModule,
             me.melinoe.features.impl.tracking.bosstracker.TrackerModule,
-            
+            me.melinoe.features.impl.tracking.SessionManagerModule,
+
             // Misc
             me.melinoe.features.impl.misc.DiscordRPCModule,
             me.melinoe.features.impl.misc.KeybindsModule,
-            
+
             // Utility
             me.melinoe.features.impl.combat.AutoSprintModule,
             me.melinoe.features.impl.ClickGUIModule
         )
-        
+
         // Register input event handler for keybinds
         on<InputEvent> {
             for (setting in keybindSettingsCache) {

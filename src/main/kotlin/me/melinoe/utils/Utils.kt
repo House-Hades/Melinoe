@@ -15,7 +15,6 @@ import net.minecraft.network.chat.HoverEvent
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import java.util.*
 
 fun logError(throwable: Throwable, context: Any) {
     val version = try {
@@ -34,11 +33,7 @@ fun logError(throwable: Throwable, context: Any) {
     }```"
 
     // Send clickable message with hover tooltip
-    Message.chat(Component.literal("$message §cPlease click this message to copy and send it in the Melinoe discord!").withStyle {
-        it
-            .withClickEvent(ClickEvent.RunCommand("mdev copy $errorText"))
-            .withHoverEvent(HoverEvent.ShowText(Component.literal("§6Click to copy the error to your clipboard.")))
-    })
+    Message.chat("$message <click:run_command:'/mdev copy $errorText'><hover:show_text:'<gold>Click to copy the error to your clipboard.'><red>Please click this message to copy and send it in the Melinoe discord!</click>")
 }
 
 fun setClipboardContent(string: String) {

@@ -8,11 +8,13 @@ import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext
 import net.minecraft.client.renderer.MultiBufferSource
 import net.minecraft.client.renderer.RenderType
 import net.minecraft.client.renderer.blockentity.BeaconRenderer
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
 import org.joml.Quaternionf
 import kotlin.math.max
+import kotlin.math.sin
 
 /**
  * Waypoint rendering utilities adapted from SBO-Kotlin
@@ -32,33 +34,45 @@ object WaypointRenderer {
         showBeam: Boolean = true,
         showLine: Boolean = false,
         showText: Boolean = true,
-        textShadow: Boolean = true,
         textScale: Float = 0.7f,
-        maxTextScale: Double = 1.0,
         lineWidth: Float = 2.0f,
         textAlpha: Float = 1.0f,
-        playerName: String? = null // Optional player name for truncation logic
+        playerName: String? = null,
+        icon: ResourceLocation? = null,
+        isFlashing: Boolean = false
     ) {
         val poseStack = context.matrices() ?: return
         val bufferSource = context.consumers() ?: return
         val camera = context.gameRenderer().mainCamera?.position ?: return
         
+        // Generates a smooth sine wave multiplier between 0.25 and 1.0 based on system time used for flashing
+        val flashAlphaMult = if (isFlashing) {
+            0.625f + 0.375f * sin((System.currentTimeMillis() % 2000L) / 2000.0 * Math.PI * 2).toFloat()
+        } else {
+            1.0f
+        }
+        
+        val currentAlpha = alpha * flashAlphaMult
+        val currentTextAlpha = textAlpha * flashAlphaMult
+        
         // Render filled box at waypoint location
-        renderFilledBox(poseStack, bufferSource, camera, pos, color, alpha)
+        renderFilledBox(poseStack, bufferSource, camera, pos, color, currentAlpha)
         
         // Render beacon beam
         if (showBeam) {
-            renderBeaconBeam(context, pos, color, alpha)
+            renderBeaconBeam(context, pos, color, currentAlpha, text)
         }
         
         // Render line from camera to waypoint
         if (showLine) {
-            renderLineFromCamera(poseStack, bufferSource, camera, pos, color, lineWidth, alpha)
+            renderLineFromCamera(poseStack, bufferSource, camera, pos, color, lineWidth, currentAlpha)
         }
         
-        // Render text label
-        if (showText && text.isNotEmpty()) {
-            renderText(context, pos, text, color, textShadow, textScale.toDouble(), maxTextScale, textAlpha, playerName)
+        if ((showText && text.isNotEmpty()) || icon != null) {
+            renderTextAndIcon(
+                context, pos, text, color, textScale.toDouble(),
+                currentTextAlpha, playerName, icon, showText
+            )
         }
     }
     
@@ -150,17 +164,60 @@ object WaypointRenderer {
     }
     
     /**
+     * Draw a textured quad for labels/icons
+     */
+    private fun drawTextureQuad(
+        buffer: VertexConsumer,
+        matrix: Matrix4f,
+        x: Float, y: Float, size: Float,
+        alpha: Float
+    ) {
+        val r = 255
+        val g = 255
+        val b = 255
+        val a = (alpha * 255).toInt().coerceIn(0, 255)
+        
+        buffer.addVertex(matrix, x, y, 0f).setColor(r, g, b, a).setUv(0f, 0f).setLight(15728880)
+        buffer.addVertex(matrix, x, y + size, 0f).setColor(r, g, b, a).setUv(0f, 1f).setLight(15728880)
+        buffer.addVertex(matrix, x + size, y + size, 0f).setColor(r, g, b, a).setUv(1f, 1f).setLight(15728880)
+        buffer.addVertex(matrix, x + size, y, 0f).setColor(r, g, b, a).setUv(1f, 0f).setLight(15728880)
+    }
+    
+    /**
      * Render a beacon beam at the waypoint - adapted from SBO
      */
     private fun renderBeaconBeam(
         context: WorldRenderContext,
         pos: Vec3,
         color: FloatArray,
-        alpha: Float = 1.0f
+        alpha: Float = 1.0f,
+        text: String
     ) {
         val player = mc.player ?: return
         val distance = player.position().distanceTo(pos)
-        if (distance < 20.0) return // Don't render beam if within 20 blocks (boss arena range)
+        
+        // Smooth transparency fade when getting close
+        val fadeStart = 30.0
+        val fadeEnd = 15.0
+        if (distance <= fadeEnd) return // Completely invisible if too close
+        
+        // Calculate how transparent the beam should be based on distance
+        val distanceAlphaMult = Mth.clamp((distance - fadeEnd) / (fadeStart - fadeEnd), 0.0, 1.0).toFloat()
+        val finalAlpha = alpha * distanceAlphaMult
+        
+        // Skip rendering if the beam is practically invisible
+        if (finalAlpha <= 0.01f) return
+        
+        // Calculate dynamic beam height
+        val isDefender = text.contains("Defender", ignoreCase = true)
+        val heightLimit = mc.level?.maxY ?: 320
+        val beamHeight = if (isDefender) {
+            120
+        } else {
+            max(0, heightLimit - pos.y.toInt())
+        }
+        
+        if (beamHeight <= 0) return
         
         val poseStack = context.matrices() ?: return
         val bufferSource = context.consumers() ?: return
@@ -176,7 +233,7 @@ object WaypointRenderer {
         val partialTicks = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
         val worldTime = mc.level?.gameTime ?: 0L
         
-        renderBeam(poseStack, bufferSource, partialTicks, worldTime, color, alpha)
+        renderBeam(poseStack, bufferSource, partialTicks, worldTime, color, finalAlpha, beamHeight)
         
         poseStack.popPose()
     }
@@ -190,9 +247,9 @@ object WaypointRenderer {
         partialTicks: Float,
         worldTime: Long,
         color: FloatArray,
-        alpha: Float = 1.0f
+        alpha: Float = 1.0f,
+        beamHeight: Int
     ) {
-        val height = 320
         val innerRadius = 0.2f
         val outerRadius = 0.25f
         
@@ -200,7 +257,7 @@ object WaypointRenderer {
         val fixedTime = -time
         val wavePhase = Mth.frac(fixedTime * 0.2f - Mth.floor(fixedTime * 0.1f).toFloat())
         val animationStep = -1f + wavePhase
-        var renderYOffset = height.toFloat() * (0.5f / innerRadius) + animationStep
+        var renderYOffset = beamHeight.toFloat() * (0.5f / innerRadius) + animationStep
         
         poseStack.pushPose()
         poseStack.translate(0.5, 0.0, 0.5)
@@ -209,19 +266,19 @@ object WaypointRenderer {
         poseStack.pushPose()
         poseStack.mulPose(org.joml.Quaternionf().rotationY(Math.toRadians((time * 2.25f - 45f).toDouble()).toFloat()))
         
-        val buffer = bufferSource.getBuffer(RenderType.beaconBeam(BeaconRenderer.BEAM_LOCATION, false))
+        val buffer = bufferSource.getBuffer(RenderType.beaconBeam(BeaconRenderer.BEAM_LOCATION, true))
         val innerColor = floatArrayOf(color[0], color[1], color[2], alpha)
         renderBeamLayer(
             poseStack, buffer, innerColor,
             0f, innerRadius, innerRadius,
             0f, -innerRadius, 0f,
             0f, -innerRadius,
-            renderYOffset, animationStep
+            renderYOffset, animationStep, beamHeight
         )
         poseStack.popPose()
         
         // Outer translucent beam
-        renderYOffset = height.toFloat() + animationStep
+        renderYOffset = beamHeight.toFloat() + animationStep
         val translucentBuffer = bufferSource.getBuffer(RenderType.beaconBeam(BeaconRenderer.BEAM_LOCATION, true))
         val outerAlpha = 0.125f * alpha // 32/255 * fade alpha
         val outerColor = floatArrayOf(color[0], color[1], color[2], outerAlpha)
@@ -230,7 +287,7 @@ object WaypointRenderer {
             -outerRadius, -outerRadius, outerRadius,
             -outerRadius, -outerRadius, outerRadius,
             outerRadius, outerRadius,
-            renderYOffset, animationStep
+            renderYOffset, animationStep, beamHeight
         )
         
         poseStack.popPose()
@@ -246,13 +303,14 @@ object WaypointRenderer {
         x1: Float, z1: Float, x2: Float,
         z2: Float, x3: Float, z3: Float,
         x4: Float, z4: Float,
-        v1: Float, v2: Float
+        v1: Float, v2: Float,
+        beamHeight: Int
     ) {
         val entry = poseStack.last()
-        renderBeamFace(entry, buffer, color, x1, z1, x2, z2, v1, v2)
-        renderBeamFace(entry, buffer, color, x4, z4, x3, z3, v1, v2)
-        renderBeamFace(entry, buffer, color, x2, z2, x4, z4, v1, v2)
-        renderBeamFace(entry, buffer, color, x3, z3, x1, z1, v1, v2)
+        renderBeamFace(entry, buffer, color, x1, z1, x2, z2, v1, v2, beamHeight)
+        renderBeamFace(entry, buffer, color, x4, z4, x3, z3, v1, v2, beamHeight)
+        renderBeamFace(entry, buffer, color, x2, z2, x4, z4, v1, v2, beamHeight)
+        renderBeamFace(entry, buffer, color, x3, z3, x1, z1, v1, v2, beamHeight)
     }
     
     /**
@@ -264,12 +322,13 @@ object WaypointRenderer {
         color: FloatArray,
         x1: Float, z1: Float,
         x2: Float, z2: Float,
-        v1: Float, v2: Float
+        v1: Float, v2: Float,
+        beamHeight: Int
     ) {
-        renderBeamVertex(entry, buffer, color, 320, x1, z1, 1f, v1)
+        renderBeamVertex(entry, buffer, color, beamHeight, x1, z1, 1f, v1)
         renderBeamVertex(entry, buffer, color, 0, x1, z1, 1f, v2)
         renderBeamVertex(entry, buffer, color, 0, x2, z2, 0f, v2)
-        renderBeamVertex(entry, buffer, color, 320, x2, z2, 0f, v1)
+        renderBeamVertex(entry, buffer, color, beamHeight, x2, z2, 0f, v1)
     }
     
     /**
@@ -329,20 +388,19 @@ object WaypointRenderer {
     }
     
     /**
-     * Render text at the waypoint that faces the camera - adapted from SBO
+     * Render text and/or icon at the waypoint that faces the camera
      * Text is truncated to 3 characters unless looking at/near the waypoint
-     * Format: "BossName [PlayerName] [Distance]" or "BossName [Distance]"
      */
-    private fun renderText(
+    private fun renderTextAndIcon(
         context: WorldRenderContext,
         pos: Vec3,
         text: String,
         color: FloatArray,
-        shadow: Boolean,
         scale: Double,
-        maxScale: Double,
         textAlpha: Float = 1.0f,
-        playerName: String? = null
+        playerName: String? = null,
+        icon: ResourceLocation? = null,
+        showText: Boolean = true
     ) {
         val poseStack = context.matrices() ?: return
         val bufferSource = context.consumers() ?: return
@@ -350,109 +408,144 @@ object WaypointRenderer {
         val cameraPos = camera.position
         val font = mc.font
         
-        val textWorldPos = Vec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
+        val textWorldPos = Vec3(pos.x + 0.5, pos.y + 1.5, pos.z + 0.5)
         val distance = cameraPos.distanceTo(textWorldPos)
         
         // Check if player is looking at/near the waypoint
-        // Calculate the angle between camera direction and direction to waypoint
         val cameraDirection = Vec3.directionFromRotation(camera.xRot, camera.yRot)
         val toWaypoint = textWorldPos.subtract(cameraPos).normalize()
         val dotProduct = cameraDirection.dot(toWaypoint)
         
-        // Show full name if:
-        // 1. Looking directly at it (dot product > 0.95, ~18 degree cone)
-        // 2. Very close to it (within 10 blocks)
         val isLookingAt = dotProduct > 0.95
         val isNearby = distance < 10.0
         
-        val displayText = if (isLookingAt || isNearby) {
-            // Show full text when looking at or near waypoint
+        val displayText = if (!showText || text.isEmpty()) {
+            ""
+        } else if (isLookingAt || isNearby) {
             text
         } else {
             // Parse and truncate text
-            // Format: "BossName [PlayerName] §6[Timer] §7[Distance]" or "BossName §6[Timer] §7[Distance]" or "BossName [PlayerName] §7[Distance]" or "BossName §7[Distance]"
-            
-            // Find the distance part (starts with §7[)
             val distanceIndex = text.indexOf(" §7[")
             if (distanceIndex != -1) {
                 val beforeDistance = text.substring(0, distanceIndex)
-                val distancePart = text.substring(distanceIndex) // " §7[Distance]"
+                val distancePart = text.substring(distanceIndex)
                 
-                // Check if there's a portal timer (§6[)
                 val timerIndex = beforeDistance.indexOf(" §6[")
-                val beforeTimer = if (timerIndex != -1) {
-                    beforeDistance.substring(0, timerIndex)
-                } else {
-                    beforeDistance
-                }
-                val timerPart = if (timerIndex != -1) {
-                    beforeDistance.substring(timerIndex) // " §6[Timer]"
-                } else {
-                    ""
-                }
+                val beforeTimer = if (timerIndex != -1) beforeDistance.substring(0, timerIndex) else beforeDistance
+                val timerPart = if (timerIndex != -1) beforeDistance.substring(timerIndex) else ""
                 
-                // Check if there's a player name bracket in the beforeTimer part
                 val firstBracketIndex = beforeTimer.indexOf(" [")
                 if (firstBracketIndex != -1) {
-                    // Has player name: "BossName [PlayerName]"
                     val bossName = beforeTimer.substring(0, firstBracketIndex)
-                    val playerPart = beforeTimer.substring(firstBracketIndex + 2, beforeTimer.length - 1) // Skip " [" and remove "]"
+                    val playerPart = beforeTimer.substring(firstBracketIndex + 2, beforeTimer.length - 1)
                     
                     val truncatedBoss = bossName.substring(0, 3.coerceAtMost(bossName.length))
                     val truncatedPlayer = playerPart.substring(0, 3.coerceAtMost(playerPart.length))
                     
                     "$truncatedBoss [$truncatedPlayer]$timerPart$distancePart"
                 } else {
-                    // No player name, just boss: "BossName"
                     val truncatedBoss = beforeTimer.substring(0, 3.coerceAtMost(beforeTimer.length))
                     "$truncatedBoss$timerPart$distancePart"
                 }
             } else {
-                // Fallback: just truncate the whole text
                 text.substring(0, 3.coerceAtMost(text.length))
             }
         }
         
-        val dynamicScale = max(distance, 2.5) * scale * 0.01
-        
-        // Cap the scale at maxScale to prevent text from getting too large
-        val finalScale = kotlin.math.min(dynamicScale, maxScale)
+        val renderCoords = if (distance > 32.0) {
+            val radius = 32.0
+            val diff = textWorldPos.subtract(cameraPos)
+            cameraPos.add(diff.scale(radius / distance))
+        } else {
+            textWorldPos
+        }
         
         poseStack.pushPose()
         poseStack.translate(
-            pos.x + 0.5 - cameraPos.x,
-            pos.y + 1.5 - cameraPos.y,
-            pos.z + 0.5 - cameraPos.z
+            renderCoords.x - cameraPos.x,
+            renderCoords.y - cameraPos.y,
+            renderCoords.z - cameraPos.z
         )
         
         // Rotate to face camera
         poseStack.mulPose(Quaternionf().rotationY(Math.toRadians((-camera.yRot).toDouble()).toFloat()))
         poseStack.mulPose(Quaternionf().rotationX(Math.toRadians(camera.xRot.toDouble()).toFloat()))
         
-        poseStack.scale(-finalScale.toFloat(), -finalScale.toFloat(), finalScale.toFloat())
+        val finalScale = 0.1f
+        poseStack.scale(-finalScale, -finalScale, finalScale)
         
-        val textWidth = font.width(displayText)
-        val xOffset = -textWidth / 2f
+        // Get the valid icon path
+        val resolvedIcon = icon?.let {
+            var path = it.path
+            if (!path.startsWith("textures/")) {
+                path = "textures/$path"
+            }
+            if (!path.endsWith(".png")) {
+                path = "$path.png"
+            }
+            ResourceLocation.fromNamespaceAndPath(it.namespace, path)
+        }
         
-        // Apply alpha to text color
-        val alphaInt = (textAlpha * 255).toInt().coerceIn(0, 255)
-        val textColor = ((color[0] * 255).toInt() shl 16) or
-                       ((color[1] * 255).toInt() shl 8) or
-                       (color[2] * 255).toInt() or
-                       (alphaInt shl 24)
+        // Icon drawing
+        if (resolvedIcon != null) {
+            val iconSize = 20f
+            // If the text is present then place the icon above it, otherwise center it perfectly
+            val iconY = if (showText && displayText.isNotEmpty()) -iconSize - 2f else -iconSize / 2f
+            val iconX = -iconSize / 2f
+            
+            // Draw see-through label
+            val seeThroughBuffer = bufferSource.getBuffer(RenderType.textSeeThrough(resolvedIcon))
+            drawTextureQuad(seeThroughBuffer, poseStack.last().pose(), iconX, iconY, iconSize, textAlpha * 0.5f)
+            
+            // Draw solid label
+            val solidBuffer = bufferSource.getBuffer(RenderType.text(resolvedIcon))
+            drawTextureQuad(solidBuffer, poseStack.last().pose(), iconX, iconY, iconSize, textAlpha)
+        }
         
-        font.drawInBatch(
-            displayText,
-            xOffset,
-            0f,
-            textColor,
-            shadow,
-            poseStack.last().pose(),
-            bufferSource,
-            net.minecraft.client.gui.Font.DisplayMode.SEE_THROUGH,
-            0,
-            15728880
-        )
+        // Draw standard text below the icon if present
+        if (showText && displayText.isNotEmpty()) {
+            val textWidth = font.width(displayText)
+            val xOffset = -textWidth / 2f
+            
+            // Apply alpha to text color
+            val solidAlphaInt = (textAlpha * 255).toInt().coerceIn(0, 255)
+            val transparentAlphaInt = (textAlpha * .5f * 255).toInt().coerceIn(0, 255)
+            val solidTextColor = ((color[0] * 255).toInt() shl 16) or
+                    ((color[1] * 255).toInt() shl 8) or
+                    (color[2] * 255).toInt() or
+                    (solidAlphaInt shl 24)
+
+            val transparentTextColor = ((color[0] * 255).toInt() shl 16) or
+                    ((color[1] * 255).toInt() shl 8) or
+                    (color[2] * 255).toInt() or
+                    (transparentAlphaInt shl 24)
+
+            font.drawInBatch(
+                displayText,
+                xOffset,
+                0f,
+                solidTextColor,
+                false,
+                poseStack.last().pose(),
+                bufferSource,
+                net.minecraft.client.gui.Font.DisplayMode.NORMAL,
+                0,
+                15728880
+            )
+            
+            font.drawInBatch(
+                displayText,
+                xOffset,
+                0f,
+                transparentTextColor,
+                false,
+                poseStack.last().pose(),
+                bufferSource,
+                net.minecraft.client.gui.Font.DisplayMode.SEE_THROUGH,
+                0,
+                15728880
+            )
+        }
         
         poseStack.popPose()
     }

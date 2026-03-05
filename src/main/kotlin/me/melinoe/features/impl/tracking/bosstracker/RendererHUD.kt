@@ -43,7 +43,9 @@ object RendererHUD {
             val level = mc.level
             val dimensionPath = level?.dimension()?.location()?.path
             if (dimensionPath != Constants.DIMENSION_REALM && !example) return@render Pair(0, 0)
-            
+
+            val hiddenShadowlandsBosses = listOf("Reaper", "Warden", "Herald")
+
             val aliveBosses = if (example) {
                 listOf(
                     BossState.TrackedBoss("Anubis", BlockPos(100, 64, 200), BossState.State.ALIVE, BossData.ANUBIS).apply {
@@ -56,13 +58,13 @@ object RendererHUD {
                     }
                 )
             } else {
-                BossState.getBossesByState(BossState.State.ALIVE)
+                BossState.getBossesByState(BossState.State.ALIVE).filter { it.name !in hiddenShadowlandsBosses }
             }
             
             val portalBosses = if (example) {
                 emptyList()
             } else {
-                BossState.getBossesByState(BossState.State.DEFEATED_PORTAL_ACTIVE).filter { it.name != "Raphael" }
+                BossState.getBossesByState(BossState.State.DEFEATED_PORTAL_ACTIVE).filter { it.name != "Raphael" && it.name !in hiddenShadowlandsBosses }
             }
             
             val allActiveBosses = aliveBosses + portalBosses
@@ -234,7 +236,7 @@ object RendererHUD {
      */
     private fun buildBossText(boss: BossState.TrackedBoss): Component {
         val text = Component.empty()
-        
+
         val distanceColor = when {
             boss.distanceMarkerValue <= 2.0 -> ChatFormatting.GREEN
             boss.distanceMarkerValue <= 4.0 -> ChatFormatting.YELLOW

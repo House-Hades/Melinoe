@@ -1,6 +1,7 @@
 package me.melinoe.features.impl.tracking.bosstracker
 
 import me.melinoe.Melinoe.mc
+import me.melinoe.utils.LocalAPI
 import me.melinoe.utils.render.WaypointRenderer
 import net.minecraft.client.Camera
 import net.minecraft.world.phys.Vec3
@@ -28,13 +29,31 @@ object RendererWaypoints {
         val player = mc.player ?: return
         val camera = mc.gameRenderer.mainCamera
         val cameraPos = camera.position
-        
+
+        // Fetch current area safely to determine shadowlands logic filtering
+        val inShadowlands = try {
+            LocalAPI.getCurrentCharacterArea() == "Shadowlands"
+        } catch (e: Exception) {
+            false
+        }
+
         for (boss in BossState.getAllBosses()) {
-            // Skip defeated bosses without portals
+            val isShadowlandsBoss = boss.name in listOf("Reaper", "Warden", "Herald")
+
+            if (inShadowlands) {
+                // If in shadowlands, hide all other bosses (except shadowlands minibosses, raphael, & defender
+                if (!isShadowlandsBoss && boss.name != "Raphael" && boss.name != "Defender") continue
+            } else {
+                // If not in shadowlands, hide shadowlands bosses
+                if (isShadowlandsBoss) continue
+            }
+
+            // Skip defeated bosses without portals (unless they are Shadowlands bosses returning to idle)
             if (boss.state == BossState.State.DEFEATED) continue
             
             // Filter by boss state
             val shouldShow = when {
+                boss.state == BossState.State.SHADOWLANDS_IDLE -> true
                 boss.state == BossState.State.DEFEATED_PORTAL_ACTIVE && !showPortal -> false
                 boss.state == BossState.State.ALIVE && boss.calledPlayerName != null && !showFighting -> false
                 boss.state == BossState.State.ALIVE && boss.calledPlayerName == null && !showAvailable -> false
@@ -58,8 +77,13 @@ object RendererWaypoints {
             // Calculate fade alpha
             val fadeAlpha = calculateFadeAlpha(distance)
             if (fadeAlpha <= 0.01f) continue
-            
-            val color = waypoint.getColor()
+
+            // Overlay dark gray text styling for Shadowlands idle bosses
+            val color = if (boss.state == BossState.State.SHADOWLANDS_IDLE) {
+                floatArrayOf(0.33f, 0.33f, 0.33f)
+            } else {
+                waypoint.getColor()
+            }
             val text = waypoint.getDisplayText()
             
             // Render waypoint
@@ -72,11 +96,11 @@ object RendererWaypoints {
                 showBeam = waypointBeams,
                 showLine = false,
                 showText = true,
-                textShadow = true,
                 textScale = 0.5f,
-                maxTextScale = maxTextScale,
                 lineWidth = 2.0f,
-                textAlpha = fadeAlpha
+                textAlpha = fadeAlpha,
+                icon = boss.data.modelIdentifier,
+                isFlashing = boss.state == BossState.State.DEFEATED_PORTAL_ACTIVE
             )
         }
     }

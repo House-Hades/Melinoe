@@ -29,6 +29,35 @@ object ChatParser {
             val bossData = BossData.fromString(bossName)
             
             if (bossData != null) {
+                // Unique override for Shadowlands minibosses
+                val isShadowlandsBoss = bossName in listOf("Reaper", "Warden", "Herald")
+                if (isShadowlandsBoss) {
+                    val defeatPattern = Constants.SHADOWLANDS_DEFEATS[bossName]
+                    if (defeatPattern != null && defeatPattern.matcher(messageString).find()) {
+                        Melinoe.logger.info("[BossTracker] Shadowlands boss defeated: $bossName")
+                        BossState.updateBoss(bossName, BossState.State.SHADOWLANDS_IDLE)
+                        return false
+                    }
+
+                    val spawnPattern = Constants.SHADOWLANDS_SPAWNS[bossName]
+                    if (spawnPattern != null && spawnPattern.matcher(messageString).find()) {
+                        Melinoe.logger.info("[BossTracker] Shadowlands boss spawned: $bossName")
+                        BossState.updateBoss(bossName, BossState.State.ALIVE)
+                        return false
+                    }
+
+                    // Allow players' calls to still update the called player for shadowlands bosses
+                    val playerCallMatcher = bossData.playerCallPattern.matcher(messageString)
+                    if (playerCallMatcher.find()) {
+                        val boss = BossState.getBoss(bossName) ?: BossState.updateBoss(bossName, BossState.State.ALIVE)
+                        boss?.calledPlayerName = playerCallMatcher.group(1)
+                        Melinoe.logger.info("[BossTracker] Player call detected: ${boss?.calledPlayerName}")
+                    }
+
+                    return false
+                }
+
+                // Normal handling for the normal realm bosses
                 Melinoe.logger.info("[BossTracker] Boss call detected: $bossName (dimension: $currentDimension, inDungeon=$inDungeon)")
                 val boss = BossState.updateBoss(bossName, BossState.State.ALIVE)
                 

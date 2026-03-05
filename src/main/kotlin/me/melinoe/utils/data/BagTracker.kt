@@ -498,7 +498,7 @@ object BagTracker {
         if (PityCounterModule.showAnnounceButton) {
             val shareText = "[${item.rarity}] Dropped ${item.displayName} at ${pityCount} pity!"
 
-            message += " <click:suggest_command:'${shareText}'><hover:show_text:\"<gray>Click to share in chat!</gray>\"><gray><b>\uD83D\uDCE8</b></gray></hover></click>"
+            message += " <click:suggest_command:'${shareText}'><hover:show_text:\"<gray>Click to share in chat!</gray>\"><gray><b>⧉</b></gray></hover></click>"
         }
 
         val chatIndicator = GuiMessageTag(
