@@ -1,10 +1,10 @@
 package me.melinoe.features.impl.tracking
 
-import me.melinoe.Melinoe
 import me.melinoe.clickgui.settings.impl.BooleanSetting
 import me.melinoe.clickgui.settings.impl.ColorSetting
 import me.melinoe.clickgui.settings.impl.HUDSetting
 import me.melinoe.events.BossBarUpdateEvent
+import me.melinoe.events.DungeonChangeEvent
 import me.melinoe.events.DungeonEntryEvent
 import me.melinoe.events.DungeonExitEvent
 import me.melinoe.events.core.on
@@ -20,7 +20,6 @@ import me.melinoe.utils.data.persistence.DataConfig
 import me.melinoe.utils.data.persistence.TrackingKey
 import me.melinoe.utils.data.persistence.TypeSafeDataAccess
 import net.minecraft.ChatFormatting
-import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.item.ItemStack
@@ -72,7 +71,10 @@ object PityCounterModule : Module(
         on<DungeonEntryEvent> {
             handleDungeonEntry(dungeon)
         }
-        
+
+        on<DungeonChangeEvent> {
+            handleDungeonEntry(newDungeon)
+        }
         on<DungeonExitEvent> {
             currentBossData = null
         }
@@ -164,7 +166,7 @@ object PityCounterModule : Module(
         if (!ServerUtils.isOnTelos() && !example) return@render Pair(100, 50)
         
         // Get items to display
-        val items = if (example) {
+        val items : List<Item> = if (example) {
             // Show Eddie's drops as example
             listOf(
                 Item.BLUNDERBOW,
@@ -172,6 +174,8 @@ object PityCounterModule : Module(
                 Item.SLIME_ARCHER,
                 Item.GOLDEN_STALLION
             )
+        } else if (LocalAPI.getCurrentCharacterArea().equals("Rustborn Kingdom")) {
+            (BossData.VALERION.items + BossData.NEBULA.items + BossData.OPHANIM.items).toList()
         } else {
             getItemsToDisplay()
         }
@@ -181,7 +185,10 @@ object PityCounterModule : Module(
         // Get boss name for title
         val bossName = if (example) {
             "Eddie"
-        } else {
+        } else if (LocalAPI.getCurrentCharacterArea().equals("Rustborn Kingdom")){
+            "Rustborn Kingdom"
+        }
+        else {
             currentBossData?.label ?: "Pity Counters"
         }
         
