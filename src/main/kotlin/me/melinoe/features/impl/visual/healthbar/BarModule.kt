@@ -76,7 +76,7 @@ object HealthBarModule : Module(
     // Appearance Settings
     private val textScale by NumberSetting(
         "Text Scale",
-        0.15,
+        0.02,
         0.01,
         0.2,
         0.01,
@@ -105,7 +105,7 @@ object HealthBarModule : Module(
     
     private val barWidth by NumberSetting(
         "Bar Width",
-        0.8,
+        1.5,
         0.1,
         5.0,
         0.1,
@@ -123,7 +123,7 @@ object HealthBarModule : Module(
     
     private val barHeight by NumberSetting(
         "Bar Height",
-        0.05,
+        0.3,
         0.01,
         1.0,
         0.01,
@@ -132,7 +132,7 @@ object HealthBarModule : Module(
     
     private val barHeightHUD by NumberSetting(
         "Bar Height (HUD)",
-        8.0,
+        15.0,
         4.0,
         20.0,
         1.0,
@@ -141,7 +141,7 @@ object HealthBarModule : Module(
     
     private val yPosition by NumberSetting(
         "Y Position",
-        0.0,
+        -0.5,
         -3.0,
         3.0,
         0.1,
@@ -210,7 +210,7 @@ object HealthBarModule : Module(
     
     private val mediumHealthThreshold by NumberSetting(
         "Mid HP Threshold %",
-        75.0,
+        50.0,
         0.0,
         100.0,
         1.0,

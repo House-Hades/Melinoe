@@ -23,7 +23,7 @@ object AssassinStacksModule : Module(
 ) {
 
     // Settings
-    private val nameColor by ColorSetting("Name Color", Color(0xFF8A0000.toInt()), desc = "Color for the name text")
+    private val nameColor by ColorSetting("Name Color", Color(0xFF7CFFB2.toInt()), desc = "Color for the name text")
     private val valueColor by ColorSetting("Value Color", Color(0xFFFFFFFF.toInt()), desc = "Color for the value text")
     private val madScientist by BooleanSetting("Mad Scientist", false, desc = "Show Mad Scientist stacks")
     

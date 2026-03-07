@@ -27,7 +27,7 @@ object AbilityCooldownModule : Module(
     category = Category.COMBAT,
     description = "Displays ability cooldown with visual notifications."
 ) {
-
+    
     private const val BAR_WIDTH = 16
     private const val BAR_HEIGHT = 5
     private const val BAR_BG_COLOR = 0x80101010.toInt()
@@ -41,11 +41,13 @@ object AbilityCooldownModule : Module(
     private const val COLOR_COOLING_R = 204
     private const val COLOR_COOLING_G = 48
     private const val COLOR_COOLING_B = 48
-
-    val titleText = registerSetting(StringSetting("Title Text", "Ability Ready!", desc = "Text to display in title popup"))
-    val duration = registerSetting(NumberSetting("Duration", 60.0f, 10.0f, 100.0f, desc = "Duration of title display in ticks"))
-    val titleColor = registerSetting(ColorSetting("Title Color", Color(0xFFFFFFFF.toInt()), desc = "Color of the title text"))
     
+    val showHud = registerSetting(BooleanSetting("Show HUD", true, desc = "Toggle the visual cooldown bar and icon"))
+    
+    val titleText by StringSetting("Title Text", "Ability Ready!", desc = "Text to display in title popup")
+    val duration by NumberSetting("Duration", 60.0f, 10.0f, 100.0f, desc = "Duration of title display in ticks")
+    val titleColor by ColorSetting("Title Color", Color(0xFF7CFFB2.toInt()), desc = "Color of the title text")
+
     private val titleHud by HUDSetting(
         name = "Title Display",
         x = 400,
@@ -56,18 +58,18 @@ object AbilityCooldownModule : Module(
         module = this
     ) { example ->
         if (customTitle == null && !example) return@HUDSetting 0 to 0
-
+        
         val title = if (example) {
-            buildStyledTitleText(titleText.value, titleColor.value.rgba)
+            buildStyledTitleText(titleText, titleColor.rgba)
         } else {
             customTitle!!
         }
         val textRenderer = mc.font
         val textWidth = textRenderer.width(title)
         val textHeight = textRenderer.lineHeight
-
-        drawString(textRenderer, title, 0, 0, titleColor.value.rgba, true)
-
+        
+        drawString(textRenderer, title, 0, 0, titleColor.rgba, true)
+        
         textWidth to textHeight
     }
     
@@ -77,7 +79,7 @@ object AbilityCooldownModule : Module(
         default = "entity.player.levelup",
         dependencies = { playSound.value }
     )
-
+    
     private var trackedAbility = ItemStack.EMPTY
     private var displayedAbility = ItemStack.EMPTY
     private var cooldownProgress = 0f
@@ -86,36 +88,36 @@ object AbilityCooldownModule : Module(
     private const val INDICATOR_FADE_MS = 250L
     private var customTitle: Component? = null
     private var titleDisplayTicks = 0
-
+    
     init {
         on<TickEvent.End> {
             if (!enabled) return@on
-
+            
             val player = mc.player ?: return@on
-
+            
             previousCooldownProgress = cooldownProgress
             cooldownProgress = player.cooldowns.getCooldownPercent(trackedAbility, 0f)
-
+            
             val heldAbility = getCurrentPlayerAbility()
-
+            
             if (heldAbility.isEmpty) {
                 displayedAbility = heldAbility
                 return@on
             }
-
+            
             displayedAbility = heldAbility
-
+            
             if (!ItemStack.matches(heldAbility, trackedAbility)) {
                 trackedAbility = heldAbility.copy()
             }
-
+            
             if (previousCooldownProgress > 0 && cooldownProgress == 0f && !trackedAbility.isEmpty) {
                 indicatorStartTime = System.currentTimeMillis()
                 
                 if (titleHud.enabled) {
-                    customTitle = buildStyledTitleText(titleText.value, titleColor.value.rgba)
-                    titleDisplayTicks = duration.value.toInt()
-
+                    customTitle = buildStyledTitleText(titleText, titleColor.rgba)
+                    titleDisplayTicks = duration.toInt()
+                    
                     if (playSound.enabled) {
                         playNotificationSound()
                     }
@@ -127,7 +129,7 @@ object AbilityCooldownModule : Module(
                 customTitle = null
                 titleDisplayTicks = 0
             }
-
+            
             if (titleDisplayTicks > 0) {
                 titleDisplayTicks--
                 if (titleDisplayTicks <= 0) {
@@ -136,11 +138,12 @@ object AbilityCooldownModule : Module(
             }
         }
     }
-
+    
     fun renderHud(context: GuiGraphics) {
         if (!enabled) return
+        if (!showHud.value) return
         if (displayedAbility.isEmpty) return
-
+        
         val windowWidth = mc.window.guiScaledWidth
         val windowHeight = mc.window.guiScaledHeight
         val halfWindowWidth = windowWidth / 2
@@ -258,14 +261,14 @@ object AbilityCooldownModule : Module(
         }
         context.fill(cx, cy + 3, cx + 2, cy + 4, white)
     }
-
+    
     private fun buildStyledTitleText(text: String, textColor: Int): Component {
         if (text.isEmpty()) {
             return Component.literal("")
         }
         return Component.literal(text).withStyle(Style.EMPTY.withColor(textColor))
     }
-
+    
     private fun playNotificationSound() {
         try {
             playSoundSettings(soundSettings())
@@ -273,30 +276,30 @@ object AbilityCooldownModule : Module(
             Melinoe.logger.warn("Ability Cooldown: Failed to play sound: ${e.message}")
         }
     }
-
+    
     private fun getCurrentPlayerAbility(): ItemStack {
         val player = mc.player ?: return ItemStack.EMPTY
-
+        
         val mainHandStack = player.mainHandItem
         val offHandStack = player.offhandItem
-
+        
         if (isAbility(mainHandStack)) {
             return mainHandStack
         }
-
+        
         if (isAbility(offHandStack)) {
             return offHandStack
         }
-
+        
         return ItemStack.EMPTY
     }
-
+    
     private fun isAbility(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
         val itemId = BuiltInRegistries.ITEM.getKey(stack.item).toString()
         return itemId.endsWith("_hoe")
     }
-
+    
     override fun onDisable() {
         super.onDisable()
         trackedAbility = ItemStack.EMPTY

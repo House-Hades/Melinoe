@@ -5,8 +5,6 @@ import me.melinoe.features.Category
 import me.melinoe.features.Module
 import me.melinoe.clickgui.settings.impl.BooleanSetting
 import me.melinoe.clickgui.settings.impl.HUDSetting
-import me.melinoe.clickgui.settings.impl.NumberSetting
-import me.melinoe.clickgui.settings.impl.StringSetting
 import me.melinoe.events.DungeonChangeEvent
 import me.melinoe.events.DungeonEntryEvent
 import me.melinoe.events.DungeonExitEvent
@@ -17,10 +15,10 @@ import me.melinoe.utils.ItemUtils
 import me.melinoe.utils.Message
 import me.melinoe.utils.createSoundSettings
 import me.melinoe.utils.equalsOneOf
-import me.melinoe.utils.playSoundAtPlayer
 import me.melinoe.utils.playSoundSettings
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.ItemStack
 
@@ -34,12 +32,12 @@ object NaturesGiftModule : Module(
     category = Category.COMBAT,
     description = "Plays a sound when health drops below threshold (requires Nature's Gift boots)"
 ) {
-
+    
     // Settings
     private val playSound by BooleanSetting("Play Sound", true, desc = "Enable sound notification")
     private val soundSettings = createSoundSettings(
         name = "Sound",
-        default = "minecraft:entity.player.levelup",
+        default = "minecraft:item.totem.use",
         dependencies = { playSound }
     )
     private val showInfoMessage by BooleanSetting("Show Info Message", true, desc = "Display chat message when Nature's Gift procs")
@@ -101,19 +99,20 @@ object NaturesGiftModule : Module(
         // Draw the text next to the icon (vertically centered with icon)
         val textYOffset = (iconSize - textHeight) / 2
         drawString(textRenderer, text, iconSize + iconPadding, textYOffset, color, true)
-
+        
         (iconSize + iconPadding + textWidth) to iconSize
     }
     
     // State tracking
     private var wasHealthBelowThreshold = false
+    private var hadRegen = false
     private var isOnCooldown = false
     private var cooldownEndTime = 0L
     
     // Cached item data
     private var cachedHealthThreshold = 30.0f
     private var cachedCooldownDuration = 360.0f
-
+    
     init {
         // Register tick event for health monitoring
         on<TickEvent.End> {
@@ -124,7 +123,9 @@ object NaturesGiftModule : Module(
             // Check if player has Nature's Gift boots equipped
             val equippedItem = getEquippedNatureGift()
             if (equippedItem == null) {
-                // No Nature's Gift equipped, don't do anything
+                // Clear state memory if unequipped so it doesn't instantly proc upon re-equipping
+                wasHealthBelowThreshold = false
+                hadRegen = false
                 return@on
             }
             
@@ -138,8 +139,14 @@ object NaturesGiftModule : Module(
             val healthPercentage = (currentHealth / maxHealth) * 100.0f
             val isHealthBelowThreshold = healthPercentage <= cachedHealthThreshold
             
-            // Check if health just dropped below threshold and ability is ready
-            if (isHealthBelowThreshold && !wasHealthBelowThreshold && !isOnCooldown) {
+            // Check regeneration effect applied
+            val regenEffect = player.getEffect(MobEffects.REGENERATION)
+            val hasRegen5 = regenEffect != null && regenEffect.amplifier == 4
+            
+            // Determine if the ability just procced
+            val shouldTrigger = (isHealthBelowThreshold && !wasHealthBelowThreshold) || (hasRegen5 && !hadRegen)
+            
+            if (shouldTrigger && !isOnCooldown) {
                 // Activate ability and start cooldown
                 startCooldown()
                 // Play sound when ability is activated
@@ -148,7 +155,9 @@ object NaturesGiftModule : Module(
                 showProcMessage()
             }
             
+            // Update previous state trackers
             wasHealthBelowThreshold = isHealthBelowThreshold
+            hadRegen = hasRegen5
             
             // Update cooldown progress
             if (isOnCooldown) {
@@ -219,7 +228,7 @@ object NaturesGiftModule : Module(
             cachedCooldownDuration = 360.0f
         }
     }
-
+    
     /**
      * Start the cooldown period
      */
@@ -227,7 +236,7 @@ object NaturesGiftModule : Module(
         cooldownEndTime = System.currentTimeMillis() + (cachedCooldownDuration * 1000).toLong()
         isOnCooldown = true
     }
-
+    
     /**
      * Show proc message in chat
      */
@@ -248,7 +257,7 @@ object NaturesGiftModule : Module(
             // Silently fail
         }
     }
-
+    
     /**
      * Play the notification sound.
      */
@@ -261,7 +270,7 @@ object NaturesGiftModule : Module(
             // Silently fail
         }
     }
-
+    
     /**
      * Reset the cooldown
      */
@@ -269,8 +278,9 @@ object NaturesGiftModule : Module(
         isOnCooldown = false
         cooldownEndTime = 0
         wasHealthBelowThreshold = false
+        hadRegen = false
     }
-
+    
     /**
      * Get time until next notification is available (in seconds)
      */
@@ -281,12 +291,13 @@ object NaturesGiftModule : Module(
         val remainingMs = cooldownEndTime - currentTime
         return kotlin.math.max(0, kotlin.math.ceil(remainingMs / 1000.0).toLong())
     }
-
+    
     override fun onDisable() {
         super.onDisable()
         // Clear cooldown state when disabled
         cooldownEndTime = 0
         isOnCooldown = false
         wasHealthBelowThreshold = false
+        hadRegen = false
     }
 }

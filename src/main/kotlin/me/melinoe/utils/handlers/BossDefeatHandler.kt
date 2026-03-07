@@ -44,12 +44,15 @@ object BossDefeatHandler {
     
     private var currentDungeon: DungeonData? = null
     
+    // Queue for messages hidden during leaderboard building
+    private val queuedMessages: MutableList<Component> by lazy { mutableListOf() }
+    
     init {
         EventBus.subscribe(this)
         
         on<ChatPacketEvent> {
             if (!ServerUtils.isOnTelos()) return@on
-            handleMessage(value)
+            this.handleMessage()
         }
         
         on<DungeonEntryEvent> {
@@ -68,7 +71,8 @@ object BossDefeatHandler {
     /**
      * Handle incoming chat messages for boss defeat tracking
      */
-    private fun ChatPacketEvent.handleMessage(message: String) {
+    private fun ChatPacketEvent.handleMessage() {
+        val message = value
         val cleanValue = message.trim()
         val strippedValue = cleanValue.noControlCodes.trim()
         
@@ -103,11 +107,23 @@ object BossDefeatHandler {
         // Always hide the message
         hideMessage()
         
+        if (trackerBit) {
+            queuedMessages.clear()
+        }
+        
         if (!trackerBit && wasTrackingBefore && pendingBossName != null) {
-            processBossDefeat(pendingBossName!!)
             pendingBossName = null
             
             Message.separator()
+            
+            // Leaderboard is done, send back any hidden messages
+            if (queuedMessages.isNotEmpty()) {
+                queuedMessages.forEach { component ->
+                    // Re-send the component to preserve formatting
+                    Melinoe.mc.execute { Melinoe.mc.gui?.chat?.addMessage(component) }
+                }
+                queuedMessages.clear()
+            }
         }
         
         // Reset boss name captured flag when toggling
@@ -138,6 +154,9 @@ object BossDefeatHandler {
         bossNameCaptured = true
         hideMessage()
         
+        // Process the boss defeat after in order for the pity counter line to provide accurate pity counters
+        processBossDefeat(cleanValue)
+        
         // Find the boss data
         val bossData = BossData.findByKey(strippedValue)
         val dungeon = currentDungeon
@@ -150,7 +169,7 @@ object BossDefeatHandler {
         
         if (bossData != null) {
             // Make the Pity Module Lines
-            if (PityCounterModule.enabled && bossData.bossType == BossType.DUNGEON && dungeon != null) {
+            if (PityCounterModule.enabled) {
                 val pityLine = PityCounterConfig.buildPityLine(dungeon, bossData)
                 if (pityLine.isNotEmpty()) {
                     pityLines.add(pityLine)
@@ -173,6 +192,11 @@ object BossDefeatHandler {
         val headerSpaces = getCenteredText(plainHeaderText).takeWhile { it == ' ' }
         val finalHeader = Component.literal(headerSpaces).append(headerComponent ?: "<yellow><bold>$strippedValue</bold></yellow>".toNative())
         Melinoe.mc.execute { Melinoe.mc.gui?.chat?.addMessage(finalHeader) }
+        
+        // Space prior to either the Timer or Pity Module
+        if (pityLines.isNotEmpty() || timerLines.isNotEmpty()) {
+            Melinoe.mc.execute { Melinoe.mc.gui?.chat?.addMessage(" ".toNative()) }
+        }
         
         // Pity Module Lines
         pityLines.forEach {
@@ -200,6 +224,23 @@ object BossDefeatHandler {
      *   - Stats (percentage + damage): Red (0xFF3333)
      */
     private fun ChatPacketEvent.formatDamageStats(cleanValue: String, strippedValue: String) {
+        // Verify this is actually a damage stat line to prevent formatting interleaved chat messages
+        if (!strippedValue.matches(Regex("^\\d+(\\.\\d+)?%\\s+\\([^)]+\\)\\s+.+$"))) {
+            // Log the hidden message
+            Melinoe.logger.info("[BossDefeatHandler] Hidden message during leaderboard building: $strippedValue")
+            
+            // Queue the full Component to preserve formatting when re-sent later
+            if (this.component != null) {
+                queuedMessages.add(this.component)
+            } else {
+                // Fallback if component is missing
+                queuedMessages.add(Component.literal(value))
+            }
+            
+            hideMessage()
+            return
+        }
+        
         hideMessage()
         
         // Parse the damage stat line
@@ -224,7 +265,7 @@ object BossDefeatHandler {
                 "𕑱" -> "<#FFD700>" // Gold
                 "𕑰" -> "<#C0C0C0>" // Silver
                 "𕑩" -> "<#895129>" // Bronze
-                else -> "<gray>" // Gray (4th+ place - use default <gray>)
+                else -> "<#8B8B8B>" // Gray (4th+ place - use default <gray>)
             }
             
             // Damage color (red)

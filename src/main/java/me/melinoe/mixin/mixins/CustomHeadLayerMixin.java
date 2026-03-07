@@ -6,6 +6,7 @@ import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
@@ -41,7 +42,7 @@ public abstract class CustomHeadLayerMixin<T extends LivingEntity, S extends Liv
             CallbackInfo ci
     ) {
         if (HideArmorModule.INSTANCE.getEnabled()) {
-            if (entity != Minecraft.getInstance().player) {
+            if (entity.getType() != EntityType.PLAYER) {
                 return;
             }
 

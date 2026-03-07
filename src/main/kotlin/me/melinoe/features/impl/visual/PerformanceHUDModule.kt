@@ -22,8 +22,8 @@ object PerformanceHUDModule : Module(
     category = Category.VISUAL,
     description = "Shows performance information on the screen."
 ) {
-    private val nameColor by ColorSetting("Name Color", Color(27, 197, 97), desc = "The color of the stat information.")
-    private val valueColor by ColorSetting("Value Color", Colors.WHITE, desc = "The color of the stat values.")
+    private val nameColor by ColorSetting("Name Color", Color(0xFF7CFFB2.toInt()), desc = "The color of the stat information.")
+    private val valueColor by ColorSetting("Value Color", Color(0xFFFFFFFF.toInt()), desc = "The color of the stat values.")
     private val direction by SelectorSetting("Direction", "Horizontal", listOf("Horizontal", "Vertical"), "Direction the information is displayed.")
     private val showFPS by BooleanSetting("Show FPS", true, desc = "Shows the FPS in the HUD.")
     private val showTPS by BooleanSetting("Show TPS", true, desc = "Shows the TPS in the HUD.")

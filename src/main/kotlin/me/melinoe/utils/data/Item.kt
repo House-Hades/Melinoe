@@ -8,8 +8,7 @@ enum class Item(
     val rarity: Rarity,
     val displayName: String,
     val texturePath: String,
-    val maxPity: Int,
-    val shortName: String? = null // Optional short name override for compact display
+    val maxPity: Int
 ) {
     // Lowlands Dungeons (IRRADIATED rarity)
     // Skull Cavern (Eddie)

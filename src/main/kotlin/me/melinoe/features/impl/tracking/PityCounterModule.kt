@@ -3,6 +3,7 @@ package me.melinoe.features.impl.tracking
 import me.melinoe.clickgui.settings.impl.BooleanSetting
 import me.melinoe.clickgui.settings.impl.ColorSetting
 import me.melinoe.clickgui.settings.impl.HUDSetting
+import me.melinoe.clickgui.settings.impl.NumberSetting
 import me.melinoe.events.BossBarUpdateEvent
 import me.melinoe.events.DungeonChangeEvent
 import me.melinoe.events.DungeonEntryEvent
@@ -30,7 +31,6 @@ import net.minecraft.world.item.ItemStack
  * Features:
  * - Item-based tracking (not boss-based)
  * - Icon rendering for each item
- * - Compact mode toggle
  * - Dynamic filtering based on current boss
  * - Rarity-based color coding
  */
@@ -40,14 +40,17 @@ object PityCounterModule : Module(
     description = "Displays pity counters for items from the current boss"
 ) {
     
-    // Settings - Color for widget border and title
-    private val widgetColor by ColorSetting("Widget Color", Color(0xFFAA0000.toInt()), desc = "Color for the widget border and title")
+    // Toggle to show or hide the HUD
+    private val toggleHud by BooleanSetting("Show HUD", default = true, desc = "Toggle the visibility of the Pity Counter HUD")
     
-    // Compact mode - show only icons
-    private val compactMode by BooleanSetting("Compact Mode", false, desc = "Show only item icons without names")
+    // Settings - Color for widget border and title
+    private val widgetColor by ColorSetting("Widget Color", Color(0xFF2E8F78.toInt()), desc = "Color for the widget border and title")
     
     // Value color (always white by default, like Ttt)
     private val valueColor by ColorSetting("Value Color", Color(0xFFFFFFFF.toInt()), desc = "Color for pity counter values")
+    
+    // Truncation setting to limit the number of visible characters
+    private val maxCharacters by NumberSetting("Max Characters", 15, min = 0, max = 30, desc = "Maximum number of characters for item names (excluding apostrophes)")
     
     val useCustomMsg by BooleanSetting("Custom Drop", default = true, desc = "Show custom drop messages which include pity")
     val showAnnounceButton by BooleanSetting("Announce Button", true, desc = "Show the announce button at the end of drop messages")
@@ -55,8 +58,23 @@ object PityCounterModule : Module(
     // Current boss tracking
     private var currentBossData: BossData? = null
     
-    // Cached pity counters for instant updates
+    // Memory Caches to massively improve performance
     private val cachedPityCounters = mutableMapOf<String, Int>()
+    private val cachedItemStack = mutableMapOf<Item, ItemStack>()
+    private val cachedTruncatedName = mutableMapOf<Pair<String, Int>, String>()
+    private var cachedTitleComponent: Component? = null
+    
+    private var lastBossName = ""
+    
+    // Pre-mapped lists to prevent creating them every frame
+    private val shadowlandsBosses = listOf(BossData.DEFENDER, BossData.REAPER, BossData.WARDEN, BossData.HERALD)
+    private val realmBossMapping by lazy {
+        me.melinoe.features.impl.tracking.bosstracker.BossData.entries
+            .filter { it.name !in listOf("RAPHAEL", "DEFENDER", "REAPER", "WARDEN", "HERALD") }
+            .mapNotNull { trackerBoss ->
+                BossData.findByKey(trackerBoss.label)?.let { dataBoss -> trackerBoss to dataBoss }
+            }
+    }
     
     init {
         // Register callback for instant updates when pity changes
@@ -89,10 +107,49 @@ object PityCounterModule : Module(
      * Update cached pity counters for all items
      */
     private fun updateCache() {
-        // Update cache for all items that might be displayed
         Item.entries.forEach { item ->
             val pityKey = TrackingKey.PityCounter(item.name)
             cachedPityCounters[item.name] = TypeSafeDataAccess.get(pityKey) ?: 0
+        }
+    }
+    
+    /**
+     * Get or create cached ItemStack to avoid creating objects every frame
+     */
+    private fun getItemStack(item: Item): ItemStack {
+        return cachedItemStack.getOrPut(item) {
+            val itemStack = ItemStack(net.minecraft.world.item.Items.CARROT_ON_A_STICK)
+            itemStack.set(net.minecraft.core.component.DataComponents.ITEM_MODEL, ResourceLocation.parse(item.texturePath))
+            itemStack
+        }
+    }
+    
+    /**
+     * Evaluates the string character by character, ignoring apostrophes from the count,
+     * and adds an ellipsis if the length exceeds the config setting
+     */
+    private fun getTruncatedName(name: String, maxChars: Int): String {
+        // If the max allowed characters is 0 or less, immediately return the dash indicator
+        if (maxChars <= 0) return "-"
+        
+        // Cache based on the item name
+        val key = Pair(name, maxChars)
+        return cachedTruncatedName.getOrPut(key) {
+            var validCharCount = 0
+            
+            for (i in name.indices) {
+                // Only count characters that aren't apostrophes
+                if (name[i] != '\'') {
+                    validCharCount++
+                }
+                
+                if (validCharCount > maxChars) {
+                    // Slices the string from the beginning up to the preset setting
+                    return@getOrPut name.substring(0, i) + "…"
+                }
+            }
+            
+            name
         }
     }
     
@@ -114,7 +171,7 @@ object PityCounterModule : Module(
             null
         }
         
-        if (currentArea != null && DungeonData.findByKey(currentArea) != null) {
+        if (LocalAPI.isInDungeon()) {
             return // In dungeon, keep dungeon boss
         }
         
@@ -130,7 +187,7 @@ object PityCounterModule : Module(
      * Get items to display based on current boss
      */
     private fun getItemsToDisplay(): List<Item> {
-        // Skip if in nexus
+        // Skip if the player is in the nexus
         if (LocalAPI.isInNexus()) return emptyList()
         
         val player = mc.player ?: return emptyList()
@@ -143,7 +200,7 @@ object PityCounterModule : Module(
         if (LocalAPI.getCurrentCharacterArea() == "Shadowlands") {
             var minDistance = Double.MAX_VALUE
             
-            for (boss in listOf(BossData.DEFENDER, BossData.REAPER, BossData.WARDEN, BossData.HERALD)) {
+            for (boss in shadowlandsBosses) {
                 val dist = kotlin.math.abs(px - boss.spawnPosition!!.x) +
                         kotlin.math.abs(py - boss.spawnPosition.y) +
                         kotlin.math.abs(pz - boss.spawnPosition.z)
@@ -165,9 +222,7 @@ object PityCounterModule : Module(
         var minDistance = 5625.0 // 75 squared
         
         // Scan for realm bosses
-        for (boss in me.melinoe.features.impl.tracking.bosstracker.BossData.entries) {
-            if (boss.name == "RAPHAEL" || boss.name == "DEFENDER" || boss.name == "REAPER" || boss.name == "WARDEN" || boss.name == "HERALD") continue
-            
+        for ((boss, dataBoss) in realmBossMapping) {
             val pos = boss.spawnPosition
             
             // Calculate distance to the center of the boss spawn block
@@ -177,12 +232,8 @@ object PityCounterModule : Module(
             val distance = dx * dx + dy * dy + dz * dz
             
             if (distance <= minDistance) {
-                // Map the other BossData to the BossData type containing items by its label
-                val dataBoss = BossData.findByKey(boss.label)
-                if (dataBoss != null) {
-                    minDistance = distance
-                    nearestBossData = dataBoss
-                }
+                minDistance = distance
+                nearestBossData = dataBoss
             }
         }
         
@@ -198,7 +249,7 @@ object PityCounterModule : Module(
             Item.Rarity.GILDED -> 0xFFDF5320.toInt()
             Item.Rarity.ROYAL -> 0xFFAA00AA.toInt()
             Item.Rarity.BLOODSHOT -> 0xFFAA0000.toInt()
-            Item.Rarity.VOIDBOUND -> 0xFF4169E1.toInt()
+            Item.Rarity.VOIDBOUND -> 0xFF8D15F0.toInt()
             Item.Rarity.UNHOLY -> 0xFFBFBFBF.toInt()
             Item.Rarity.COMPANION -> 0xFFFFAA00.toInt()
             Item.Rarity.RUNE -> 0xFF616161.toInt()
@@ -206,7 +257,7 @@ object PityCounterModule : Module(
     }
     
     /**
-     * HUD rendering - similar to LifetimeStats with icons from BossTracker
+     * HUD rendering
      */
     private val pityCounterHud by HUDSetting(
         name = "Pity Counter Display",
@@ -218,17 +269,15 @@ object PityCounterModule : Module(
         module = this
     ) render@{ example ->
         if (!enabled && !example) return@render Pair(100, 50)
+        // Check if HUD is toggled
+        if (!toggleHud && !example) return@render Pair(0, 0)
+        
         if (!ServerUtils.isOnTelos() && !example) return@render Pair(100, 50)
         
         // Get items to display
         val items : List<Item> = if (example) {
-            // Show Eddie's drops as example
-            listOf(
-                Item.BLUNDERBOW,
-                Item.LOST_TREASURE_SCRIPTURE,
-                Item.SLIME_ARCHER,
-                Item.GOLDEN_STALLION
-            )
+            // Show Eddie's drops as an example
+            listOf(Item.BLUNDERBOW, Item.LOST_TREASURE_SCRIPTURE, Item.SLIME_ARCHER, Item.GOLDEN_STALLION)
         } else if (LocalAPI.getCurrentCharacterArea().equals("Rustborn Kingdom")) {
             (BossData.VALERION.items + BossData.NEBULA.items + BossData.OPHANIM.items).toList()
         } else {
@@ -237,73 +286,76 @@ object PityCounterModule : Module(
         
         if (items.isEmpty()) return@render Pair(100, 50)
         
+        val font = mc.font
+        val isChatFocused = example || mc.screen is net.minecraft.client.gui.screens.ChatScreen
+        var anyFullyTruncated = false
+        
+        val processedItems = items.map { item ->
+            var itemName = item.displayName
+            
+            // If chat isn't focused, truncate
+            if (!isChatFocused) {
+                itemName = getTruncatedName(itemName, maxCharacters)
+                if (itemName == "-") anyFullyTruncated = true
+            }
+            
+            val pityCount = if (example) {
+                when (item) {
+                    Item.BLUNDERBOW -> 42
+                    Item.LOST_TREASURE_SCRIPTURE -> 87
+                    Item.SLIME_ARCHER -> 15
+                    Item.GOLDEN_STALLION -> 103
+                    else -> 50
+                }
+            } else {
+                cachedPityCounters[item.name] ?: 0
+            }
+            
+            Triple(item, itemName, pityCount.toString())
+        }
+        
         // Get boss name for title
-        val bossName = if (example) {
+        val bossName = if (anyFullyTruncated) {
+            "Pity"
+        } else if (example) {
             "Eddie"
         } else if (LocalAPI.getCurrentCharacterArea().equals("Rustborn Kingdom")){
             "Rustborn Kingdom"
-        }
-        else {
+        } else {
             currentBossData?.label ?: "Pity Counters"
         }
         
-        val font = mc.font
-        val title = bossName
-        val titleComponent = Component.literal(title).withStyle(ChatFormatting.BOLD)
+        // Cache the title to only format it once
+        if (bossName != lastBossName || cachedTitleComponent == null) {
+            lastBossName = bossName
+            cachedTitleComponent = Component.literal(bossName).withStyle(ChatFormatting.BOLD)
+        }
+        
+        val titleComponent = cachedTitleComponent!!
         val titleColor = widgetColor.rgba and 0x00FFFFFF
         val borderColor = 0xFF000000.toInt() or titleColor
         val bgColor = 0xC00C0C0C.toInt()
         
-        // Create lighter version of widget color for labels
-        val r = ((titleColor shr 16) and 0xFF)
-        val g = ((titleColor shr 8) and 0xFF)
-        val b = (titleColor and 0xFF)
-        val lighterR = minOf(255, (r * 1.8).toInt())
-        val lighterG = minOf(255, (g * 1.8).toInt())
-        val lighterB = minOf(255, (b * 1.8).toInt())
-        val labelColor = 0xFF000000.toInt() or (lighterR shl 16) or (lighterG shl 8) or lighterB
-        
         // Calculate dimensions
-        val lineSpacing = 16 // Same as BossTracker
-        val iconSize = 16
-        val iconPadding = 18 // Icon + padding = 18px (matches BossTracker)
+        val lineSpacing = 16
+        val targetItemSize = 14
+        val itemPadding = targetItemSize + 4
         val titleWidth = font.width(titleComponent)
         
-        // Check if chat is focused to determine width calculation
-        val isChatFocusedForWidth = example || mc.screen is net.minecraft.client.gui.screens.ChatScreen
-        val truncationWidth = 100 // Fixed width for truncation when chat is closed
+        val spaceWidth = font.width(" ")
+        val doubleSpaceWidth = spaceWidth * 2
+        val dashWidth = font.width("-")
         
-        val maxLabelWidth = if (compactMode) {
-            0 // No labels in compact mode
-        } else if (isChatFocusedForWidth) {
-            // Use full width when chat is open or in example mode
-            items.maxOfOrNull { font.width(it.displayName) } ?: 100
+        // Get actual space taken by longest required label
+        val maxLabelWidth = processedItems.maxOfOrNull { if (it.second == "-") 0 else font.width(it.second) } ?: 0
+        val maxValueWidth = processedItems.maxOfOrNull { font.width(it.third) } ?: font.width("999")
+        
+        val contentWidth = if (maxLabelWidth == 0) {
+            targetItemSize + spaceWidth + dashWidth + spaceWidth + maxValueWidth
         } else {
-            // Use truncation width when chat is closed
-            truncationWidth
+            itemPadding + maxLabelWidth + doubleSpaceWidth + maxValueWidth
         }
         
-        val maxValueWidth = if (compactMode) {
-            0
-        } else {
-            items.maxOfOrNull { item ->
-                val pityCount = if (example) {
-                    // Use same fixed values as in rendering
-                    when (item) {
-                        Item.BLUNDERBOW -> 42
-                        Item.LOST_TREASURE_SCRIPTURE -> 87
-                        Item.SLIME_ARCHER -> 15
-                        Item.GOLDEN_STALLION -> 103
-                        else -> 50
-                    }
-                } else {
-                    cachedPityCounters[item.name] ?: 0
-                }
-                font.width(pityCount.toString())
-            } ?: font.width("999")
-        }
-        
-        val contentWidth = iconPadding + maxLabelWidth + maxValueWidth + (if (!compactMode) 10 else 0)
         val boxWidth = maxOf(titleWidth + 16, contentWidth + 12)
         val boxHeight = font.lineHeight + 2 + (items.size * lineSpacing) + 4
         
@@ -326,69 +378,41 @@ object PityCounterModule : Module(
         // Right border
         fill(boxWidth - 2, 2 + strHeightHalf, boxWidth - 1, boxHeight - 2, borderColor)
         
-        // Draw title in bold
+        // Draw title
         drawString(font, titleComponent, 8, 2, borderColor, false)
         
         // Draw items
         var yOffset = font.lineHeight + 4
         val leftPadding = 6
+        val scaleFactor = targetItemSize.toFloat() / 16f
         
-        // Check if chat is focused for full names (or if in example mode)
-        val isChatFocused = example || mc.screen is net.minecraft.client.gui.screens.ChatScreen
-        
-        for (item in items) {
+        for ((item, itemName, pityCountStr) in processedItems) {
             var xOffset = leftPadding
+            val itemStack = getItemStack(item)
             
-            // Render item icon - create ResourceLocation from texture path
-            val resourceLocation = ResourceLocation.parse(item.texturePath)
-            val itemStack = ItemStack(net.minecraft.world.item.Items.CARROT_ON_A_STICK)
-            itemStack.set(net.minecraft.core.component.DataComponents.ITEM_MODEL, resourceLocation)
+            // Item texture scaling & translating to be in the exact center
+            pose().pushMatrix()
+            val itemY = yOffset + (font.lineHeight / 2f) - (targetItemSize / 2f)
+            pose().translate(xOffset.toFloat(), itemY)
+            pose().scale(scaleFactor, scaleFactor)
+            renderItem(itemStack, 0, 0)
+            pose().popMatrix()
             
-            renderItem(itemStack, xOffset, yOffset - 2)
-            xOffset += iconPadding
+            xOffset += itemPadding
+            val textColor = getTextColor(item.rarity)
+            val valueWidth = font.width(pityCountStr)
+            val valueX = boxWidth - valueWidth - 6
+            var drawX = xOffset
             
-            if (!compactMode) {
-                // Get pity count
-                val pityCount = if (example) {
-                    // Use fixed example values for each item
-                    when (item) {
-                        Item.BLUNDERBOW -> 42
-                        Item.LOST_TREASURE_SCRIPTURE -> 87
-                        Item.SLIME_ARCHER -> 15
-                        Item.GOLDEN_STALLION -> 103
-                        else -> 50
-                    }
-                } else {
-                    cachedPityCounters[item.name] ?: 0
-                }
-                
-                // Get text color for rarity
-                val textColor = getTextColor(item.rarity)
-                
-                // Draw item name (truncated if chat closed)
-                val truncationWidth = 100 // Fixed width for truncation when chat is closed
-                val itemName = if (isChatFocused) {
-                    item.displayName
-                } else {
-                    // Truncate to fit truncationWidth
-                    val fullName = item.displayName
-                    if (font.width(fullName) > truncationWidth) {
-                        var truncated = fullName
-                        while (font.width(truncated + "…") > truncationWidth && truncated.isNotEmpty()) {
-                            truncated = truncated.dropLast(1)
-                        }
-                        truncated + "…"
-                    } else {
-                        fullName
-                    }
-                }
-                
-                drawString(font, itemName, xOffset, yOffset, textColor, false)
-                
-                // Draw pity value (right-aligned)
-                val valueX = boxWidth - font.width(pityCount.toString()) - 6
-                drawString(font, pityCount.toString(), valueX, yOffset, valueColor.rgba, false)
+            if (itemName == "-") {
+                val dashW = font.width(itemName)
+                val textureEnd = xOffset - itemPadding + targetItemSize
+                val spaceAvailable = valueX - textureEnd
+                drawX = textureEnd + (spaceAvailable - dashW) / 2
             }
+            
+            drawString(font, itemName, drawX, yOffset, textColor, false)
+            drawString(font, pityCountStr, valueX, yOffset, valueColor.rgba, false)
             
             yOffset += lineSpacing
         }

@@ -22,7 +22,9 @@ object LifetimeStatsModule : Module(
 ) {
 
     // Color setting for border and title
-    private val widgetColor by ColorSetting("Widget Color", Color(0xFFFFFF00.toInt()), desc = "Color for the widget border and title")
+    private val widgetColor by ColorSetting("Widget Color", Color(0xFF2E8F78.toInt()), desc = "Color for the widget border and title")
+    private val labelColor by ColorSetting("Label Color", Color(0xFF7CFFB2.toInt()), desc = "Color for the bag labels")
+    private val valueColor by ColorSetting("Value Color", Color(0xFFFFFFFF.toInt()), desc = "Color for the bag amounts")
 
     // Toggleable stats (in display order)
     private val showEventBags by BooleanSetting("Event Bags", true, desc = "Display event bags counter")
@@ -102,15 +104,6 @@ object LifetimeStatsModule : Module(
         val borderColor = 0xFF000000.toInt() or titleColor
         val bgColor = 0xC00C0C0C.toInt()
         
-        // Create lighter version of widget color for labels (increase brightness by 80%)
-        val r = ((titleColor shr 16) and 0xFF)
-        val g = ((titleColor shr 8) and 0xFF)
-        val b = (titleColor and 0xFF)
-        val lighterR = minOf(255, (r * 1.8).toInt())
-        val lighterG = minOf(255, (g * 1.8).toInt())
-        val lighterB = minOf(255, (b * 1.8).toInt())
-        val labelColor = 0xFF000000.toInt() or (lighterR shl 16) or (lighterG shl 8) or lighterB
-        
         // Calculate dimensions - use bold title width
         val lineSpacing = 11 // Line spacing between entries
         val titleWidth = font.width(titleComponent)
@@ -159,10 +152,10 @@ object LifetimeStatsModule : Module(
                 val labelText = "$label:"
                 val valueText = value.toString()
                 
-                drawString(font, labelText, leftPadding, yOffset, labelColor, false)
+                drawString(font, labelText, leftPadding, yOffset, labelColor.rgba, false)
                 
                 val valueX = boxWidth - font.width(valueText) - rightPadding
-                drawString(font, valueText, valueX, yOffset, 0xFF000000.toInt() or (ChatFormatting.YELLOW.color ?: 0xFFFF00), false)
+                drawString(font, valueText, valueX, yOffset, valueColor.rgba, false)
                 
                 yOffset += lineSpacing
             }

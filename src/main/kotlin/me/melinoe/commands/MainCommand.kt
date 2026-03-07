@@ -100,7 +100,7 @@ val mainCommand = Commodore("melinoe", "m", "mel") {
                             "GILDED"     -> "<#df5320>$name"
                             "ROYAL"      -> "<#aa00aa>$name"
                             "BLOODSHOT"  -> "<#aa0000>$name"
-                            "VOIDBOUND"  -> "<#4169e1>$name"
+                            "VOIDBOUND"  -> "<#8d15f0>$name"
                             "UNHOLY"     -> "<#bfbfbf>$name"
                             "COMPANION"  -> "<#ffaa00>$name"
                             "RUNE"       -> "<#616161>$name"

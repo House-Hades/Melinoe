@@ -2,6 +2,7 @@ package me.melinoe.features.impl.visual.dungeontimer
 
 import me.melinoe.utils.data.BossData
 import me.melinoe.utils.data.DungeonData
+import me.melinoe.utils.data.Item
 import me.melinoe.utils.data.persistence.TypeSafeDataAccess
 import me.melinoe.utils.data.persistence.TrackingKey
 
@@ -12,102 +13,63 @@ import me.melinoe.utils.data.persistence.TrackingKey
 object PityCounterConfig {
     
     /**
-     * Represents a single pity counter display.
+     * Builds the pity counter line for a dungeon/boss based on the items it drops.
+     * Groups items by rarity, creating a hoverable text message for each rarity.
+     *
+     * @param dungeon Nullable, as World Bosses do not have a dungeon instance
+     * @param boss The specific boss data to check drops for
      */
-    data class PityDisplay(
-        val icon: String,
-        val color: String,
-        val label: String,
-        val trackingKey: String
-    )
-    
-    // Common pity displays
-    private val BLOODSHOT = PityDisplay(Constants.ICON_BLOODSHOT, "<red>", "Bloodshot", "")
-    
-    /**
-     * Maps dungeons to their pity counter displays.
-     * For multi-stage dungeons, use boss-specific mappings.
-     */
-    private val dungeonPityConfig = mapOf(
-        // Endgame dungeons with both bloodshot and special drops
-        DungeonData.SERAPHS_DOMAIN to listOf(
-            BLOODSHOT.copy(trackingKey = "True Seraph Bloodshot"),
-            PityDisplay("𕑦", "<white>", "Holy Cross", "True Seraph")
-        ),
-        DungeonData.DAWN_OF_CREATION to listOf(
-            BLOODSHOT.copy(trackingKey = "True Ophan Bloodshot"),
-            PityDisplay("𕑦", "<white>", "Pendant of Sin", "True Ophan")
-        ),
-        DungeonData.TENEBRIS to listOf(
-            BLOODSHOT.copy(trackingKey = "Voided Omnipotent"),
-            PityDisplay("𖈵", "<pink>", "Nihility", "Nihility")
-        ),
+    fun buildPityLine(dungeon: DungeonData?, boss: BossData): String {
+        // If the boss has no items, don't show a pity line
+        if (boss.items.isEmpty()) return ""
         
-        // Endgame dungeons with bloodshot only
-        DungeonData.RAPHS_CHAMBER to listOf(
-            BLOODSHOT.copy(trackingKey = "Raphael")
-        ),
-        DungeonData.RESOUNDING_RUINS to listOf(
-            BLOODSHOT.copy(trackingKey = "Unrest")
-        ),
-        DungeonData.DREADWOOD_THICKET to listOf(
-            BLOODSHOT.copy(trackingKey = "Sylvaris")
-        ),
+        // Group all items dropped by this boss by their rarity
+        val itemsByRarity = boss.items.groupBy { it.rarity }
         
-        // Boss dungeons with bloodshot drops
-        DungeonData.ANUBIS_LAIR to listOf(
-            BLOODSHOT.copy(trackingKey = "Kurvaros")
-        ),
-        DungeonData.THE_AVIARY to listOf(
-            BLOODSHOT.copy(trackingKey = "Shadowflare")
-        ),
-        DungeonData.FUNGAL_CAVERN to listOf(
-            BLOODSHOT.copy(trackingKey = "Prismara")
-        ),
-        DungeonData.CORSAIRS_CONDUCTORIUM to listOf(
-            BLOODSHOT.copy(trackingKey = "Thalassar")
-        ),
-        DungeonData.OMNIPOTENTS_CITADEL to listOf(
-            BLOODSHOT.copy(trackingKey = "Omnipotent")
-        ),
-        DungeonData.CULTISTS_HIDEOUT to listOf(
-            BLOODSHOT.copy(trackingKey = "Silex")
-        ),
-        DungeonData.CHRONOS to listOf(
-            BLOODSHOT.copy(trackingKey = "Chronos")
-        ),
-        DungeonData.ILLARIUS_HIDEOUT to listOf(
-            BLOODSHOT.copy(trackingKey = "Loa")
-        )
-    )
-    
-    /**
-     * Boss-specific pity displays for multi-stage dungeons.
-     */
-    private val bossPityConfig = mapOf(
-        // Rustborn Kingdom bosses
-        "Valerion" to listOf(BLOODSHOT.copy(trackingKey = "Valerion")),
-        "Nebula" to listOf(BLOODSHOT.copy(trackingKey = "Nebula")),
-        "Ophanim" to listOf(BLOODSHOT.copy(trackingKey = "Ophanim")),
-        
-        // Celestials Province bosses
-        "Asmodeus" to listOf(BLOODSHOT.copy(trackingKey = "Asmodeus")),
-        "Seraphim" to listOf(BLOODSHOT.copy(trackingKey = "Seraphim"))
-    )
-    
-    /**
-     * Builds the pity counter line for a dungeon/boss combination.
-     * Returns empty string if no pity counters are configured.
-     */
-    fun buildPityLine(dungeon: DungeonData, boss: BossData): String {
-        // Check for boss-specific pity first (for multi-stage dungeons)
-        val displays = bossPityConfig[boss.label] ?: dungeonPityConfig[dungeon] ?: return ""
-        
-        if (displays.isEmpty()) return ""
-        
-        return displays.joinToString(" <dark_gray>| <reset>") { display ->
-            val pity = TypeSafeDataAccess.get(TrackingKey.PityCounter(display.trackingKey)) ?: 0
-            "${display.icon} ${display.color}${display.label} <gray>($pity)"
+        val segments = itemsByRarity.mapNotNull { (rarity, items) ->
+            if (items.isEmpty()) return@mapNotNull null
+            
+            // Map the rarity to its icon
+            val icon = when (rarity) {
+                Item.Rarity.IRRADIATED -> Constants.ICON_IRRADIATED
+                Item.Rarity.GILDED -> Constants.ICON_GILDED
+                Item.Rarity.ROYAL -> Constants.ICON_ROYAL
+                Item.Rarity.BLOODSHOT -> Constants.ICON_BLOODSHOT
+                Item.Rarity.VOIDBOUND -> Constants.ICON_VOIDBOUND
+                Item.Rarity.UNHOLY -> Constants.ICON_UNHOLY
+                Item.Rarity.COMPANION -> Constants.ICON_COMPANION
+                Item.Rarity.RUNE -> Constants.ICON_RUNE
+            }
+            
+            // Map the rarity to its text color
+            val color = when (rarity) {
+                Item.Rarity.IRRADIATED -> "<#15CD15>"
+                Item.Rarity.GILDED -> "<#DF5320>"
+                Item.Rarity.ROYAL -> "<#AA00AA>"
+                Item.Rarity.BLOODSHOT -> "<#AA0000>"
+                Item.Rarity.VOIDBOUND -> "<#8D15F0>"
+                Item.Rarity.UNHOLY -> "<#BFBFBF>"
+                Item.Rarity.COMPANION -> "<#FFAA00>"
+                Item.Rarity.RUNE -> "<#616161>"
+            }
+            
+            // Build the hover text displaying each item and its pity count
+            val hoverText = items.joinToString("<br>") { item ->
+                val pity = TypeSafeDataAccess.get(TrackingKey.PityCounter(item.name)) ?: 0
+                
+                // Prevent MiniMessage from breaking because of items with an apostrophe
+                val safeName = item.displayName.replace("'", "\\'")
+                
+                // Add the sprite icon using the item's texture path
+                "<sprite:\"minecraft:blocks\":\"${item.texturePath}\"> $color$safeName<gray>: <white>$pity</white>"
+            }
+            
+            "<hover:show_text:'$hoverText'><white>$icon</white></hover>"
         }
+        
+        if (segments.isEmpty()) return ""
+        
+        // Join all grouped rarities with the divider
+        return segments.joinToString(" <dark_gray>| <reset>")
     }
 }

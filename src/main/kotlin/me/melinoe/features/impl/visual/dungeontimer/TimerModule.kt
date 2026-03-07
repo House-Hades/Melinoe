@@ -35,7 +35,7 @@ object TimerModule : Module(
 ) {
     
     // Settings
-    private val nameColor by ColorSetting("Label Color", Color(27, 197, 97), desc = "Color for labels (Dungeon:, Current Time:, etc.)")
+    private val nameColor by ColorSetting("Label Color", Color(0xFF7CFFB2.toInt()), desc = "Color for labels (Dungeon:, Current Time:, etc.)")
     private val valueColor by ColorSetting("Value Color", Color(0xFFFFFFFF.toInt()), desc = "Color for values (dungeon name, times, etc.)")
     
     // State management

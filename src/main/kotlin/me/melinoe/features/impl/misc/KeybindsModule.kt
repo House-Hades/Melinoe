@@ -23,8 +23,11 @@ object KeybindsModule : Module(
     description = "Configurable keybinds for commands and menus"
 ) {
 
-    private val bossPhaseKey by KeybindSetting("Boss Phase", GLFW.GLFW_KEY_F6, desc = "Send Ophanim/True Ophan phase message")
+    private val bossPhaseKey by KeybindSetting("Boss Phase", GLFW.GLFW_KEY_F6, desc = "Send boss/dungeon phase message")
         .onPress { handleBossPhase() }
+    
+    private val bossesMenuKey by KeybindSetting("Bosses Menu", GLFW.GLFW_KEY_UNKNOWN, desc = "Open bosses menu")
+        .onPress { sendTelosCommand("bosses", "Bosses menu") }
 
     private val mountsMenuKey by KeybindSetting("Mounts Menu", GLFW.GLFW_KEY_UNKNOWN, desc = "Open mounts menu")
         .onPress { sendTelosCommand("mounts", "Mounts menu") }
@@ -32,11 +35,7 @@ object KeybindsModule : Module(
     private val petsMenuKey by KeybindSetting("Pets Menu", GLFW.GLFW_KEY_UNKNOWN, desc = "Open pets menu")
         .onPress { sendTelosCommand("pets", "Pets menu") }
 
-    private val realmSelectorKey by KeybindSetting(
-        "Realm Selector",
-        GLFW.GLFW_KEY_C,
-        desc = "Open the realm selector menu"
-    )
+    private val realmSelectorKey by KeybindSetting("Realm Selector", GLFW.GLFW_KEY_C, desc = "Open the realm selector menu")
         .onPress { handleRealmSelector() }
 
     private val spawnMountKey by KeybindSetting("Spawn Mount", GLFW.GLFW_KEY_V, desc = "Spawn your mount")
@@ -45,13 +44,10 @@ object KeybindsModule : Module(
     private val useStickerKey by KeybindSetting("Use Sticker", GLFW.GLFW_KEY_UNKNOWN, desc = "Use your sticker")
         .onPress { sendTelosCommand("showtheselectedsticker", "Use sticker") }
 
+    // Toggle commands
     private val togglesDropdown by DropdownSetting("Toggles", false)
 
-    private val toggleMountsKey by KeybindSetting(
-        "Toggle Mounts",
-        GLFW.GLFW_KEY_UNKNOWN,
-        desc = "Toggle mount visibility"
-    )
+    private val toggleMountsKey by KeybindSetting("Toggle Mounts", GLFW.GLFW_KEY_UNKNOWN, desc = "Toggle mount visibility")
         .withDependency { togglesDropdown }
         .onPress { sendTelosCommand("togglemounts", "Toggle mounts") }
 
@@ -63,33 +59,22 @@ object KeybindsModule : Module(
         .withDependency { togglesDropdown }
         .onPress { sendTelosCommand("toggleplayers", "Toggle players") }
 
-    private val toggleStickersKey by KeybindSetting(
-        "Toggle Stickers",
-        GLFW.GLFW_KEY_UNKNOWN,
-        desc = "Toggle sticker visibility"
-    )
+    private val toggleStickersKey by KeybindSetting("Toggle Stickers", GLFW.GLFW_KEY_UNKNOWN, desc = "Toggle sticker visibility")
         .withDependency { togglesDropdown }
         .onPress { sendTelosCommand("togglestickers", "Toggle stickers") }
 
+    // Supporter only commands
     private val supporterDropdown by DropdownSetting("Supporter", false)
 
     private val openStashKey by KeybindSetting("Open Stash", GLFW.GLFW_KEY_UNKNOWN, desc = "Open your stash")
         .withDependency { supporterDropdown }
         .onPress { sendTelosCommand("stash", "Stash") }
 
-    private val teleportCentreKey by KeybindSetting(
-        "Teleport (Centre)",
-        GLFW.GLFW_KEY_UNKNOWN,
-        desc = "Teleport to the centre"
-    )
+    private val teleportCentreKey by KeybindSetting("Teleport (Centre)", GLFW.GLFW_KEY_UNKNOWN, desc = "Teleport to the centre")
         .withDependency { supporterDropdown }
         .onPress { sendTelosCommand("centre", "Teleport (Centre)") }
 
-    private val teleportSpawnKey by KeybindSetting(
-        "Teleport (Spawn)",
-        GLFW.GLFW_KEY_UNKNOWN,
-        desc = "Teleport to spawn"
-    )
+    private val teleportSpawnKey by KeybindSetting("Teleport (Spawn)", GLFW.GLFW_KEY_UNKNOWN, desc = "Teleport to spawn")
         .withDependency { supporterDropdown }
         .onPress { sendTelosCommand("spawn", "Teleport (Spawn)") }
 
@@ -154,80 +139,182 @@ object KeybindsModule : Module(
             mc.setScreen(RealmSelectorScreen)
         }
     }
-
+    
+    private var lastUsedTime: Long = 0L
+    private val COOLDOWN_MS: Long = 10000L
+    
     /**
-     * Handle boss phase keybind - sends Ophanim/True Ophan phase message
+     * Handle boss phase keybind - sends current phase or dungeon status
      */
     private fun handleBossPhase() {
         if (!enabled) return
         val player = mc.player ?: return
-
+        
         if (!ServerUtils.isOnTelos()) {
             sendTelosOnlyError("Boss phase")
             return
         }
-
+        
+        // Cooldown handling
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastUsedTime < COOLDOWN_MS) {
+            val remainingSeconds = (COOLDOWN_MS - (currentTime - lastUsedTime)) / 1000.0
+            Message.error(String.format("Please wait %.1fs before using this again.", remainingSeconds))
+            return
+        }
+        
         // Check if in correct dungeon
+        if (LocalAPI.isInDungeon()) {
+            Message.error("You are not currently in a dungeon.")
+            return
+        }
+        
         val currentArea = LocalAPI.getCurrentCharacterArea()
+        
         val currentDungeon = DungeonData.findByKey(currentArea)
-
-        if (currentDungeon == null ||
-            !currentDungeon.equalsOneOf(DungeonData.RUSTBORN_KINGDOM, DungeonData.DAWN_OF_CREATION)) {
-            Message.error("No True Ophan or Ophanim phase detected.")
+        if (currentDungeon == null) {
+            Message.error("You are not currently in a dungeon.")
             return
         }
-
-        // Get current boss
-        val currentBoss = LocalAPI.getCurrentCharacterFighting()
-        if (currentBoss.isEmpty() || !currentBoss.equalsOneOf("Ophanim", "True Ophan")) {
-            Message.error("No True Ophan or Ophanim phase detected.")
+        
+        val hp = getBossHealthPercentage()
+        lastUsedTime = currentTime
+        
+        if (hp <= 0) {
+            player.connection.sendChat("Currently in $currentArea")
             return
         }
-
-        // Get boss health percentage
-        val healthPercentage = getBossHealthPercentage()
-        val currentPhase = getCurrentPhase(healthPercentage)
-
-        // Send message to chat
-        val message = "$currentBoss is at $healthPercentage% HP - $currentPhase"
-        player.connection.sendChat(message)
+        
+        var currentBoss = LocalAPI.getCurrentCharacterFighting() ?: ""
+        
+        // If LocalAPI fails to fetch the boss name, force it from the dungeon
+        if (currentBoss.trim().isEmpty()) {
+            currentBoss = when (currentDungeon) {
+                DungeonData.RUSTBORN_KINGDOM -> "Ophanim"
+                DungeonData.DAWN_OF_CREATION -> "True Ophan"
+                DungeonData.SERAPHS_DOMAIN -> "True Seraph"
+                DungeonData.TENEBRIS -> "Voided Omnipotent"
+                DungeonData.RAPHS_CHAMBER -> "Raphael"
+                DungeonData.DREADWOOD_THICKET -> "Sylvaris"
+                DungeonData.CELESTIALS_PROVINCE -> "Seraphim"
+                else -> "The boss"
+            }
+        }
+        
+        val currentPhase = getCurrentPhase(currentBoss, hp, currentDungeon)
+        
+        // Send phase or fallback message
+        if (currentPhase != null) {
+            player.connection.sendChat("$currentBoss is at $hp% HP - $currentPhase")
+        } else {
+            player.connection.sendChat("$currentBoss is at $hp% HP - $currentArea")
+        }
     }
-
+    
     /**
-     * Get the health percentage of the current boss from boss bars
+     * Get the health percentage of the current boss from boss bars safely
      */
     private fun getBossHealthPercentage(): Int {
-        val bossBars = BossBarUtils.getBossBarMap().values.toList()
-
+        val bossBarMap = BossBarUtils.getBossBarMap()
+        if (bossBarMap.isNullOrEmpty()) return -1
+        
+        val bossBars = bossBarMap.values.toList()
+        
         // The boss bar is typically at index 1 when there are 5 boss bars
         if (bossBars.size == 5) {
-            val bossBar = bossBars[1]
-            val progress = bossBar.progress
-            return (progress * 100).toInt()
+            val progress = bossBars.elementAtOrNull(1)?.progress ?: 0.0f
+            if (progress > 0.0f) {
+                return kotlin.math.round(progress * 100.0f).toInt()
+            }
         }
-
-        // Fallback: search through all boss bars for one with health info
+        
+        // Fallback: search through all boss bars for one with valid health info
         for (bossBar in bossBars) {
             val progress = bossBar.progress
             if (progress > 0.0f && progress <= 1.0f) {
-                return (progress * 100).toInt()
+                return kotlin.math.round(progress * 100.0f).toInt()
             }
         }
-
-        return 100 // Default to 100% if we can't determine health
+        
+        return -1
     }
-
+    
     /**
-     * Determine the current phase based on boss health percentage
+     * Determine the current phase based on boss name, health percentage, and dungeon
      */
-    private fun getCurrentPhase(healthPercentage: Int): String {
+    private fun getCurrentPhase(bossName: String, hp: Int, dungeon: DungeonData): String? {
+        val name = bossName.lowercase()
+        
+        // Use contains to bypass any hidden color codes or weird spacing LocalAPI might return
         return when {
-            healthPercentage in 86..100 -> "First Phase"
-            healthPercentage in 61..85 -> "Walls/Eyeballs"
-            healthPercentage in 41..60 -> "Clock"
-            healthPercentage in 16..40 -> "Wheel/America"
-            healthPercentage in 0..15 -> "Grid"
-            else -> "Unknown Phase"
+            name.contains("ophan") -> {
+                if (dungeon != DungeonData.RUSTBORN_KINGDOM && dungeon != DungeonData.DAWN_OF_CREATION) return null
+                when (hp) {
+                    in 86..100 -> "First Phase"
+                    in 61..85 -> "Walls/Eyeballs"
+                    in 41..60 -> "Clock"
+                    in 16..40 -> "Wheel/America"
+                    in 0..15 -> "Grid"
+                    else -> "Unknown Phase"
+                }
+            }
+            name.contains("asmodeus") -> {
+                if (dungeon != DungeonData.CELESTIALS_PROVINCE) return null
+                when (hp) {
+                    in 76..100 -> "First Phase"
+                    in 51..75 -> "Second Phase"
+                    in 21..50 -> "Third Phase"
+                    in 0..20 -> "Fourth Phase"
+                    else -> "Unknown Phase"
+                }
+            }
+            name.contains("seraph") -> {
+                if (dungeon != DungeonData.CELESTIALS_PROVINCE && dungeon != DungeonData.SERAPHS_DOMAIN) return null
+                when (hp) {
+                    in 82..100 -> "First Phase"
+                    in 80..81 -> "Chicken"
+                    in 52..79 -> "Slow Beams/Dance"
+                    in 50..51 -> "QR Code"
+                    in 21..49 -> "Fast Beams/Rain"
+                    in 0..20 -> "Desperation"
+                    else -> "Unknown Phase"
+                }
+            }
+            name.contains("omnipotent") || name.contains("voided") -> {
+                if (dungeon != DungeonData.TENEBRIS) return null
+                when (hp) {
+                    100 -> "Unchaining"
+                    in 86..99 -> "Second Phase"
+                    in 66..85 -> "Chase"
+                    in 31..65 -> "Snakes/Pillars/Black Holes"
+                    in 16..30 -> "Bells"
+                    in 0..15 -> "Desperation"
+                    else -> "Unknown Phase"
+                }
+            }
+            name.contains("raphael") -> {
+                if (dungeon != DungeonData.RAPHS_CHAMBER) return null
+                when (hp) {
+                    in 77..100 -> "First Phase"
+                    in 75..76 -> "Memorise"
+                    in 52..74 -> "Swords/Beams"
+                    in 50..51 -> "Bell"
+                    in 16..49 -> "Dash/Denmark/Tridents"
+                    in 0..15 -> "Desperation"
+                    else -> "Unknown Phase"
+                }
+            }
+            name.contains("sylvaris") -> {
+                if (dungeon != DungeonData.DREADWOOD_THICKET) return null
+                when (hp) {
+                    in 76..100 -> "First Phase"
+                    in 51..75 -> "Shulker"
+                    in 26..50 -> "Third Phase"
+                    in 0..25 -> "Arrows"
+                    else -> "Unknown Phase"
+                }
+            }
+            else -> null
         }
     }
 

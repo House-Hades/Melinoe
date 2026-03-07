@@ -28,14 +28,11 @@ sealed class TrackingKey<T> {
         
         // Bag drop counters
         data object BloodshotBags : LifetimeStat("bloodshotBags")
-        data object UnholyBags : LifetimeStat("unholy")
         data object VoidboundBags : LifetimeStat("voidbound")
+        data object UnholyBags : LifetimeStat("unholy")
         data object RoyalBags : LifetimeStat("royalBags")
         data object CompanionBags : LifetimeStat("companionBags")
         data object EventBags : LifetimeStat("eventBags")
-        
-        // Special item counters
-        data object NihilityDrops : LifetimeStat("nihility")
         
         companion object {
             /**
@@ -44,12 +41,11 @@ sealed class TrackingKey<T> {
             fun all(): List<LifetimeStat> = listOf(
                 TotalRuns,
                 BloodshotBags,
-                UnholyBags,
                 VoidboundBags,
+                UnholyBags,
                 RoyalBags,
                 CompanionBags,
-                EventBags,
-                NihilityDrops
+                EventBags
             )
         }
     }

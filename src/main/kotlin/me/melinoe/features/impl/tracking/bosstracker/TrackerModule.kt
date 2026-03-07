@@ -31,7 +31,7 @@ object TrackerModule : Module(
 ) {
 
     // Settings
-    private val widgetColor by ColorSetting("Widget Color", Color(0xFF8A0000.toInt()), desc = "Color for the widget border and title")
+    private val widgetColor by ColorSetting("Widget Color", Color(0xFF2E8F78.toInt()), desc = "Color for the widget border and title")
     
     private val showWaypoints by BooleanSetting("Show Waypoints", true, desc = "Show waypoints at boss locations")
     

@@ -28,7 +28,7 @@ object AbilityRangeModule : Module(
 ) {
 
     // Settings
-    private val rangeColor by ColorSetting("Color", Color(0x8000FF00.toInt()), desc = "Color of the range circle")
+    private val rangeColor by ColorSetting("Color", Color(0x80611784.toInt()), desc = "Color of the range circle")
     private val rangeType = registerSetting(SelectorSetting("Type", "Circle", listOf("Circle", "Arc"), desc = "Shape of the range display"))
     private val showLine by BooleanSetting("Line", false, desc = "Show line from player to range")
 
