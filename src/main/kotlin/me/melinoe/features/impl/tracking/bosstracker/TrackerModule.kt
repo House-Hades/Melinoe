@@ -19,6 +19,7 @@ import me.melinoe.utils.ChatManager.hideMessage
 import me.melinoe.utils.Color
 import me.melinoe.utils.LocalAPI
 import me.melinoe.utils.Message
+import me.melinoe.utils.ServerUtils
 import me.melinoe.utils.equalsOneOf
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import org.lwjgl.glfw.GLFW
@@ -45,8 +46,8 @@ object TrackerModule : Module(
     private val showFighting by BooleanSetting("Show Fighting", true, desc = "Show waypoints for bosses being fought (green)").withDependency { waypointStatusDropdown }
     private val showPortal by BooleanSetting("Show Portal", true, desc = "Show waypoints for defeated bosses with portal (gold)").withDependency { waypointStatusDropdown }
     
-    private val quickTeleportKey by KeybindSetting("Quick Teleport", GLFW.GLFW_KEY_Y, desc = "Teleport to player at boss when looking at waypoint")
-        .onPress { handleQuickTeleport() }
+    private val quickTeleportKey by KeybindSetting("Quick Teleport", GLFW.GLFW_KEY_Y, desc = "Teleport to the player at the boss when looking at the waypoint")
+        .onPress { handleQuickTeleport() }.withDependency { showWaypoints }
     
     // Previous world and dimension for detecting changes
     private var previousWorld: String = ""
@@ -147,9 +148,9 @@ object TrackerModule : Module(
         // Register chat event for boss messages
         on<ChatPacketEvent> {
             if (!enabled) return@on
-            if (!me.melinoe.utils.ServerUtils.isOnTelos()) return@on
+            if (!ServerUtils.isOnTelos()) return@on
             
-            val shouldHide = ChatParser.handleChatMessage(value)
+            val shouldHide = ChatParser.handleChatMessage(value) && !showHud
             if (shouldHide) {
                 this.hideMessage()
             }
@@ -158,7 +159,7 @@ object TrackerModule : Module(
         // Register GUI close event for /bosses menu scanning (manual scan)
         on<GuiEvent.Close> {
             if (!enabled) return@on
-            if (!me.melinoe.utils.ServerUtils.isOnTelos()) return@on
+            if (!ServerUtils.isOnTelos()) return@on
             if (screen !is AbstractContainerScreen<*>) return@on
             
             BossState.scanBossesMenu(screen)
@@ -173,7 +174,7 @@ object TrackerModule : Module(
         // Register world render event for waypoint rendering
         on<RenderEvent.Last> {
             if (!enabled) return@on
-            if (!me.melinoe.utils.ServerUtils.isOnTelos()) return@on
+            if (!ServerUtils.isOnTelos()) return@on
             if (!shouldShowTracker()) return@on
             
             // Update renderer settings
@@ -204,7 +205,7 @@ object TrackerModule : Module(
      */
     private fun handleQuickTeleport() {
         if (!enabled) return
-        if (!me.melinoe.utils.ServerUtils.isOnTelos()) return
+        if (!ServerUtils.isOnTelos()) return
         
         val player = mc.player ?: return
         val playerName = player.gameProfile.name

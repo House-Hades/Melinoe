@@ -4,16 +4,12 @@ import me.melinoe.Melinoe
 import me.melinoe.clickgui.settings.Setting.Companion.withDependency
 import me.melinoe.clickgui.settings.impl.*
 import me.melinoe.events.RenderEvent
-import me.melinoe.events.WorldLoadEvent
 import me.melinoe.events.core.on
 import me.melinoe.features.Category
 import me.melinoe.features.Module
 import me.melinoe.utils.Color
-import me.melinoe.utils.createSoundSettings
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext
 import net.minecraft.client.gui.GuiGraphics
-import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.Style
 
 /**
  * Unified Health Bar Module - Combines 3D world-space and HUD projection rendering.
@@ -25,7 +21,6 @@ object HealthBarModule : Module(
 ) {
     // Components
     private val healthState = HealthState()
-    private val warnings = Warnings(mc)
     private val renderer3D = Renderer3D(mc)
     private val rendererHUD = RendererHUD(mc)
     
@@ -154,152 +149,28 @@ object HealthBarModule : Module(
         desc = "Display health bar in first person view (HUD mode only)"
     ).withDependency { renderMode == 1 }
     
-    // Health Warnings
-    private val healthWarningsDropdown by DropdownSetting("Health Warnings", false)
+    // Bar Color Threshold Settings
+    private val colorThresholdsDropdown by DropdownSetting("Bar Color Thresholds", false)
     
-    // Low Health Warning
-    private val enableLowHealth by BooleanSetting(
-        "Enable Low HP Warning",
-        true,
-        desc = "Enable low health warning"
-    ).withDependency { healthWarningsDropdown }
-    
-    private val lowHealthThreshold by NumberSetting(
-        "Low HP Threshold %",
-        35.0,
-        0.0,
-        100.0,
-        1.0,
-        desc = "Health percentage to trigger low HP warning"
-    ).withDependency { healthWarningsDropdown && enableLowHealth }
-    
-    private val lowHealthHud by HUDSetting(
-        name = "Low HP Title",
-        x = 400,
-        y = 250,
-        scale = 2f,
-        toggleable = true,
-        description = "Enable and position the low health title",
-        module = this
-    ) { example ->
-        val currentTime = System.currentTimeMillis()
-        if (currentTime > warnings.lowHealthTitleEndTime && !example) return@HUDSetting 0 to 0
-        
-        val baseColor = 0xFFFF0000.toInt()
-        val displayColor = if (titleFlashing) {
-            warnings.getFlashingColor(baseColor, warnings.lowHealthTitleEndTime, currentTime, lowHealthSoundRepeat.toInt())
-        } else {
-            baseColor
-        }
-        
-        val component = Component.literal(lowHealthText).withStyle(Style.EMPTY.withColor(displayColor))
-        
-        val textRenderer = mc.font
-        val textWidth = textRenderer.width(component)
-        val textHeight = textRenderer.lineHeight
-        drawString(textRenderer, component, 0, 0, displayColor, true)
-        textWidth to textHeight
-    }.withDependency { healthWarningsDropdown && enableLowHealth }
-    
-    // Medium Health Warning
-    private val enableMediumHealth by BooleanSetting(
-        "Enable Mid HP Warning",
-        true,
-        desc = "Enable medium health warning"
-    ).withDependency { healthWarningsDropdown }
-    
-    private val mediumHealthThreshold by NumberSetting(
-        "Mid HP Threshold %",
+    private val midColorThreshold by NumberSetting(
+        "Mid HP Color %",
         50.0,
         0.0,
         100.0,
         1.0,
-        desc = "Health percentage to trigger mid HP warning"
-    ).withDependency { healthWarningsDropdown && enableMediumHealth }
+        desc = "Health percentage to turn the bar yellow"
+    ).withDependency { colorThresholdsDropdown }
     
-    private val mediumHealthHud by HUDSetting(
-        name = "Mid HP Title",
-        x = 400,
-        y = 280,
-        scale = 2f,
-        toggleable = true,
-        description = "Enable and position the medium health title",
-        module = this
-    ) { example ->
-        val currentTime = System.currentTimeMillis()
-        val lowHealthActive = currentTime <= warnings.lowHealthTitleEndTime
-        if ((currentTime > warnings.mediumHealthTitleEndTime || lowHealthActive) && !example) return@HUDSetting 0 to 0
-        
-        val baseColor = 0xFFFFAA00.toInt()
-        val displayColor = if (titleFlashing) {
-            warnings.getFlashingColor(baseColor, warnings.mediumHealthTitleEndTime, currentTime, mediumHealthSoundRepeat.toInt())
-        } else {
-            baseColor
-        }
-        
-        val component = Component.literal(mediumHealthText).withStyle(Style.EMPTY.withColor(displayColor))
-        
-        val textRenderer = mc.font
-        val textWidth = textRenderer.width(component)
-        val textHeight = textRenderer.lineHeight
-        drawString(textRenderer, component, 0, 0, displayColor, true)
-        textWidth to textHeight
-    }.withDependency { healthWarningsDropdown && enableMediumHealth }
+    private val lowColorThreshold by NumberSetting(
+        "Low HP Color %",
+        35.0,
+        0.0,
+        100.0,
+        1.0,
+        desc = "Health percentage to turn the bar red"
+    ).withDependency { colorThresholdsDropdown }
     
-    // Title Settings
-    private val titleSettingsDropdown by DropdownSetting("Title Settings", false).withDependency { healthWarningsDropdown }
-    private val lowHealthText by StringSetting(
-        "Low HP Text",
-        "LOW HEALTH!",
-        desc = "Text to display for low health"
-    ).withDependency { titleSettingsDropdown }
-    private val mediumHealthText by StringSetting(
-        "Mid HP Text",
-        "MEDIUM HEALTH",
-        desc = "Text to display for medium health"
-    ).withDependency { titleSettingsDropdown }
-    private val titleFlashing by BooleanSetting(
-        "Text Flashing",
-        true,
-        desc = "Flash the warning text"
-    ).withDependency { titleSettingsDropdown }
-    
-    // Sound Settings
-    private val soundSettingsDropdown by DropdownSetting("Sound Settings", false).withDependency { healthWarningsDropdown }
-    private val lowHealthSoundSettings = createSoundSettings(
-        "Low HP Sound",
-        "entity.experience_orb.pickup",
-        { soundSettingsDropdown },
-        buttonName = "Play Low HP Sound"
-    )
-    private val lowHealthSoundRepeat by NumberSetting(
-        "Low HP Sound Repeat",
-        5.0,
-        1.0,
-        20.0,
-        1.0,
-        desc = "Number of times to repeat low HP sound"
-    ).withDependency { soundSettingsDropdown }
-    private val mediumHealthSoundSettings = createSoundSettings(
-        "Mid HP Sound",
-        "block.note_block.pling",
-        { soundSettingsDropdown },
-        buttonName = "Play Mid HP Sound"
-    )
-    private val mediumHealthSoundRepeat by NumberSetting(
-        "Mid HP Sound Repeat",
-        5.0,
-        1.0,
-        20.0,
-        1.0,
-        desc = "Number of times to repeat mid HP sound"
-    ).withDependency { soundSettingsDropdown }
-
     init {
-        on<WorldLoadEvent> {
-            warnings.handleWorldChange()
-        }
-        
         on<RenderEvent.Last> {
             if (!enabled) return@on
             
@@ -320,29 +191,11 @@ object HealthBarModule : Module(
             
             val healthPercentage = healthState.displayedHealth / maxHealth
             
-            // Check health warnings
-            val updatedHealthPercent = warnings.checkHealthWarnings(
-                healthPercentage,
-                healthState.lastHealthPercentage,
-                maxHealth,
-                lowHealthThreshold,
-                mediumHealthThreshold,
-                enableLowHealth,
-                enableMediumHealth,
-                lowHealthHud.enabled,
-                mediumHealthHud.enabled,
-                lowHealthSoundSettings,
-                mediumHealthSoundSettings,
-                lowHealthSoundRepeat.toInt(),
-                mediumHealthSoundRepeat.toInt()
-            )
-            healthState.lastHealthPercentage = updatedHealthPercent
-            
-            // Get health bar color
+            // Get health bar color using own localized parameters
             val healthBarColor = healthState.getHealthBarColor(
                 healthPercentage,
-                lowHealthThreshold,
-                mediumHealthThreshold,
+                lowColorThreshold,
+                midColorThreshold,
                 damageFlash
             )
             
@@ -428,10 +281,11 @@ object HealthBarModule : Module(
         if (isFirstPerson && !showInFirstPerson) return
         
         val healthPercentage = healthState.displayedHealth / player.maxHealth
+        
         val healthBarColor = healthState.getHealthBarColor(
             healthPercentage,
-            lowHealthThreshold,
-            mediumHealthThreshold,
+            lowColorThreshold,
+            midColorThreshold,
             damageFlash
         )
         val healthText = formatHealthText(player, healthPercentage)
@@ -483,7 +337,6 @@ object HealthBarModule : Module(
     override fun onDisable() {
         super.onDisable()
         healthState.reset()
-        warnings.reset()
         rendererHUD.clearCache()
         Melinoe.logger.info("Health Bar disabled")
     }

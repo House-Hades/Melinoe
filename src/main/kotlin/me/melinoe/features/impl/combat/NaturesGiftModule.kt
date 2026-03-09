@@ -1,55 +1,55 @@
 package me.melinoe.features.impl.combat
 
 import me.melinoe.Melinoe
+import me.melinoe.clickgui.settings.Setting.Companion.withDependency
 import me.melinoe.features.Category
 import me.melinoe.features.Module
 import me.melinoe.clickgui.settings.impl.BooleanSetting
+import me.melinoe.clickgui.settings.impl.ColorSetting
 import me.melinoe.clickgui.settings.impl.HUDSetting
+import me.melinoe.clickgui.settings.impl.NumberSetting
+import me.melinoe.clickgui.settings.impl.StringSetting
 import me.melinoe.events.DungeonChangeEvent
 import me.melinoe.events.DungeonEntryEvent
 import me.melinoe.events.DungeonExitEvent
 import me.melinoe.events.TickEvent
 import me.melinoe.events.WorldLoadEvent
 import me.melinoe.events.core.on
+import me.melinoe.utils.Color
 import me.melinoe.utils.ItemUtils
-import me.melinoe.utils.Message
 import me.melinoe.utils.createSoundSettings
 import me.melinoe.utils.equalsOneOf
 import me.melinoe.utils.playSoundSettings
 import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.Style
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.ItemStack
 
 /**
- * Nature's Gift Module - plays a sound notification when player health drops below a threshold.
+ * Nature's Gift Module - plays a sound and displays a title when player health drops below a threshold.
  * Requires UT or EX Nature's Gift boots equipped to function.
  * Automatically detects item type and adjusts health threshold and cooldown accordingly.
  */
 object NaturesGiftModule : Module(
     name = "Nature's Gift",
     category = Category.COMBAT,
-    description = "Plays a sound when health drops below threshold (requires Nature's Gift boots)"
+    description = "Plays a sound and displays a title when health drops below threshold (requires Nature's Gift boots)"
 ) {
     
     // Settings
     private val playSound by BooleanSetting("Play Sound", true, desc = "Enable sound notification")
-    private val soundSettings = createSoundSettings(
-        name = "Sound",
-        default = "minecraft:item.totem.use",
-        dependencies = { playSound }
-    )
-    private val showInfoMessage by BooleanSetting("Show Info Message", true, desc = "Display chat message when Nature's Gift procs")
-    private val compactMode by BooleanSetting("Compact Mode", false, desc = "Show only icon and timer/checkmark")
+    private val soundSettings = createSoundSettings(name = "Sound", default = "minecraft:item.totem.use", dependencies = { playSound })
     
-    // HUD element for displaying the status
+    // HUD element for displaying the persistent status
     private val statusHud by HUDSetting(
         name = "Status Display",
         x = 10,
         y = 10,
         scale = 1f,
-        toggleable = false,
+        toggleable = true,
+        default = true,
         description = "Position of the Nature's Gift status display.",
         module = this
     ) { example ->
@@ -103,11 +103,49 @@ object NaturesGiftModule : Module(
         (iconSize + iconPadding + textWidth) to iconSize
     }
     
+    // Compact mode for the status HUD
+    private val compactMode: Boolean by BooleanSetting("Compact Mode", false, desc = "Show only icon and timer/checkmark").withDependency { statusHud.enabled }
+    
+    // HUD element for displaying the pop-up title
+    private val titleHud by HUDSetting(
+        name = "Title Display",
+        x = 400,
+        y = 200,
+        scale = 2f,
+        toggleable = true,
+        default = true,
+        description = "Position of the Nature's Gift activation title popup. Toggle to show/hide.",
+        module = this
+    ) { example ->
+        if (customTitle == null && !example) return@HUDSetting 0 to 0
+        
+        val title = if (example) {
+            buildStyledTitleText(titleText, titleColor.rgba)
+        } else {
+            customTitle!!
+        }
+        val textRenderer = mc.font
+        val textWidth = textRenderer.width(title)
+        val textHeight = textRenderer.lineHeight
+        
+        drawString(textRenderer, title, 0, 0, titleColor.rgba, true)
+        
+        textWidth to textHeight
+    }
+    
+    // Title Settings
+    val titleText: String by StringSetting("Title Text", "Nature's Gift Popped!", desc = "Text to display in title popup").withDependency { titleHud.enabled }
+    val duration: Float by NumberSetting("Duration", 60.0f, 10.0f, 100.0f, desc = "Duration of title display in ticks").withDependency { titleHud.enabled }
+    val titleColor: Color by ColorSetting("Title Color", Color(0xFF55FF55.toInt()), desc = "Color of the title text").withDependency { titleHud.enabled }
+    
     // State tracking
     private var wasHealthBelowThreshold = false
     private var hadRegen = false
     private var isOnCooldown = false
     private var cooldownEndTime = 0L
+    
+    private var customTitle: Component? = null
+    private var titleDisplayTicks = 0
     
     // Cached item data
     private var cachedHealthThreshold = 30.0f
@@ -151,13 +189,23 @@ object NaturesGiftModule : Module(
                 startCooldown()
                 // Play sound when ability is activated
                 playNotificationSound()
-                // Show info message
-                showProcMessage()
+                
+                // Show title
+                customTitle = buildStyledTitleText(titleText, titleColor.rgba)
+                titleDisplayTicks = duration.toInt()
             }
             
             // Update previous state trackers
             wasHealthBelowThreshold = isHealthBelowThreshold
             hadRegen = hasRegen5
+            
+            // Update title ticks
+            if (titleDisplayTicks > 0) {
+                titleDisplayTicks--
+                if (titleDisplayTicks <= 0) {
+                    customTitle = null
+                }
+            }
             
             // Update cooldown progress
             if (isOnCooldown) {
@@ -170,24 +218,12 @@ object NaturesGiftModule : Module(
         }
         
         // Register dungeon event handlers for automatic cooldown resets
-        // Nature's Gift doesn't have a trackable cooldown like other items,
-        // so we reset on dungeon transitions to ensure accuracy
-        on<DungeonEntryEvent> {
-            resetCooldown()
-        }
-        
-        on<DungeonExitEvent> {
-            resetCooldown()
-        }
-        
-        on<DungeonChangeEvent> {
-            resetCooldown()
-        }
+        on<DungeonEntryEvent> { resetCooldown() }
+        on<DungeonExitEvent> { resetCooldown() }
+        on<DungeonChangeEvent> { resetCooldown() }
         
         // Register world load event for cooldown reset
-        on<WorldLoadEvent> {
-            resetCooldown()
-        }
+        on<WorldLoadEvent> { resetCooldown() }
     }
     
     /**
@@ -238,27 +274,6 @@ object NaturesGiftModule : Module(
     }
     
     /**
-     * Show proc message in chat
-     */
-    private fun showProcMessage() {
-        if (!showInfoMessage) return
-        
-        try {
-            // Create a styled message using Message utility
-            val message = Component.literal("Nature's Gift ")
-                .withStyle(net.minecraft.ChatFormatting.GREEN)
-                .append(Component.literal("activated! ")
-                    .withStyle(net.minecraft.ChatFormatting.GRAY))
-                .append(Component.literal("(+9 HP over 1.5s)")
-                    .withStyle(net.minecraft.ChatFormatting.YELLOW))
-            
-            Message.chat(message)
-        } catch (e: Exception) {
-            // Silently fail
-        }
-    }
-    
-    /**
      * Play the notification sound.
      */
     private fun playNotificationSound() {
@@ -271,10 +286,17 @@ object NaturesGiftModule : Module(
         }
     }
     
+    private fun buildStyledTitleText(text: String, textColor: Int): Component {
+        if (text.isEmpty()) {
+            return Component.literal("")
+        }
+        return Component.literal(text).withStyle(Style.EMPTY.withColor(textColor))
+    }
+    
     /**
      * Reset the cooldown
      */
-    private fun resetCooldown() {
+    fun resetCooldown() {
         isOnCooldown = false
         cooldownEndTime = 0
         wasHealthBelowThreshold = false
@@ -299,5 +321,7 @@ object NaturesGiftModule : Module(
         isOnCooldown = false
         wasHealthBelowThreshold = false
         hadRegen = false
+        customTitle = null
+        titleDisplayTicks = 0
     }
 }

@@ -199,6 +199,19 @@ object PityCounterModule : Module(
         
         // Shadowlands bosses section
         if (LocalAPI.getCurrentCharacterArea() == "Shadowlands") {
+            // Check if in the arenas
+            if (pz < -360) {
+                currentBossData = BossData.HERALD
+                return currentBossData!!.items.toList()
+            } else if (pz > 500) {
+                currentBossData = BossData.REAPER
+                return currentBossData!!.items.toList()
+            } else if (px < -400) {
+                currentBossData = BossData.WARDEN
+                return currentBossData!!.items.toList()
+            }
+            
+            // Otherwise get closest
             var minDistance = Double.MAX_VALUE
             
             for (boss in shadowlandsBosses) {
@@ -279,8 +292,10 @@ object PityCounterModule : Module(
         val items : List<Item> = if (example) {
             // Show Eddie's drops as an example
             listOf(Item.BLUNDERBOW, Item.LOST_TREASURE_SCRIPTURE, Item.SLIME_ARCHER, Item.GOLDEN_STALLION)
-        } else if (LocalAPI.getCurrentCharacterArea().equals("Rustborn Kingdom")) {
+        } else if (LocalAPI.getCurrentCharacterArea() == "Rustborn Kingdom") {
             (BossData.VALERION.items + BossData.NEBULA.items + BossData.OPHANIM.items).toList()
+        } else if (LocalAPI.getCurrentCharacterArea() == "Celestial's Province") {
+            (BossData.ASMODEUS.items + BossData.SERAPHIM.items).toList()
         } else {
             getItemsToDisplay()
         }
@@ -316,8 +331,10 @@ object PityCounterModule : Module(
             "Pity"
         } else if (example) {
             "Eddie"
-        } else if (LocalAPI.getCurrentCharacterArea().equals("Rustborn Kingdom")){
+        } else if (LocalAPI.getCurrentCharacterArea() == "Rustborn Kingdom") {
             "Rustborn Kingdom"
+        } else if (LocalAPI.getCurrentCharacterArea() == "Celestial's Province") {
+            "Celestial's Province"
         } else {
             currentBossData?.label ?: "Pity Counters"
         }

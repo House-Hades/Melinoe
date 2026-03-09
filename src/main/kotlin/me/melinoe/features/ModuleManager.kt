@@ -161,6 +161,7 @@ object ModuleManager {
             me.melinoe.features.impl.visual.PerformanceHUDModule,
             me.melinoe.features.impl.visual.dungeontimer.TimerModule,
             me.melinoe.features.impl.visual.healthbar.HealthBarModule,
+            me.melinoe.features.impl.visual.HealthIndicatorModule,
             me.melinoe.features.impl.visual.PlayerSizeModule,
             me.melinoe.features.impl.visual.CameraModule,
             me.melinoe.features.impl.visual.HitboxModule,

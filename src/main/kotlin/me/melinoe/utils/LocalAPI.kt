@@ -2,8 +2,10 @@ package me.melinoe.utils
 
 import me.melinoe.Melinoe
 import me.melinoe.events.*
+import me.melinoe.events.core.EventBus
 import me.melinoe.events.core.on
 import me.melinoe.events.core.onReceive
+import me.melinoe.features.impl.combat.NaturesGiftModule
 import me.melinoe.utils.data.DungeonData
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 import kotlin.math.max
@@ -254,6 +256,27 @@ object LocalAPI {
         
         // All updated as of 21th January 2026
         currentCharacterFighting = when (currentBossHash) {
+            // Lowlands
+            -167372549 -> "Eddie"
+            -1381648356 -> "Zhum"
+            -1659173216 -> "Drayruk"
+            -973820290 -> "Miraj"
+            230865898 -> "Khufu"
+            -167370627 -> "Choji"
+            291455870 -> "Flora"
+            
+            // Centre
+            -1019671711 -> "Malfas"
+            -1659169372 -> "Heptavius"
+            -1659167450 -> "Arctic Colossus"
+            -1659168411 -> "Frostgaze"
+            -1659166489 -> "Magnus"
+            -1253198526 -> "Pyro"
+            -1621485232 -> "Thalor"
+            -167373510 -> "Ashenclaw"
+            832610318 -> "Corvack"
+            
+            // Realm Bosses
             -168181711 -> "Chungus"
             1368623635 -> "Illarius"
             -1253632898 -> "Astaroth"
@@ -266,33 +289,38 @@ object LocalAPI {
             -342545608 -> "Anubis"
             -1240191621 -> "Hollowbane"
             -1048713371 -> "Claus"
-            1824190226 -> "Shadowflare"
+            
+            // High
+            -1254007688 -> "Omnipotent"
+            -708336010 -> "Prismara"
+            -1621744702 -> "Thalassar"
+            -422985676 -> "Golden Freddy"
+            290925398 -> "Chronos"
+            -342534076 -> "Kurvaros"
+            1420701227 -> "Malthar"
+            -1643392642 -> "Silex"
             -1382454635 -> "Loa"
+            -828991878 -> "Aetheris"
+            1824190226 -> "Solarflare"
+            2131893865 -> "Orion & Osiris"
+            254038329 -> "Raphael"
+            -1253581965 -> "Voided Omnipotent"
             -132746136 -> "Valerion"
+            -707883379 -> "Mithrion"
             -829226362 -> "Nebula"
             -132585649 -> "Ophanim"
-            -708336010 -> "Prismara"
-            -1254007688 -> "Omnipotent"
-            -1621744702 -> "Thalassar"
-            -1643392642 -> "Silex"
-            290925398 -> "Chronos"
-            -422985676 -> "Golden Freddy"
-            -342534076 -> "Kurvaros"
+            -132915272 -> "True Ophan"
+            
+            // Shadowlands
             -1370656917 -> "Warden"
             -1370655956 -> "Herald"
             -1370654995 -> "Reaper"
+            230903377 -> "Sylvaris"
+            1301379752 -> "Unrest"
             -1370654034 -> "Defender"
             -1622067598 -> "Asmodeus"
             -1643406096 -> "Seraphim"
             -1643245609 -> "True Seraph"
-            -132915272 -> "True Ophan"
-            2131893865 -> "Raphael's Castle"
-            254038329 -> "Raphael"
-            230903377 -> "Sylvaris"
-            -1253581965 -> "Voided Omnipotent"
-            1301379752 -> "Unrest"
-            -828991878 -> "Aetheris"
-            1420701227 -> "Malthar"
             else -> ""
         }
         
@@ -349,17 +377,17 @@ object LocalAPI {
         // Dungeon entry
         if (currentDungeon != null && previousDungeon == null) {
             Melinoe.logger.info("LocalAPI: Firing DungeonEntryEvent for ${currentDungeon.areaName}")
-            me.melinoe.events.core.EventBus.post(DungeonEntryEvent(currentDungeon))
+            EventBus.post(DungeonEntryEvent(currentDungeon))
         }
         // Dungeon exit
         else if (currentDungeon == null && previousDungeon != null) {
             Melinoe.logger.info("LocalAPI: Firing DungeonExitEvent for ${previousDungeon.areaName}")
-            me.melinoe.events.core.EventBus.post(DungeonExitEvent(previousDungeon))
+            EventBus.post(DungeonExitEvent(previousDungeon))
         }
         // Dungeon change (chains)
         else if (currentDungeon != null && previousDungeon != null && currentDungeon != previousDungeon) {
             Melinoe.logger.info("LocalAPI: Firing DungeonChangeEvent from ${previousDungeon.areaName} to ${currentDungeon.areaName}")
-            me.melinoe.events.core.EventBus.post(DungeonChangeEvent(previousDungeon, currentDungeon))
+            EventBus.post(DungeonChangeEvent(previousDungeon, currentDungeon))
         }
     }
 
@@ -380,13 +408,14 @@ object LocalAPI {
         if (currentDungeon != null) {
             // Skip Rustborn Kingdom - it's a split dungeon, not a chain
             if (currentDungeon == DungeonData.RUSTBORN_KINGDOM) {
+                NaturesGiftModule.resetCooldown()
                 Melinoe.logger.info("LocalAPI: Dimension changed in Rustborn Kingdom (split dungeon), skipping chain event")
                 return
             }
             
             Melinoe.logger.info("LocalAPI: Dimension changed from '$previousDimension' to '$newDimension' in ${currentDungeon.areaName} - firing DungeonChangeEvent (chain)")
             // Fire a chain event - same dungeon to same dungeon (represents continuing the chain)
-            me.melinoe.events.core.EventBus.post(DungeonChangeEvent(currentDungeon, currentDungeon))
+            EventBus.post(DungeonChangeEvent(currentDungeon, currentDungeon))
         }
     }
     

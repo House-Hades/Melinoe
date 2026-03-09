@@ -8,6 +8,7 @@ import dev.firstdark.rpc.handlers.RPCEventHandler
 import dev.firstdark.rpc.models.DiscordRichPresence
 import dev.firstdark.rpc.models.User
 import me.melinoe.Melinoe
+import me.melinoe.clickgui.settings.Setting.Companion.withDependency
 import me.melinoe.clickgui.settings.impl.BooleanSetting
 import me.melinoe.clickgui.settings.impl.StringSetting
 import me.melinoe.features.Category
@@ -32,7 +33,7 @@ object DiscordRPCModule : Module(
     private val showLocation by BooleanSetting("Show Location", true, desc = "Displays your current world")
     private val showDungeon by BooleanSetting("Show Dungeon", true, desc = "Displays your current area or dungeon")
     private val showCustom by BooleanSetting("Show Custom", false, desc = "Displays custom text")
-    private val customText by StringSetting("Custom Text", "Vibing...", desc = "The custom text to display")
+    private val customText by StringSetting("Custom Text", "Vibing...", desc = "The custom text to display").withDependency { showCustom }
 
     private const val APPLICATION_ID = "1469756563811209338"
     private var scheduler: ScheduledExecutorService? = null

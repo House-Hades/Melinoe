@@ -8,6 +8,7 @@ import me.melinoe.clickgui.settings.impl.HUDSetting
 import me.melinoe.events.core.onReceive
 import me.melinoe.utils.Color
 import me.melinoe.utils.LocalAPI
+import me.melinoe.utils.ServerUtils
 import me.melinoe.utils.render.textDim
 import net.minecraft.network.protocol.game.ClientboundLevelParticlesPacket
 import net.minecraft.core.particles.ParticleTypes
@@ -26,7 +27,7 @@ object AssassinStacksModule : Module(
     // Settings
     private val nameColor by ColorSetting("Name Color", Color(0xFF7CFFB2.toInt()), desc = "Color for the name text")
     private val valueColor by ColorSetting("Value Color", Color(0xFFFFFFFF.toInt()), desc = "Color for the value text")
-    private val madScientist by BooleanSetting("Mad Scientist", false, desc = "Show Mad Scientist stacks")
+//    private val madScientist by BooleanSetting("Mad Scientist", false, desc = "Show Mad Scientist stacks")
     
     private val assassinStacksHud by HUDSetting(
         name = "Stacks Display",
@@ -34,6 +35,7 @@ object AssassinStacksModule : Module(
         y = 100,
         scale = 1f,
         toggleable = true,
+        default = true,
         description = "Position of the assassin stacks display",
         module = this
     ) render@{ example ->
@@ -78,7 +80,7 @@ object AssassinStacksModule : Module(
             val angleDiff = kotlin.math.abs(angle - other.angle)
             val normalizedAngleDiff = if (angleDiff > 180) 360 - angleDiff else angleDiff
             
-            return normalizedAngleDiff < angleTolerance && 
+            return normalizedAngleDiff < angleTolerance &&
                    kotlin.math.abs(distance - other.distance) < 0.5
         }
     }
@@ -87,9 +89,9 @@ object AssassinStacksModule : Module(
         // Listen for particle packets
         onReceive<ClientboundLevelParticlesPacket> {
             if (!enabled) return@onReceive
-            if (!me.melinoe.utils.ServerUtils.isOnTelos()) return@onReceive
+            if (!ServerUtils.isOnTelos()) return@onReceive
             
-            val char = LocalAPI.getCurrentCharacterType()
+            val char = LocalAPI.getCurrentCharacterClass()
             if (!char.contains("Assassin")) return@onReceive
             
             // Check if it's an electric_spark or dust particle
@@ -109,93 +111,101 @@ object AssassinStacksModule : Module(
             val compensatedY = player.y - (velocity.y * tickCompensation)
             val compensatedZ = player.z - (velocity.z * tickCompensation)
             
-            // Calculate relative position from compensated player position
-            val dx = x - compensatedX
-            val dy = y - compensatedY
-            val dz = z - compensatedZ
-            val distance = sqrt(dx * dx + dy * dy + dz * dz)
+            val stacks = IntArray(4)
             
-            // Check if particle is within detection radius (very close to player)
-            if (distance <= detectionRadius) {
-                val currentTime = System.currentTimeMillis()
+            for (i in 0..3) {
+                // Calculate relative position from compensated player position
+                val dx = x - compensatedX
+                val dy = y - compensatedY + (0.6 * i)
+                val dz = z - compensatedZ
+                val distance = sqrt(dx * dx + dy * dy + dz * dz)
                 
-                // Calculate angle around player (in degrees, 0-360)
-                val angle = kotlin.math.atan2(dz, dx) * 180.0 / kotlin.math.PI
-                val normalizedAngle = if (angle < 0) angle + 360 else angle
-                
-                val newPosition = RelativeParticlePosition(normalizedAngle, distance, currentTime)
-                
-                // Clean up old positions aggressively
-                electricSparkPositions.removeIf { currentTime - it.timestamp > positionLifetime }
-                dustPositions.removeIf { currentTime - it.timestamp > positionLifetime }
-                
-                // Reset stacks if too much time has passed since last particle
-                if (currentTime - lastParticleTime > particleTimeout) {
-                    currentStacks = 0
-                    electricSparkPositions.clear()
-                    dustPositions.clear()
-                }
-                
-                // Add to the appropriate set
-                if (isElectricSpark) {
-                    val isNewPosition = electricSparkPositions.none { it.isSimilarTo(newPosition) }
-                    if (isNewPosition) {
-                        electricSparkPositions.add(newPosition)
-                        lastParticleTime = currentTime
-                    }
-                } else if (isDust) {
-                    val isNewPosition = dustPositions.none { it.isSimilarTo(newPosition) }
-                    if (isNewPosition) {
-                        dustPositions.add(newPosition)
-                        lastParticleTime = currentTime
-                    }
-                }
-                
-                // Count stacks: only count angles where BOTH electric_spark AND dust exist
-                var stackCount = 0
-                val matchedAngles = mutableListOf<Double>()
-                
-                for (sparkPos in electricSparkPositions) {
-                    if (dustPositions.any { it.isSimilarTo(sparkPos) }) {
-                        matchedAngles.add(sparkPos.angle)
-                        stackCount++
-                    }
-                }
-                
-                // Verify consistent spacing if we have multiple stacks
-                // Assassin stacks spawn clockwise with ~22.5° spacing (360° / 16 max stacks)
-                if (stackCount >= 2) {
-                    // Sort angles to check spacing
-                    val sortedAngles = matchedAngles.sorted()
+                // Check if particle is within detection radius (very close to player)
+                if (distance <= detectionRadius) {
+                    val currentTime = System.currentTimeMillis()
                     
-                    // Expected spacing is always ~22.5° (for max 16 stacks)
-                    val expectedSpacing = 22.5
-                    val spacingTolerance = 8.0 // Allow some variance
+                    // Calculate angle around player (in degrees, 0-360)
+                    val angle = kotlin.math.atan2(dz, dx) * 180.0 / kotlin.math.PI
+                    val normalizedAngle = if (angle < 0) angle + 360 else angle
                     
-                    // Check if consecutive angles have consistent spacing
-                    var hasConsistentSpacing = true
-                    for (i in 0 until sortedAngles.size - 1) {
-                        val spacing = sortedAngles[i + 1] - sortedAngles[i]
-                        
-                        // Check if spacing is close to expected ~22.5°
-                        if (kotlin.math.abs(spacing - expectedSpacing) > spacingTolerance) {
-                            hasConsistentSpacing = false
-                            break
+                    val newPosition = RelativeParticlePosition(normalizedAngle, distance, currentTime)
+                    
+                    // Clean up old positions aggressively
+                    electricSparkPositions.removeIf { currentTime - it.timestamp > positionLifetime }
+                    dustPositions.removeIf { currentTime - it.timestamp > positionLifetime }
+                    
+                    // Reset stacks if too much time has passed since last particle
+                    if (currentTime - lastParticleTime > particleTimeout) {
+                        stacks[i] = 0
+                        electricSparkPositions.clear()
+                        dustPositions.clear()
+                    }
+                    
+                    // Add to the appropriate set
+                    if (isElectricSpark) {
+                        val isNewPosition = electricSparkPositions.none { it.isSimilarTo(newPosition) }
+                        if (isNewPosition) {
+                            electricSparkPositions.add(newPosition)
+                            lastParticleTime = currentTime
+                        }
+                    } else if (isDust) {
+                        val isNewPosition = dustPositions.none { it.isSimilarTo(newPosition) }
+                        if (isNewPosition) {
+                            dustPositions.add(newPosition)
+                            lastParticleTime = currentTime
                         }
                     }
                     
-                    // Update stack count if spacing is consistent
-                    if (hasConsistentSpacing) {
-                        currentStacks = stackCount.coerceAtMost(16)
+                    // Count stacks: only count angles where BOTH electric_spark AND dust exist
+                    var stackCount = 0
+                    val matchedAngles = mutableListOf<Double>()
+                    
+                    for (sparkPos in electricSparkPositions) {
+                        if (dustPositions.any { it.isSimilarTo(sparkPos) }) {
+                            matchedAngles.add(sparkPos.angle)
+                            stackCount++
+                        }
                     }
-                    // If spacing is inconsistent, keep the previous count (don't reset to 0)
-                    // This makes the display "sticky" when moving fast
-                } else if (stackCount == 1) {
-                    // For 1 stack, we can't verify spacing, so accept it
-                    currentStacks = stackCount
+                    
+                    // Verify consistent spacing if we have multiple stacks
+                    // Assassin stacks spawn clockwise with ~22.5° spacing (360° / 16 max stacks)
+                    if (stackCount >= 2) {
+                        // Sort angles to check spacing
+                        val sortedAngles = matchedAngles.sorted()
+                        
+                        // Expected spacing is always ~22.5° (for max 16 stacks)
+                        val expectedSpacing = 22.5
+                        val spacingTolerance = 8.0 // Allow some variance
+                        
+                        // Check if consecutive angles have consistent spacing
+                        var hasConsistentSpacing = true
+                        for (i in 0 until sortedAngles.size - 1) {
+                            val spacing = sortedAngles[i + 1] - sortedAngles[i]
+                            
+                            // Check if spacing is close to expected ~22.5°
+                            if (kotlin.math.abs(spacing - expectedSpacing) > spacingTolerance) {
+                                hasConsistentSpacing = false
+                                break
+                            }
+                        }
+                        
+                        // Update stack count if spacing is consistent
+                        if (hasConsistentSpacing) {
+                            stacks[i] = stackCount
+//                            currentStacks = stackCount.coerceAtMost(16)
+                        }
+                        // If spacing is inconsistent, keep the previous count (don't reset to 0)
+                        // This makes the display "sticky" when moving fast
+                    } else if (stackCount == 1) {
+                        // For 1 stack, we can't verify spacing, so accept it
+                        stacks[i] = stackCount
+//                        currentStacks = stackCount
+                    }
+                    // If stackCount is 0, currentStacks will naturally decay via the timeout check
                 }
-                // If stackCount is 0, currentStacks will naturally decay via the timeout check
             }
+            
+            currentStacks = stacks.sum()
         }
     }
 
