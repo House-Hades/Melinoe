@@ -13,6 +13,7 @@ import me.melinoe.utils.data.persistence.TrackingKey
 import me.melinoe.utils.data.persistence.TypeSafeDataAccess
 import me.melinoe.utils.noControlCodes
 import me.melinoe.utils.toNative
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.minecraft.client.GuiMessageTag
 import net.minecraft.network.chat.Component
 import net.minecraft.world.entity.item.ItemEntity
@@ -48,7 +49,7 @@ object BagTracker {
     
     init {
         // Register tick handler for item scanning
-        net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register { client ->
+        ClientTickEvents.END_CLIENT_TICK.register { client ->
             if (client.player != null && client.level != null) {
                 onTick()
             }
@@ -213,7 +214,7 @@ object BagTracker {
         val box = player.boundingBox.inflate(10.0)
         
         // Scan for item entities
-        val itemEntities = level.getEntitiesOfClass(ItemEntity::class.java, box) { it.isAlive }
+        val itemEntities = level.getEntitiesOfClass(ItemEntity::class.java, box) { it.isAlive && it.isCurrentlyGlowing}
         
         Melinoe.logger.debug("Scanning for items: ticksRemaining=$ticksRemaining, entities=${itemEntities.size}")
         
@@ -362,7 +363,7 @@ object BagTracker {
      */
     private fun resolveContextualItem(texturePath: String): Item? {
         // Find default item by texture path
-        val defaultItem = Item.values().find { it.texturePath == texturePath } ?: return null
+        val defaultItem = Item.entries.find { it.texturePath == texturePath } ?: return null
         
         try {
             val currentArea = LocalAPI.getCurrentCharacterArea()
