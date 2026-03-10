@@ -3,6 +3,7 @@ package me.melinoe.network
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import me.melinoe.Melinoe
+import net.minecraft.client.Minecraft
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.WebSocket
@@ -15,19 +16,12 @@ object ModWebSocket : WebSocket.Listener {
     
     val activeModUsers: MutableSet<String> = ConcurrentHashMap.newKeySet()
     
-    fun connect(name: String) {
+    fun connect() {
         // Build and connect asynchronously
         httpClient.newWebSocketBuilder()
-            .buildAsync(URI.create("ws://fig.magnetite.dev:3000"), this)
+            .buildAsync(URI.create("wss://fig.magnetite.dev"), this)
             .thenAccept { ws ->
                 this.webSocket = ws
-                
-                // Send join payload
-                val joinMessage = JsonObject().apply {
-                    addProperty("action", "join")
-                    addProperty("name", name)
-                }
-                ws.sendText(joinMessage.toString(), true)
             }.exceptionally {
                 Melinoe.logger.error("Failed to connect to Mod WebSocket: ${it.message}")
                 null
@@ -43,25 +37,41 @@ object ModWebSocket : WebSocket.Listener {
     // Called whenever the server sends us a message
     override fun onText(webSocket: WebSocket, data: CharSequence, last: Boolean): CompletionStage<*>? {
         val json = JsonParser.parseString(data.toString()).asJsonObject
-        
-        when (json.get("action").asString) {
-            "sync" -> {
-                activeModUsers.clear()
-                json.getAsJsonArray("names").forEach {
-                    activeModUsers.add(it.asString)
+        val action = json.get("action").asString
+
+        when (action) {
+            "auth_request" -> {
+                val serverId = json.get("serverId").asString
+                val client = Minecraft.getInstance()
+                val session = client.user
+
+                try {
+                    client.services().sessionService.joinServer(
+                        session.profileId,
+                        session.accessToken,
+                        serverId
+                    )
+
+                    // Tell backend we finished signing
+                    val response = JsonObject().apply {
+                        addProperty("action", "auth_response")
+                        addProperty("name", session.name)
+                        addProperty("uuid", session.profileId.toString())
+                    }
+                    webSocket.sendText(response.toString(), true)
+
+                } catch (e: Exception) {
+                    println("Failed to authenticate with Mojang: ${e.message}")
+                    webSocket.sendClose(WebSocket.NORMAL_CLOSURE, "Auth Failed")
                 }
             }
-            "add" -> {
-                val name = json.get("name").asString
-                activeModUsers.add(name)
+            "sync" -> {
+                activeModUsers.clear()
+                json.getAsJsonArray("names").forEach { activeModUsers.add(it.asString) }
             }
-            "remove" -> {
-                val name = json.get("name").asString
-                activeModUsers.remove(name)
-            }
+            "add" -> activeModUsers.add(json.get("name").asString)
+            "remove" -> activeModUsers.remove(json.get("name").asString)
         }
-        
-        // Let the WebSocket know we are ready for the next message
         return super.onText(webSocket, data, last)
     }
 }

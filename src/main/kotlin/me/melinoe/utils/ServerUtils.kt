@@ -71,7 +71,7 @@ object ServerUtils {
             if (serverAddress.contains("telosrealms.com", ignoreCase = true)) {
                 Melinoe.logger.info("[Presence] Joined Telos. Announcing presence...")
                 
-                ModWebSocket.connect(minecraft.user.name)
+                ModWebSocket.connect()
                 RealmFetcher.fetchServers()
             }
         }
