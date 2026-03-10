@@ -67,7 +67,7 @@ object TrackerModule : Module(
     init {
         on<RenderEvent.Extract> {
             if (!enabled) return@on
-            if (!me.melinoe.utils.ServerUtils.isOnTelos()) return@on
+            if (!ServerUtils.isOnTelos()) return@on
             
             val player = mc.player ?: return@on
             val now = System.currentTimeMillis()
@@ -227,7 +227,7 @@ object TrackerModule : Module(
             val command = lookingAtWaypoint.getTeleportCommand()
             if (command != null) {
                 player.connection?.sendCommand(command.removePrefix("/"))
-                Message.success("<white>Teleporting to <yellow>$targetPlayerName at <gray>${lookingAtWaypoint.name}")
+                Message.success("<gray>Teleporting to <yellow>$targetPlayerName <gray>at <yellow>${lookingAtWaypoint.name}")
             }
         } else {
             Message.error("Look at a boss waypoint with a player to teleport")

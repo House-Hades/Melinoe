@@ -239,6 +239,11 @@ enum class Item(
     TARTALINK(Rarity.COMPANION, "Tartalink", "telos:material/pet/tartarus", 120),
     EMBERAPTOR(Rarity.COMPANION, "Emberaptor", "telos:material/mount/tartarus", 120),
     PENTACURSE_RUNE(Rarity.RUNE, "Rune (Pentacurse)", "telos:material/rune/tartarus", 120),
+    
+    // Raphael's Castle (Dark Champions)
+    DARK_GUARDIAN_SWORD(Rarity.ROYAL, "Dark Guardian Sword", "telos:material/weapon/sword/ut-guardian", 120),
+    SLOW_TOUCH_ORB(Rarity.ROYAL, "Slow Touch Orb", "telos:material/ability/orb/ut-slow", 120),
+    CORRUPTED_CHAPS(Rarity.ROYAL, "Corrupted Chaps", "telos:material/armour/light/leggings/ut-corrupted", 120),
 
     // Raphael's Chamber (Raphael)
     CALAMITY(Rarity.BLOODSHOT, "Calamity", "telos:material/weapon/sceptre/ut-onyx", 75),

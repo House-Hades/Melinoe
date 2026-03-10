@@ -37,6 +37,9 @@ object KeybindsModule : Module(
 
     private val mountsMenuKey by KeybindSetting("Mounts Menu", GLFW.GLFW_KEY_UNKNOWN, desc = "Open mounts menu")
         .onPress { sendTelosCommand("mounts", "Mounts menu") }
+    
+    private val openBackpackKey by KeybindSetting("Open backpack", GLFW.GLFW_KEY_UNKNOWN, desc = "Open your backpack")
+        .onPress { sendTelosCommand("backpack", "Open backpack") }
 
     private val petsMenuKey by KeybindSetting("Pets Menu", GLFW.GLFW_KEY_UNKNOWN, desc = "Open pets menu")
         .onPress { sendTelosCommand("pets", "Pets menu") }

@@ -150,6 +150,17 @@ object BossDefeatHandler {
      * Capture the boss name from the first line after separator
      */
     private fun ChatPacketEvent.captureBossName(cleanValue: String, strippedValue: String) {
+        if (strippedValue.matches(Regex("^.*\\s*\\[[^\\]]*\\]\\s*.*$"))) {
+            // Log the hidden message
+            Melinoe.logger.info("[BossDefeatHandler] Hidden message during leaderboard building: $strippedValue")
+            
+            // Queue the full Component to preserve formatting when re-sent later
+            queuedMessages.add(this.component)
+            
+            hideMessage()
+            return
+        }
+        
         pendingBossName = cleanValue
         bossNameCaptured = true
         hideMessage()
@@ -230,12 +241,7 @@ object BossDefeatHandler {
             Melinoe.logger.info("[BossDefeatHandler] Hidden message during leaderboard building: $strippedValue")
             
             // Queue the full Component to preserve formatting when re-sent later
-            if (this.component != null) {
-                queuedMessages.add(this.component)
-            } else {
-                // Fallback if component is missing
-                queuedMessages.add(Component.literal(value))
-            }
+            queuedMessages.add(this.component)
             
             hideMessage()
             return
