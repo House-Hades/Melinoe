@@ -6,6 +6,9 @@ import net.minecraft.client.gui.components.PlayerTabOverlay;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.FontDescription;
+import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,6 +17,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(PlayerTabOverlay.class)
 public class PlayerTabOverlayMixin {
+
+    @Unique
+    private static final ResourceLocation melinoe$ICON_FONT = ResourceLocation.fromNamespaceAndPath("melinoe", "icons");
+
+    @Unique
+    private static final Style melinoe$ICON_STYLE = Style.EMPTY
+            .withFont(new FontDescription.Resource(melinoe$ICON_FONT))
+            .withColor(0xFFFFFF);
 
     @Inject(method = "getNameForDisplay", at = @At("RETURN"), cancellable = true)
     private void melinoe$appendIndicator(PlayerInfo playerInfo, CallbackInfoReturnable<Component> cir) {
@@ -25,12 +36,15 @@ public class PlayerTabOverlayMixin {
         String displayName = currentName.getString();
         if (displayName.isEmpty()) return;
 
+        if (displayName.contains("\uE000")) return;
+
         for (String modUser : ModWebSocket.INSTANCE.getActiveModUsers()) {
             if (melinoe$isStrictMatch(displayName, modUser)) {
 
-                if (displayName.contains("☽")) return;
+                MutableComponent result = currentName.copy()
+                        .append(Component.literal(" "))
+                        .append(Component.literal("\uE000").withStyle(melinoe$ICON_STYLE));
 
-                MutableComponent result = currentName.copy().append(Component.literal(" ☽"));
                 cir.setReturnValue(result);
                 return;
             }

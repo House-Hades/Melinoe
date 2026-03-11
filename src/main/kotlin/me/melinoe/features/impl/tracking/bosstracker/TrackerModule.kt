@@ -150,7 +150,7 @@ object TrackerModule : Module(
             if (!enabled) return@on
             if (!ServerUtils.isOnTelos()) return@on
             
-            val shouldHide = ChatParser.handleChatMessage(value) && !showHud
+            val shouldHide = ChatParser.handleChatMessage(value) && showHud
             if (shouldHide) {
                 this.hideMessage()
             }

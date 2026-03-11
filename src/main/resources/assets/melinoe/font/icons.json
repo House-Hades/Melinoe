@@ -1,0 +1,13 @@
+{
+  "providers":[
+    {
+      "type": "bitmap",
+      "file": "melinoe:font/crescent.png",
+      "ascent": 7,
+      "height": 8,
+      "chars":[
+        "\uE000"
+      ]
+    }
+  ]
+}

@@ -42,10 +42,6 @@ public abstract class CustomHeadLayerMixin<T extends LivingEntity, S extends Liv
             CallbackInfo ci
     ) {
         if (HideArmorModule.INSTANCE.getEnabled()) {
-            if (entity.getType() != EntityType.PLAYER) {
-                return;
-            }
-
             ItemStack stack = entity.getItemBySlot(EquipmentSlot.HEAD);
             if (stack.isEmpty()) return;
 

@@ -86,8 +86,8 @@ class BossWaypoint(
         // Calculate dot product (cosine of angle between vectors)
         val dot = lookVec.dot(waypointVec)
         
-        // If dot product > 0.98 (about 11 degrees), player is looking at waypoint
-        return dot > 0.98
+        // If dot product > 0.995 (about 6 degrees), player is looking at waypoint
+        return dot > 0.995
     }
     
     /**

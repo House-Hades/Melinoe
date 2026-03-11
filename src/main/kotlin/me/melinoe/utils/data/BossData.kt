@@ -120,7 +120,7 @@ enum class BossData(
         Item.MINOBI, Item.MYCOHAWK, Item.CRYSTAL_RUNE
     )),
     THALASSAR("Thalassar", null, BossType.DUNGEON, arrayOf(
-        Item.SPIRIT_DAGGER, Item.ETHEREAL_LONGBOW, Item.SPECTRAL_ARMOUR, Item.OCEANIC_TURRENT,
+        Item.SPIRIT_DAGGER, Item.ETHEREAL_LONGBOW, Item.SPECTRAL_ARMOUR, Item.OCEANIC_TORRENT,
         Item.MINI_ILLUSIONIST, Item.SPECTRAL_STEED, Item.SPECTRAL_TIDES_RUNE
     )),
     GOLDEN_FREDDY("Golden Freddy", null, BossType.DUNGEON, arrayOf(

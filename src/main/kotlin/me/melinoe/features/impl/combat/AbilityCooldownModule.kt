@@ -117,6 +117,11 @@ object AbilityCooldownModule : Module(
                 }
             }
             
+            if (previousCooldownProgress == 0f && cooldownProgress > 0f) {
+                titleDisplayTicks = 0
+                customTitle = null
+            }
+            
             // Title display duration
             if (titleDisplayTicks > 0) {
                 titleDisplayTicks--

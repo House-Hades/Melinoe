@@ -1,28 +1,29 @@
 package me.melinoe.features.impl
 
 import com.google.gson.annotations.SerializedName
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import me.melinoe.Melinoe
-import me.melinoe.Melinoe.mc
 import me.melinoe.clickgui.ClickGUI
 import me.melinoe.clickgui.HudManager
 import me.melinoe.clickgui.settings.AlwaysActive
-import me.melinoe.clickgui.settings.impl.*
+import me.melinoe.clickgui.settings.impl.ActionSetting
+import me.melinoe.clickgui.settings.impl.BooleanSetting
+import me.melinoe.clickgui.settings.impl.ColorSetting
+import me.melinoe.clickgui.settings.impl.MapSetting
 import me.melinoe.events.WorldLoadEvent
 import me.melinoe.events.core.on
 import me.melinoe.features.Category
-import me.melinoe.features.Category.Companion.categories
 import me.melinoe.features.Module
 import me.melinoe.utils.Color
+import me.melinoe.utils.Message
 import me.melinoe.utils.alert
-import me.melinoe.utils.createMelinoeGradient
+import me.melinoe.utils.getCenteredText
+import me.melinoe.utils.getChatBreak
+import me.melinoe.utils.toNative
 import me.melinoe.utils.ui.rendering.NVGRenderer
-import net.minecraft.network.chat.ClickEvent
+import net.minecraft.client.Minecraft
 import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.HoverEvent
+import net.minecraft.network.chat.MutableComponent
 import org.lwjgl.glfw.GLFW
 import java.net.URI
 import java.net.http.HttpClient
@@ -82,8 +83,8 @@ object ClickGUIModule : Module(
     }
 
     // Update checker integration
-    private const val RELEASE_LINK = "https://github.com/House-Hades/Melinoe/releases/latest"
-    private const val GITHUB_API_URL = "https://api.github.com/House-Hades/Melinoe/releases/latest"
+    private const val RELEASE_LINK = "https://modrinth.com/project/fsZHbO2r/version/"
+    private const val GITHUB_API_URL = "https://api.github.com/repos/House-Hades/Melinoe/releases/latest"
     private var latestVersionNumber: String? = null
     private var hasSentUpdateMessage = false
     
@@ -102,7 +103,13 @@ object ClickGUIModule : Module(
             if (hasSentUpdateMessage || latestVersionNumber == null) return@on
             hasSentUpdateMessage = true
             
-            notifyUpdate(latestVersionNumber!!)
+            CoroutineScope(Dispatchers.Default).launch {
+                delay(2000)
+                
+                Minecraft.getInstance().execute {
+                    notifyUpdate(latestVersionNumber!!)
+                }
+            }
         }
     }
 
@@ -112,113 +119,32 @@ object ClickGUIModule : Module(
     private fun notifyUpdate(version: String) {
         mc.execute {
             val currentVersion = Melinoe.version.friendlyString
-            val message = buildUpdateMessage(currentVersion, version, RELEASE_LINK)
+            val message = buildUpdateMessage(currentVersion, version, RELEASE_LINK + version.removePrefix("v"))
             
-            mc.player?.displayClientMessage(message, false)
+            Melinoe.mc.gui?.chat?.addMessage(message)
             
             // Play alert sound
-            alert("melinoe Update Available", playSound = true)
+            alert("Melinoe Update Available", playSound = true)
         }
     }
     
     /**
      * Build the update message in the melinoe style with centered text.
      */
-    private fun buildUpdateMessage(currentVersion: String, targetVersion: String, releaseUrl: String): net.minecraft.network.chat.MutableComponent {
-        val message = Component.empty() as net.minecraft.network.chat.MutableComponent
-        val chatWidth = mc.gui.chat.width
+    private fun buildUpdateMessage(currentVersion: String, targetVersion: String, releaseUrl: String): MutableComponent {
+        val sepTag = "<#606060>${getChatBreak()}"
         
-        // Helper function to center text
-        fun centerText(text: String, color: Int = 0xAAAAAA): Component {
-            val textWidth = mc.font.width(text)
-            if (textWidth >= chatWidth) return Component.literal(text).withStyle { it.withColor(net.minecraft.network.chat.TextColor.fromRgb(color)) }
-            val spacesNeeded = ((chatWidth - textWidth) / 2 / 4).coerceAtLeast(0)
-            val spaces = " ".repeat(spacesNeeded)
-            return Component.literal(spaces + text).withStyle { it.withColor(net.minecraft.network.chat.TextColor.fromRgb(color)) }
-        }
+        val headerText = getCenteredText("<white>☽ </white><#7CFFB2><bold>UPDATE AVAILABLE</bold></#7CFFB2><white> ☽</white>")
+        val melinoeText = getCenteredText("<bold><gradient:#B8FFE1:#7CFFB2:#2E8F78>Melinoe</gradient></bold><#AAAAAA> grows stronger, a new version awaits.</#AAAAAA>")
+        val versionText = getCenteredText("<#AAAAAA>Current version: <#7CFFB2>v$currentVersion</#7CFFB2> → New version: <#7CFFB2>$targetVersion</#7CFFB2></#AAAAAA>")
         
-        // Top separator line
-        val separatorWidth = chatWidth / 4
-        val separator = "─".repeat(separatorWidth)
-        message.append(Component.literal(separator)
-            .withStyle { it.withColor(net.minecraft.network.chat.TextColor.fromRgb(0x404040)).withStrikethrough(true) })
-        message.append(Component.literal("\n"))
+        val githubTag = "<click:open_url:'$releaseUrl'><hover:show_text:'<gray>Open the Modrinth Page'><#7CFFB2><underlined>ᴍᴏᴅʀɪɴᴛʜ</underlined></#7CFFB2></hover></click>"
+        val discordTag = "<click:open_url:'https://discord.gg/Nxhmxjt3kR'><hover:show_text:'<gray>Join the Melinoe Discord server'><#7CFFB2><underlined>ᴅɪѕᴄᴏʀᴅ</underlined></#7CFFB2></hover></click>"
+        val dText = getCenteredText("<#AAAAAA>Download the latest release on $githubTag or $discordTag!</#AAAAAA>")
         
-        // "UPDATE AVAILABLE" header with moon emojis (centered)
-        val headerText = "☽ UPDATE AVAILABLE ☽"
-        val headerWidth = mc.font.width(headerText)
-        val headerSpaces = ((chatWidth - headerWidth) / 2 / 4).coerceAtLeast(0)
-        message.append(Component.literal(" ".repeat(headerSpaces)))
-        message.append(Component.literal("☽ "))
-        message.append(Component.literal("UPDATE AVAILABLE")
-            .withStyle { it.withColor(net.minecraft.network.chat.TextColor.fromRgb(0x7CFFB2)).withBold(true) })
-        message.append(Component.literal(" ☽"))
-        message.append(Component.literal("\n"))
+        val miniMessageStr = "$sepTag<br>$headerText<br>$melinoeText<br>$versionText<br>$dText<br>$sepTag"
         
-        // "Melinoe grows stronger" line (centered)
-        val melinoeText = "Melinoe grows stronger, a new version awaits."
-        val melinoeWidth = mc.font.width(melinoeText)
-        val melinoeSpaces = ((chatWidth - melinoeWidth) / 2 / 4).coerceAtLeast(0)
-        message.append(Component.literal(" ".repeat(melinoeSpaces)))
-        message.append(createMelinoeGradient())
-        message.append(Component.literal(" grows stronger, a new version awaits.")
-            .withStyle { it.withColor(net.minecraft.network.chat.TextColor.fromRgb(0xAAAAAA)) })
-        message.append(Component.literal("\n"))
-        
-        // Version comparison line (centered)
-        val versionText = "Current version: v$currentVersion → New version: $targetVersion"
-        val versionWidth = mc.font.width(versionText)
-        val versionSpaces = ((chatWidth - versionWidth) / 2 / 4).coerceAtLeast(0)
-        message.append(Component.literal(" ".repeat(versionSpaces)))
-        message.append(Component.literal("Current version: ")
-            .withStyle { it.withColor(net.minecraft.network.chat.TextColor.fromRgb(0xAAAAAA)) })
-        message.append(Component.literal("v$currentVersion")
-            .withStyle { it.withColor(net.minecraft.network.chat.TextColor.fromRgb(0x7CFFB2)) })
-        message.append(Component.literal(" → New version: ")
-            .withStyle { it.withColor(net.minecraft.network.chat.TextColor.fromRgb(0xAAAAAA)) })
-        message.append(Component.literal(targetVersion)
-            .withStyle { it.withColor(net.minecraft.network.chat.TextColor.fromRgb(0x7CFFB2)) })
-        message.append(Component.literal("\n"))
-        
-        // Download instruction line (centered)
-        val downloadText = "Download the latest release on ɢɪᴛʜᴜʙ or ᴅɪѕᴄᴏʀᴅ!"
-        val downloadWidth = mc.font.width(downloadText)
-        val downloadSpaces = ((chatWidth - downloadWidth) / 2 / 4).coerceAtLeast(0)
-        message.append(Component.literal(" ".repeat(downloadSpaces)))
-        message.append(Component.literal("Download the latest release on ")
-            .withStyle { it.withColor(net.minecraft.network.chat.TextColor.fromRgb(0xAAAAAA)) })
-        
-        // GitHub link (small caps style)
-        val githubLink = Component.literal("ɢɪᴛʜᴜʙ")
-            .withStyle {
-                it.withColor(net.minecraft.network.chat.TextColor.fromRgb(0x7CFFB2))
-                    .withUnderlined(true)
-                    .withClickEvent(ClickEvent.OpenUrl(URI(releaseUrl)))
-                    .withHoverEvent(HoverEvent.ShowText(Component.literal("Open GitHub release")))
-            }
-        message.append(githubLink)
-        
-        message.append(Component.literal(" or ")
-            .withStyle { it.withColor(net.minecraft.network.chat.TextColor.fromRgb(0xAAAAAA)) })
-        
-        // Discord link (small caps style)
-        val discordLink = Component.literal("ᴅɪѕᴄᴏʀᴅ")
-            .withStyle {
-                it.withColor(net.minecraft.network.chat.TextColor.fromRgb(0x7CFFB2))
-                    .withUnderlined(true)
-                    .withClickEvent(ClickEvent.OpenUrl(URI("https://discord.gg/Nxhmxjt3kR")))
-                    .withHoverEvent(HoverEvent.ShowText(Component.literal("Join the Melinoe Discord server")))
-            }
-        message.append(discordLink)
-        
-        message.append(Component.literal("!\n")
-            .withStyle { it.withColor(net.minecraft.network.chat.TextColor.fromRgb(0xAAAAAA)) })
-        
-        // Bottom separator line
-        message.append(Component.literal(separator)
-            .withStyle { it.withColor(net.minecraft.network.chat.TextColor.fromRgb(0x404040)).withStrikethrough(true) })
-        
-        return message
+        return Component.empty().append(miniMessageStr.toNative()) as MutableComponent
     }
 
     private suspend fun checkNewerVersion(currentVersion: String): String? {

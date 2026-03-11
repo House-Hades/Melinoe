@@ -71,16 +71,23 @@ loom {
     }
 }
 
-afterEvaluate {
-    loom.runs.named("client") {
-        vmArg("-javaagent:${configurations.compileClasspath.get().find { it.name.contains("sponge-mixin") }}")
-    }
-}
-
 tasks {
     processResources {
+        val expandProps = mapOf(
+            "mod_version" to project.property("mod_version") as String,
+            "minecraft_version" to project.property("minecraft_version") as String,
+            "loader_version" to project.property("loader_version") as String,
+            "mod_id" to project.property("mod_id") as String,
+            "mod_name" to project.property("mod_name") as String,
+            "mod_description" to project.property("mod_description") as String,
+            "fabric_api_version" to project.property("fabric_api_version") as String,
+            "fabric_kotlin_version" to project.property("fabric_kotlin_version") as String
+        )
+        
+        inputs.properties(expandProps)
+        
         filesMatching("fabric.mod.json") {
-            expand(getProperties())
+            expand(expandProps)
         }
     }
 
