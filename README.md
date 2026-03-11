@@ -5,7 +5,7 @@
 <div align="center">
 
 [![Discord](https://img.shields.io/discord/1459009897680212032?style=for-the-badge&logo=discord&logoColor=white&color=5865F2&label=Discord)](https://discord.gg/Nxhmxjt3kR)
-[![Modrinth](https://img.shields.io/modrinth/dt/Melinoe?style=for-the-badge&logo=modrinth&logoColor=white&color=00AF5C&label=Modrinth)]([https://modrinth.com/mod/Melinoe](https://modrinth.com/project/fsZHbO2r))
+[![Modrinth](https://img.shields.io/modrinth/dt/Melinoe?style=for-the-badge&logo=modrinth&logoColor=white&color=00AF5C&label=Modrinth)](https://modrinth.com/project/fsZHbO2r)
 [![Downloads](https://img.shields.io/github/downloads/NoWayItzJoey/Melinoe/total?style=for-the-badge&logo=github&color=4078c0&label=Downloads)](https://github.com/House-Hades/Melinoe/releases)
 [![Version](https://img.shields.io/github/v/release/NoWayItzJoey/Melinoe?include_prereleases&style=for-the-badge&logo=github&color=4078c0&label=Version)](https://github.com/House-Hades/Melinoe/releases/latest)
 </div>
