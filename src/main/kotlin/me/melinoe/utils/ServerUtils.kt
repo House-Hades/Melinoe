@@ -4,6 +4,7 @@ import me.melinoe.Melinoe
 import me.melinoe.events.core.onReceive
 import me.melinoe.network.ModWebSocket
 import me.melinoe.network.RealmFetcher
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.minecraft.Util
 import net.minecraft.network.protocol.game.ClientboundSetTimePacket
@@ -83,6 +84,10 @@ object ServerUtils {
                 Melinoe.logger.info("Disconnected from server. Removing presence...")
                 ModWebSocket.disconnect()
             }
+        }
+
+        ClientLifecycleEvents.CLIENT_STOPPING.register { client ->
+            ModWebSocket.disconnect()
         }
     }
 }

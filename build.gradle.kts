@@ -30,7 +30,6 @@ dependencies {
 
     modRuntimeOnly("me.djtheredstoner:DevAuth-fabric:${property("devauth_version")}")
     
-    implementation("org.java-websocket:Java-WebSocket:1.6.0")
     implementation("dev.firstdark.discordrpc:discord-rpc:1.0.4")
     include("dev.firstdark.discordrpc:discord-rpc:1.0.4")
 
