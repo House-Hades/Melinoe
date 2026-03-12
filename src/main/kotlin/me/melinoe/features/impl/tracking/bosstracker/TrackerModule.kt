@@ -39,7 +39,7 @@ object TrackerModule : Module(
     private val widgetColor by ColorSetting("Widget Color", Color(0xFF2E8F78.toInt()), desc = "Color for the widget border and title")
     private val showWaypoints by BooleanSetting("Show Waypoints", true, desc = "Show waypoints at boss locations")
     private val waypointBeams by BooleanSetting("Waypoint Beams", true, desc = "Show beams at boss waypoints").withDependency { showWaypoints }
-    
+
     // Filtering settings
     private val waypointStatusDropdown by DropdownSetting("Waypoint Status", false, desc = "Filter waypoints by boss status").withDependency { showWaypoints }
     private val showAvailable by BooleanSetting("Show Available", true, desc = "Show waypoints for available bosses (white)").withDependency { waypointStatusDropdown }
@@ -186,7 +186,8 @@ object TrackerModule : Module(
             
             // Update HUD settings
             RendererHUD.showHud = showHud
-            
+            RendererHUD.widgetColor = widgetColor
+
             RendererWaypoints.render(context)
         }
     }
