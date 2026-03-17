@@ -81,7 +81,6 @@ class RendererHUD(private val mc: Minecraft) {
         val matrices = guiGraphics.pose()
         matrices.pushMatrix()
         matrices.translate(screenPos.x.toFloat(), screenPos.y.toFloat())
-        matrices.scale(textScale.toFloat())
         
         val actualWidth = barWidth.toFloat()
         val actualHeight = barHeight.toFloat()
@@ -91,9 +90,12 @@ class RendererHUD(private val mc: Minecraft) {
             drawSimpleHealthBarHUD(guiGraphics, actualWidth, actualHeight, cachedHealthPercentage, healthBarColor)
         }
         
-        // Draw health text
+        // Draw health text with text scale applied
         if (healthDisplay != 3 && textPosition != 4 && healthText.isNotEmpty()) {
-            drawHealthTextHUD(guiGraphics, healthText, actualWidth, actualHeight, textColor, textOutline, textPosition)
+            matrices.pushMatrix()
+            matrices.scale(textScale.toFloat())
+            drawHealthTextHUD(guiGraphics, healthText, actualWidth, actualHeight, textColor, textOutline, textPosition, textScale.toFloat())
+            matrices.popMatrix()
         }
         
         matrices.popMatrix()
@@ -213,7 +215,8 @@ class RendererHUD(private val mc: Minecraft) {
         barHeight: Float,
         textColor: Int,
         textOutline: Int,
-        textPosition: Int
+        textPosition: Int,
+        textScale: Float
     ) {
         val font = mc.font
         val textWidth = font.width(healthText)
@@ -221,16 +224,18 @@ class RendererHUD(private val mc: Minecraft) {
         val borderWidth = Constants.BORDER_WIDTH_HUD
         val innerWidth = barWidth - borderWidth * 2
         
+        // Calculate X position (accounting for text scale when positioning relative to bar)
         val textX = when (textPosition) {
-            0 -> -innerWidth / 2
+            0 -> -(innerWidth / (2 * textScale))
             1 -> -textWidth / 2f
-            2 -> innerWidth / 2 - textWidth
+            2 -> (innerWidth / (2 * textScale)) - textWidth
             3 -> -textWidth / 2f
             else -> -textWidth / 2f
         }
         
+        // Calculate Y position (accounting for text scale when positioning relative to bar)
         val textY = if (textPosition == 3) {
-            val barTopInTextSpace = barHeight / 2
+            val barTopInTextSpace = (barHeight / 2f) / textScale
             -barTopInTextSpace - (font.lineHeight / 2f)
         } else {
             -font.lineHeight / 2f
