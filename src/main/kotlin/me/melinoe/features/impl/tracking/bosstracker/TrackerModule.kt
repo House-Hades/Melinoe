@@ -1,12 +1,10 @@
 package me.melinoe.features.impl.tracking.bosstracker
 
 import me.melinoe.Melinoe
-import me.melinoe.Melinoe.mc
 import me.melinoe.clickgui.settings.impl.BooleanSetting
 import me.melinoe.clickgui.settings.impl.ColorSetting
 import me.melinoe.clickgui.settings.impl.DropdownSetting
 import me.melinoe.clickgui.settings.impl.KeybindSetting
-import me.melinoe.clickgui.settings.impl.NumberSetting
 import me.melinoe.clickgui.settings.Setting.Companion.withDependency
 import me.melinoe.events.ChatPacketEvent
 import me.melinoe.events.GuiEvent
@@ -150,7 +148,7 @@ object TrackerModule : Module(
             if (!enabled) return@on
             if (!ServerUtils.isOnTelos()) return@on
             
-            val shouldHide = ChatParser.handleChatMessage(value) && showHud
+            val shouldHide = ChatParser.handleChatMessage(value) && (showHud && !LocalAPI.isInDungeon())
             if (shouldHide) {
                 this.hideMessage()
             }

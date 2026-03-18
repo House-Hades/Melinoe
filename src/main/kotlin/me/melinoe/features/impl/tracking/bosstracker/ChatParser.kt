@@ -2,7 +2,6 @@ package me.melinoe.features.impl.tracking.bosstracker
 
 import me.melinoe.Melinoe
 import me.melinoe.Melinoe.mc
-import me.melinoe.utils.Message
 
 /**
  * Parses chat messages for boss-related events

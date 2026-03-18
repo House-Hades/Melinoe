@@ -2,16 +2,11 @@ package me.melinoe.features.impl.combat
 
 import me.melinoe.Melinoe
 import me.melinoe.clickgui.settings.Setting.Companion.withDependency
+import me.melinoe.clickgui.settings.impl.*
 import me.melinoe.events.TickEvent
 import me.melinoe.events.core.on
 import me.melinoe.features.Category
 import me.melinoe.features.Module
-import me.melinoe.clickgui.settings.impl.BooleanSetting
-import me.melinoe.clickgui.settings.impl.ColorSetting
-import me.melinoe.clickgui.settings.impl.HUDSetting
-import me.melinoe.clickgui.settings.impl.NumberSetting
-import me.melinoe.clickgui.settings.impl.StringSetting
-import me.melinoe.events.PacketEvent
 import me.melinoe.utils.Color
 import me.melinoe.utils.createSoundSettings
 import me.melinoe.utils.playSoundSettings
@@ -109,10 +104,10 @@ object AbilityCooldownModule : Module(
                     if (titleHud.enabled) {
                         customTitle = buildStyledTitleText(titleText, titleColor.rgba)
                         titleDisplayTicks = duration.toInt()
-                        
-                        if (playSound.enabled) {
-                            playNotificationSound()
-                        }
+                    }
+                    
+                    if (playSound.enabled) {
+                        playNotificationSound()
                     }
                 }
             }

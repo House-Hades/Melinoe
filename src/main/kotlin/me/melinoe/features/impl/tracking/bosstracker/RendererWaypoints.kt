@@ -2,6 +2,7 @@ package me.melinoe.features.impl.tracking.bosstracker
 
 import me.melinoe.Melinoe.mc
 import me.melinoe.utils.LocalAPI
+import me.melinoe.utils.ServerUtils
 import me.melinoe.utils.render.WaypointRenderer
 import net.minecraft.client.Camera
 import net.minecraft.world.phys.Vec3
@@ -21,6 +22,7 @@ object RendererWaypoints {
      * Render waypoints for all tracked bosses
      */
     fun render(context: net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext) {
+        if (!ServerUtils.isOnTelos())
         if (!showWaypoints) return
         
         val player = mc.player ?: return

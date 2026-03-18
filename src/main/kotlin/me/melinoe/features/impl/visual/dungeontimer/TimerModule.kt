@@ -1,8 +1,6 @@
 package me.melinoe.features.impl.visual.dungeontimer
 
 import me.melinoe.Melinoe
-import me.melinoe.features.Category
-import me.melinoe.features.Module
 import me.melinoe.clickgui.settings.impl.ColorSetting
 import me.melinoe.clickgui.settings.impl.HUDSetting
 import me.melinoe.events.DungeonChangeEvent
@@ -10,8 +8,9 @@ import me.melinoe.events.DungeonEntryEvent
 import me.melinoe.events.DungeonExitEvent
 import me.melinoe.events.TickEvent
 import me.melinoe.events.core.on
+import me.melinoe.features.Category
+import me.melinoe.features.Module
 import me.melinoe.utils.Color
-import me.melinoe.utils.Message
 import me.melinoe.utils.PersonalBestManager
 import me.melinoe.utils.data.BossData
 import me.melinoe.utils.data.DungeonData
@@ -105,11 +104,6 @@ object TimerModule : Module(
      */
     private fun handleDungeonEntry(dungeon: DungeonData) {
         Melinoe.logger.info("DungeonTimerModule: Player entered dungeon: ${dungeon.areaName}")
-        
-        if (timerState.isActive()) {
-            Melinoe.logger.warn("DungeonTimerModule: Attempted to start new timer while one was active!")
-            return
-        }
         
         timerState.startTimer(dungeon)
         cachedPersonalBestString = getCurrentPersonalBestString()

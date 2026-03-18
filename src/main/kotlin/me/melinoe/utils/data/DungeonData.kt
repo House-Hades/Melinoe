@@ -38,7 +38,7 @@ enum class DungeonData(
     CULTISTS_HIDEOUT("Cultist's Hideout", DungeonDifficulty.BOSS, BossData.SILEX),
     ILLARIUS_HIDEOUT("Illarius' Hideout", DungeonDifficulty.BOSS, BossData.LOA),
     THE_AVIARY("The Aviary", DungeonDifficulty.BOSS, BossData.SOLARFLARE),
-    RAPHS_CASTLE("Raphael's Castle", DungeonDifficulty.BOSS, BossData.DARK_CHAMPIONS),
+    RAPHS_CASTLE("Raphael's Castle", DungeonDifficulty.BOSS, BossData.DARK_CHAMPION),
     AURORA_SANCTUM("Aurora Sanctum", DungeonDifficulty.BOSS, BossData.AETHERIS),
     TARTARUS("Tartarus", DungeonDifficulty.BOSS, BossData.MALTHAR),
 

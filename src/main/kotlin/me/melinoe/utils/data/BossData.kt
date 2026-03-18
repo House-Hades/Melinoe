@@ -147,7 +147,7 @@ enum class BossData(
         Item.AERIAL_STAFF, Item.ORB_OF_PURITY, Item.PHOENIX_PLATE, Item.RESURGENCE,
         Item.DRAGON_WARRIOR, Item.SUNFLARE, Item.SOL_RUNE
     )),
-    DARK_CHAMPIONS("Dark Champions", null, BossType.DUNGEON, arrayOf(
+    DARK_CHAMPION("Dark Champion", null, BossType.DUNGEON, arrayOf(
         Item.DARK_GUARDIAN_SWORD, Item.SLOW_TOUCH_ORB, Item.CORRUPTED_CHAPS
     )),
     AETHERIS("Aetheris", null, BossType.DUNGEON, arrayOf(
