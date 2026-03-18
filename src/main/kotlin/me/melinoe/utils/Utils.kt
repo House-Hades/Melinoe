@@ -33,7 +33,7 @@ fun logError(throwable: Throwable, context: Any) {
     }```"
 
     // Send clickable message with hover tooltip
-    Message.chat("$message <click:run_command:'/mdev copy $errorText'><hover:show_text:'<gold>Click to copy the error to your clipboard.'><red>Please click this message to copy and send it in the Melinoe discord!</click>")
+    Message.chat("$message <click:run_command:'/mdev copy $errorText'><hover:show_text:'<#FFD700>Click to copy the error to your clipboard.'><#FF3333>Please click this message to copy and send it in the Melinoe discord!</click>")
 }
 
 fun setClipboardContent(string: String) {

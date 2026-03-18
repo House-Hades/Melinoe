@@ -32,7 +32,7 @@ object MessageFormatter {
         val timeStr = PersonalBestManager.formatTimeWithDecimals(time)
         val pbString = getPBComparisonString(dungeon.areaName, time, oldPB, isNewPB)
         
-        return "${Constants.ICON_SKULL} <gray>Defeated $bossColor$bossName <gray>in $timeColor$timeStr$pbString".toNative()
+        return "${Constants.ICON_SKULL} <#AAAAAA>Defeated $bossColor$bossName <#AAAAAA>in $timeColor$timeStr$pbString".toNative()
     }
     
     /**
@@ -51,7 +51,7 @@ object MessageFormatter {
         val timeStr = PersonalBestManager.formatTimeWithDecimals(time)
         val pbString = getPBComparisonString(dungeon.areaName, time, oldPB, isNewPB)
         
-        return "${Constants.ICON_SPLIT} Split: <gray>Defeated $bossColor${boss.label} <gray>in $timeColor$timeStr$pbString".toNative()
+        return "${Constants.ICON_SPLIT} Split: <#AAAAAA>Defeated $bossColor${boss.label} <#AAAAAA>in $timeColor$timeStr$pbString".toNative()
     }
     
     /**
@@ -70,7 +70,7 @@ object MessageFormatter {
         val timeStr = PersonalBestManager.formatTimeWithDecimals(splitTime)
         val pbString = getPBComparisonString(dungeon.areaName,  splitTime, oldPB, wasNewPB)
         
-        return "${Constants.ICON_SKULL} <gray>Defeated $bossColor${boss.label} <gray>in $timeColor$timeStr$pbString".toNative()
+        return "${Constants.ICON_SKULL} <#AAAAAA>Defeated $bossColor${boss.label} <#AAAAAA>in $timeColor$timeStr$pbString".toNative()
     }
     
     /**
@@ -90,7 +90,7 @@ object MessageFormatter {
                 val oldPBStr = PersonalBestManager.formatTimeWithDecimals(oldPB)
                 
                 shareText = "NEW RECORD! Completed $dungeon in $timeStr! (Old: $oldPBStr | $diffStr)"
-                improveText = " <dark_gray>(<green>$diffStr<dark_gray>)"
+                improveText = " <#555555>(<#00FF00>$diffStr<#555555>)"
             } else {
                 shareText = "NEW RECORD! Completed $dungeon in $timeStr!"
                 improveText = ""
@@ -98,20 +98,20 @@ object MessageFormatter {
             
             val safeShareText = shareText.replace("'", "\\'")
             
-            val shareButton = " <click:suggest_command:'$safeShareText'><hover:show_text:\"<gray>Click to share in chat!</gray>\"><gray><b>⧉</b></gray></hover></click>"
+            val shareButton = " <click:suggest_command:'$safeShareText'><hover:show_text:\"<#AAAAAA>Click to share in chat!</#AAAAAA>\"><#AAAAAA><b>⧉</b></#AAAAAA></hover></click>"
             val improvement = "$improveText$shareButton"
             
-            return " ${Constants.ICON_FIRE} <gold><bold>NEW RECORD!</bold></gold>$improvement"
+            return " ${Constants.ICON_FIRE} <#FFD700><bold>NEW RECORD!</bold></#FFD700>$improvement"
         }
         
         if (oldPB != -1f) {
             val difference = time - oldPB
-            val diffColor = if (difference > 0) "<red>" else "<green>"
+            val diffColor = if (difference > 0) "<#FF3333>" else "<#00FF00>"
             
             val oldPBStr = PersonalBestManager.formatTimeWithDecimals(oldPB)
             val diffStr = PersonalBestManager.formatTimeDifferenceWithDecimals(difference)
             
-            return " <dark_gray>(${Constants.ICON_STAR} <gray>$oldPBStr <dark_gray>| $diffColor$diffStr<dark_gray>)"
+            return " <#555555>(${Constants.ICON_STAR} <#AAAAAA>$oldPBStr <#555555>| $diffColor$diffStr<#555555>)"
         }
         
         return ""

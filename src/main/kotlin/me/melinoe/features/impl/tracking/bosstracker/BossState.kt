@@ -211,7 +211,7 @@ object BossState {
                     updateBoss(name, state)
                 }
                 
-                Message.actionBar("<green>Boss Tracker Updated")
+                Message.actionBar("<#00FF00>✔ Boss Tracker Updated!")
             }
         } catch (e: Exception) {
             Melinoe.logger.error("Error scanning bosses menu: ${e.message}", e)

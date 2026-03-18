@@ -201,7 +201,7 @@ object BossDefeatHandler {
         
         // Centered Dungeon/Boss Name
         val headerSpaces = getCenteredText(plainHeaderText).takeWhile { it == ' ' }
-        val finalHeader = Component.literal(headerSpaces).append(headerComponent ?: "<yellow><bold>$strippedValue</bold></yellow>".toNative())
+        val finalHeader = Component.literal(headerSpaces).append(headerComponent ?: "<#FFFF00><bold>$strippedValue</bold></#FFFF00>".toNative())
         Melinoe.mc.execute { Melinoe.mc.gui?.chat?.addMessage(finalHeader) }
         
         // Space prior to either the Timer or Pity Module (only for world bosses)
@@ -272,7 +272,7 @@ object BossDefeatHandler {
                 "𕑱" -> "<#FFD700>" // Gold
                 "𕑰" -> "<#C0C0C0>" // Silver
                 "𕑩" -> "<#895129>" // Bronze
-                else -> "<#8B8B8B>" // Gray (4th+ place - use default <gray>)
+                else -> "<#8B8B8B>" // Gray (4th+ place)
             }
             
             // Damage color (red)
@@ -283,7 +283,7 @@ object BossDefeatHandler {
             val spaces = getCenteredText(plainText).takeWhile { it == ' ' }
             
             // Build the message as a Component with proper colors
-            val mmString = "$spaces$nameColor$medal $username<reset> <dark_gray>—</dark_gray> $damageColor$percentage $damage<reset>"
+            val mmString = "$spaces$nameColor$medal $username<reset> <#555555>—</#555555> $damageColor$percentage $damage<reset>"
             
             // Add medal with same color as username
             Melinoe.mc.execute {

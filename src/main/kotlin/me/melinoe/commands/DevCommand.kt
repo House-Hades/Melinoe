@@ -32,7 +32,7 @@ val devCommand = Commodore("melinoedev", "mdev") {
             Message.error("Dev mode is disabled. Enable it in ClickGUI settings.")
             return@runs
         }
-        Message.dev("<gray>Use <gold>/mdev help <gray>for available commands")
+        Message.dev("<#AAAAAA>Use <#FFD700>/mdev help <#AAAAAA>for available commands")
     }
     
     literal("help").runs {
@@ -42,14 +42,14 @@ val devCommand = Commodore("melinoedev", "mdev") {
         }
         
         Message.dev("""
-            <gray>Dev Command Help:
-            <dark_gray><bold>›</bold> <gold>/mdev itemid <dark_gray>- <gray>Shows item ID and model data of held item
-            <dark_gray><bold>›</bold> <gold>/mdev simulate \<dungeon> <dark_gray>- <gray>Simulates a dungeon completion message
-            <dark_gray>  Available dungeons: <gray>${DungeonData.entries.joinToString("<dark_gray>, <gray>") { it.name.lowercase() }}
-            <dark_gray><bold>›</bold> <gold>/mdev testbag \<type> <dark_gray>- <gray>Simulates a bag drop and increments stats
-            <dark_gray>  Available types: <gray>bloodshot, unholy, voidbound, royal, companion, event
-            <dark_gray><bold>›</bold> <gold>/mdev testboss \<boss> <dark_gray>- <gray>Simulates a boss defeat and increments counters
-            <dark_gray>  Examples: <gray>raphael, trueseraph, voidedomnipotent
+            <#AAAAAA>Dev Command Help:
+            <#555555><bold>›</bold> <#FFD700>/mdev itemid <#555555>- <#AAAAAA>Shows item ID and model data of held item
+            <#555555><bold>›</bold> <#FFD700>/mdev simulate \<dungeon> <#555555>- <#AAAAAA>Simulates a dungeon completion message
+            <#555555>  Available dungeons: <#AAAAAA>${DungeonData.entries.joinToString("<#555555>, <#AAAAAA>") { it.name.lowercase() }}
+            <#555555><bold>›</bold> <#FFD700>/mdev testbag \<type> <#555555>- <#AAAAAA>Simulates a bag drop and increments stats
+            <#555555>  Available types: <#AAAAAA>bloodshot, unholy, voidbound, royal, companion, event
+            <#555555><bold>›</bold> <#FFD700>/mdev testboss \<boss> <#555555>- <#AAAAAA>Simulates a boss defeat and increments counters
+            <#555555>  Examples: <#AAAAAA>raphael, trueseraph, voidedomnipotent
         """.trimIndent())
     }
     
@@ -112,27 +112,27 @@ val devCommand = Commodore("melinoedev", "mdev") {
                 // Show confirmation message
                 when (bagType.lowercase()) {
                     "bloodshot" -> {
-                        Message.dev("<dark_red>Bloodshot</dark_red> <gray>bag animation triggered!")
+                        Message.dev("<#AA0000>Bloodshot</#AA0000> <#AAAAAA>bag animation triggered!")
                         TypeSafeDataAccess.get(TrackingKey.LifetimeStat.BloodshotBags) ?: 0
                     }
                     "unholy" -> {
-                        Message.dev("<white>Unholy <gray>bag animation triggered!")
+                        Message.dev("<#FFFFFF>Unholy <#AAAAAA>bag animation triggered!")
                         TypeSafeDataAccess.get(TrackingKey.LifetimeStat.UnholyBags) ?: 0
                     }
                     "voidbound" -> {
-                        Message.dev("<light_purple>Voidbound <gray>bag animation triggered!")
+                        Message.dev("<#AA00FF>Voidbound <#AAAAAA>bag animation triggered!")
                         TypeSafeDataAccess.get(TrackingKey.LifetimeStat.VoidboundBags) ?: 0
                     }
                     "royal" -> {
-                        Message.dev("<gold>Royal <gray>bag animation triggered!")
+                        Message.dev("<#FFD700>Royal <#AAAAAA>bag animation triggered!")
                         TypeSafeDataAccess.get(TrackingKey.LifetimeStat.RoyalBags) ?: 0
                     }
                     "companion" -> {
-                        Message.dev("<yellow>Companion <gray>bag animation triggered!")
+                        Message.dev("<#FFFF00>Companion <#AAAAAA>bag animation triggered!")
                         TypeSafeDataAccess.get(TrackingKey.LifetimeStat.CompanionBags) ?: 0
                     }
                     "event" -> {
-                        Message.dev("<dark_purple>Event <gray>bag animation triggered!")
+                        Message.dev("<#AA00AA>Event <#AAAAAA>bag animation triggered!")
                         TypeSafeDataAccess.get(TrackingKey.LifetimeStat.EventBags) ?: 0
                     }
                 }
@@ -175,19 +175,19 @@ val devCommand = Commodore("melinoedev", "mdev") {
             BagTracker.onBossDefeat(properBossName)
             
             val totalRuns = TypeSafeDataAccess.get(TrackingKey.LifetimeStat.TotalRuns) ?: 0
-            Message.dev("<gray>Simulated boss defeat: <light_purple>$properBossName")
-            Message.dev("  <dark_gray>› <gray>Total runs: <aqua>$totalRuns")
+            Message.dev("<#AAAAAA>Simulated boss defeat: <#AA00FF>$properBossName")
+            Message.dev("  <#555555>› <#AAAAAA>Total runs: <#55FFFF>$totalRuns")
             
             // Show pity counters for all items this boss can drop
             val boss = BossData.findByKey(properBossName)
             if (boss != null && boss.items.isNotEmpty()) {
-                Message.dev("  <dark_gray>› <gray>Pity counters incremented for ${boss.items.size} items:")
+                Message.dev("  <#555555>› <#AAAAAA>Pity counters incremented for ${boss.items.size} items:")
                 boss.items.take(3).forEach { item ->
                     val pityCount = TypeSafeDataAccess.get(TrackingKey.PityCounter(item.name)) ?: 0
-                    Message.dev("    <dark_gray>- <gray>${item.displayName}: <red>$pityCount")
+                    Message.dev("    <#555555>- <#AAAAAA>${item.displayName}: <#FF3333>$pityCount")
                 }
                 if (boss.items.size > 3) {
-                    Message.dev("    <dark_gray>... and ${boss.items.size - 3} more")
+                    Message.dev("    <#555555>... and ${boss.items.size - 3} more")
                 }
             }
         }
@@ -237,13 +237,13 @@ val devCommand = Commodore("melinoedev", "mdev") {
         
         // Build the message dynamically
         val message = buildString {
-            append("<gray>Item ID Information\n")
-            append("<dark_gray><bold>›</bold> <reset><gold>Display Name: <white>$displayName\n")
-            append("<dark_gray><bold>›</bold> <reset><gold>Base ID: <white>$itemId\n")
+            append("<#AAAAAA>Item ID Information\n")
+            append("<#555555><bold>›</bold> <reset><#FFD700>Display Name: <#FFFFFF>$displayName\n")
+            append("<#555555><bold>›</bold> <reset><#FFD700>Base ID: <#FFFFFF>$itemId\n")
             
             // Show Unicode character info
             if (!unicodeChar.isNullOrEmpty()) {
-                append("<dark_gray><bold>›</bold> <reset><gold>Unicode Char: <white>$unicodeChar\n")
+                append("<#555555><bold>›</bold> <reset><#FFD700>Unicode Char: <#FFFFFF>$unicodeChar\n")
                 
                 // Show Unicode escape sequence (properly handle surrogate pairs)
                 val codePoints = unicodeChar.codePoints().toArray()
@@ -259,26 +259,26 @@ val devCommand = Commodore("melinoedev", "mdev") {
                         "\\u${String.format("%04X", it.code)}"
                     }
                 }
-                append("<dark_gray><bold>›</bold> <reset><gold>Unicode Escape: <white>$escapeSequence\n")
+                append("<#555555><bold>›</bold> <reset><#FFD700>Unicode Escape: <#FFFFFF>$escapeSequence\n")
             }
             
             // Show parsed range from lore
             if (parsedRange > 0) {
-                append("<dark_gray><bold>›</bold> <reset><gold>Lore Range: <green>${parsedRange}f\n")
+                append("<#555555><bold>›</bold> <reset><#FFD700>Lore Range: <#00FF00>${parsedRange}f\n")
             }
             
             // Show ItemType match status
             if (itemType != null) {
-                append("<dark_gray><bold>›</bold> <reset><gold>ItemType: <green>${itemType.name}\n")
+                append("<#555555><bold>›</bold> <reset><#FFD700>ItemType: <#00FF00>${itemType.name}\n")
                 val (range, offset) = ItemUtils.getItemRangeWithOffset(heldItem)
-                append("<dark_gray><bold>›</bold> <reset><gold>Range: <green>${range}f <gray>(offset: <green>${offset}f<gray>)\n")
+                append("<#555555><bold>›</bold> <reset><#FFD700>Range: <#00FF00>${range}f <#AAAAAA>(offset: <#00FF00>${offset}f<#AAAAAA>)\n")
             } else {
-                append("<dark_gray><bold>›</bold> <reset><gold>ItemType: <gray>Not found\n")
+                append("<#555555><bold>›</bold> <reset><#FFD700>ItemType: <#AAAAAA>Not found\n")
             }
             
             // Show custom model info
             if (customModel != null) {
-                append("<dark_gray><bold>›</bold> <reset><gold>Custom Model: <white>$customModel\n")
+                append("<#555555><bold>›</bold> <reset><#FFD700>Custom Model: <#FFFFFF>$customModel\n")
             }
             
             // Generate code snippets for ItemUtils if not already added
@@ -315,9 +315,9 @@ val devCommand = Commodore("melinoedev", "mdev") {
                         "\\u${String.format("%04X", it.code)}"
                     }
                 }
-                append("\n<gray>$enumName <dark_gray>-> <gray>\"$escapeSequence\"")
+                append("\n<#AAAAAA>$enumName <#555555>-> <#AAAAAA>\"$escapeSequence\"")
             } else if (itemType != null) {
-                append("\n<green>✔ Item matched with utils")
+                append("\n<#00FF00>✔ Item matched with utils")
             }
         }
         
@@ -438,16 +438,16 @@ private fun simulateRegularDungeon(dungeon: DungeonData, player: LocalPlayer) {
     Message.separator()
     
     // Simulate Leaderboard damage stat
-    sendCenteredMM("<#FFD700>𕑱 ${player.scoreboardName}<reset> <dark_gray>—</dark_gray> <#FF3333>100.0% (5420)<reset>")
+    sendCenteredMM("<#FFD700>𕑱 ${player.scoreboardName}<reset> <#555555>—</#555555> <#FF3333>100.0% (5420)<reset>")
     
     Message.separator()
     
     // Send dev confirmation
     val timeStr = PersonalBestManager.formatTimeWithDecimals(simulatedTime)
     val pbStr = if (currentPB == -1f) "None" else PersonalBestManager.formatTimeWithDecimals(currentPB)
-    val statusStr = if (isNewPB) "<green><bold>NEW PB!</bold>" else "<red><bold>Not PB</bold>"
+    val statusStr = if (isNewPB) "<#00FF00><bold>NEW PB!</bold>" else "<#FF3333><bold>Not PB</bold>"
     
-    Message.dev("<gray>Simulated <gold>${dungeon.areaName}<gray> completion: <aqua>$timeStr <dark_gray>(PB: $pbStr) <reset>$statusStr")
+    Message.dev("<#AAAAAA>Simulated <#FFD700>${dungeon.areaName}<#AAAAAA> completion: <#55FFFF>$timeStr <#555555>(PB: $pbStr) <reset>$statusStr")
 }
 
 /**
@@ -491,7 +491,7 @@ private fun simulateSplitDungeon(dungeon: DungeonData, player: LocalPlayer) {
         
         bossDefeats.add(TimerState.BossDefeat(boss, splitTime, isNewPB, currentPB))
         
-        val newPbString = if (isNewPB) "<green><bold>NEW PB!</bold><reset>" else "<red><bold>Not PB</bold><reset>"
+        val newPbString = if (isNewPB) "<#00FF00><bold>NEW PB!</bold><reset>" else "<#FF3333><bold>Not PB</bold><reset>"
         bossResults.add("${boss.label}: ${PersonalBestManager.formatTimeWithDecimals(splitTime)} $newPbString")
         
         // For intermediate bosses (not the final boss), show the mini split message
@@ -512,7 +512,7 @@ private fun simulateSplitDungeon(dungeon: DungeonData, player: LocalPlayer) {
             sendCenteredComponent(splitMsg)
             
             Message.separator()
-            sendCenteredMM("<#FFD700>𕑱 ${player.scoreboardName}<reset> <dark_gray>—</dark_gray> <#FF3333>100.0% (5420)<reset>")
+            sendCenteredMM("<#FFD700>𕑱 ${player.scoreboardName}<reset> <#555555>—</#555555> <#FF3333>100.0% (5420)<reset>")
             Message.separator()
         }
     }
@@ -538,14 +538,14 @@ private fun simulateSplitDungeon(dungeon: DungeonData, player: LocalPlayer) {
     }
     
     Message.separator()
-    sendCenteredMM("<#FFD700>𕑱 ${player.scoreboardName}<reset> <dark_gray>—</dark_gray> <#FF3333>100.0% (5420)<reset>")
+    sendCenteredMM("<#FFD700>𕑱 ${player.scoreboardName}<reset> <#555555>—</#555555> <#FF3333>100.0% (5420)<reset>")
     Message.separator()
     
     // Send dev confirmation
     val totalTimeStr = PersonalBestManager.formatTimeWithDecimals(totalTime)
-    Message.dev("<gray>Simulated <gold>${dungeon.areaName}<gray> split completion: <aqua>$totalTimeStr <gray>total")
+    Message.dev("<#AAAAAA>Simulated <#FFD700>${dungeon.areaName}<#AAAAAA> split completion: <#55FFFF>$totalTimeStr <#AAAAAA>total")
     bossResults.forEach { result ->
-        Message.dev("  <dark_gray>› <gray>$result")
+        Message.dev("  <#555555>› <#AAAAAA>$result")
     }
 }
 

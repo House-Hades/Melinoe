@@ -201,27 +201,27 @@ object RendererHUD {
                     }
                     
                     val distanceColor = when {
-                        raphaelDistance <= 2.0 -> ChatFormatting.GREEN
-                        raphaelDistance <= 4.0 -> ChatFormatting.YELLOW
-                        raphaelDistance <= 6.0 -> ChatFormatting.GOLD
-                        raphaelDistance <= 8.0 -> ChatFormatting.RED
-                        else -> ChatFormatting.DARK_RED
+                        raphaelDistance <= 2.0 -> 0x00FF00 // Green
+                        raphaelDistance <= 4.0 -> 0xFFFF55 // Bright Yellow
+                        raphaelDistance <= 6.0 -> 0xFFAA00 // Orange/Gold
+                        raphaelDistance <= 8.0 -> 0xFF3333 // Red
+                        else -> 0xAA0000 // Dark Red
                     }
-                    val distanceMarker = Component.literal(Constants.DISTANCE_MARKER).withStyle(distanceColor)
+                    val distanceMarker = Component.literal(Constants.DISTANCE_MARKER).withStyle { it.withColor(distanceColor) }
                     drawString(font, distanceMarker, xOffset, yOffset, labelColor, false)
                     xOffset += font.width(Constants.DISTANCE_MARKER) + 2
                     
-                    val raphaelText = Component.literal("Raphael ").withStyle(ChatFormatting.RED)
-                        .append(Component.literal("[").withStyle(ChatFormatting.GRAY))
-                        .append(Component.literal("${BossState.raphaelProgress}").withStyle(
-                            if (BossState.raphaelProgress >= BossState.raphaelMaxProgress) ChatFormatting.GREEN else ChatFormatting.YELLOW
-                        ))
-                        .append(Component.literal("/${BossState.raphaelMaxProgress}").withStyle(ChatFormatting.GRAY))
-                        .append(Component.literal("]").withStyle(ChatFormatting.GRAY))
+                    val raphaelText = Component.literal("Raphael ").withStyle { it.withColor(0xFF3333) }
+                        .append(Component.literal("[").withStyle { it.withColor(0xAAAAAA) })
+                        .append(Component.literal("${BossState.raphaelProgress}").withStyle { it.withColor(
+                            if (BossState.raphaelProgress >= BossState.raphaelMaxProgress) 0x00FF00 else 0xFFFF00
+                        )})
+                        .append(Component.literal("/${BossState.raphaelMaxProgress}").withStyle { it.withColor(0xAAAAAA) })
+                        .append(Component.literal("]").withStyle { it.withColor(0xAAAAAA) })
                     
                     if (raphaelPortalBoss != null && raphaelPortalBoss.state == BossState.State.DEFEATED_PORTAL_ACTIVE) {
                         val secondsRemaining = raphaelPortalBoss.portalTimer / 20
-                        raphaelText.append(Component.literal(" (${secondsRemaining}s)").withStyle(ChatFormatting.GOLD))
+                        raphaelText.append(Component.literal(" (${secondsRemaining}s)").withStyle { it.withColor(0xFFD700) })
                     }
                     
                     drawString(font, raphaelText, xOffset, yOffset, labelColor, false)
@@ -242,23 +242,23 @@ object RendererHUD {
         val text = Component.empty()
         
         val distanceColor = when {
-            boss.distanceMarkerValue <= 2.0 -> ChatFormatting.GREEN
-            boss.distanceMarkerValue <= 4.0 -> ChatFormatting.YELLOW
-            boss.distanceMarkerValue <= 6.0 -> ChatFormatting.GOLD
-            boss.distanceMarkerValue <= 8.0 -> ChatFormatting.RED
-            else -> ChatFormatting.DARK_RED
+            boss.distanceMarkerValue <= 2.0 -> 0x00FF00 // Green
+            boss.distanceMarkerValue <= 4.0 -> 0xFFFF55 // Bright Yellow
+            boss.distanceMarkerValue <= 6.0 -> 0xFFAA00 // Orange/Gold
+            boss.distanceMarkerValue <= 8.0 -> 0xFF3333 // Red
+            else -> 0xAA0000 // Dark Red
         }
-        text.append(Component.literal(Constants.DISTANCE_MARKER).withStyle(distanceColor))
+        text.append(Component.literal(Constants.DISTANCE_MARKER).withStyle { it.withColor(distanceColor) })
         text.append(" ")
         
         val textColor = when {
-            boss.state == BossState.State.DEFEATED -> ChatFormatting.DARK_GRAY
-            boss.state == BossState.State.DEFEATED_PORTAL_ACTIVE -> ChatFormatting.GOLD
-            boss.calledPlayerName != null -> ChatFormatting.GREEN
-            else -> ChatFormatting.WHITE
+            boss.state == BossState.State.DEFEATED -> 0x555555 // Dark Gray
+            boss.state == BossState.State.DEFEATED_PORTAL_ACTIVE -> 0xFFD700 // Gold
+            boss.calledPlayerName != null -> 0x00FF00 // Green
+            else -> 0xFFFFFF // White
         }
         
-        text.append(Component.literal(boss.name).withStyle(textColor))
+        text.append(Component.literal(boss.name).withStyle { it.withColor(textColor) })
         
         if (boss.calledPlayerName != null) {
             val isChatFocused = mc.screen is net.minecraft.client.gui.screens.ChatScreen
@@ -267,11 +267,11 @@ object RendererHUD {
             } else {
                 boss.calledPlayerName!!.substring(0, 3.coerceAtMost(boss.calledPlayerName!!.length))
             }
-            text.append(Component.literal(" [$playerName]").withStyle(ChatFormatting.GREEN))
+            text.append(Component.literal(" [$playerName]").withStyle { it.withColor(0x00FF00) })
         }
         
         if (boss.state == BossState.State.DEFEATED_PORTAL_ACTIVE) {
-            text.append(Component.literal(" (${boss.portalTimer / 20}s)").withStyle(ChatFormatting.GOLD))
+            text.append(Component.literal(" (${boss.portalTimer / 20}s)").withStyle { it.withColor(0xFFD700) })
         }
         
         return text
