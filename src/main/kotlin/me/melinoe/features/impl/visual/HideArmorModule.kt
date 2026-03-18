@@ -13,6 +13,7 @@ object HideArmorModule : Module(
     category = Category.VISUAL,
     description = "Visually hides all equipped armor on the player"
 ) {
+    val hideOthers by BooleanSetting("Hide for Others", true, "Hide armor pieces for other players")
     val hideHelmet by BooleanSetting("Hide Helmet", true, "Hide helmet armor piece")
     val hideChestplate by BooleanSetting("Hide Chestplate", true, "Hide chestplate armor piece")
     val hideLeggings by BooleanSetting("Hide Leggings", true, "Hide leggings armor piece")

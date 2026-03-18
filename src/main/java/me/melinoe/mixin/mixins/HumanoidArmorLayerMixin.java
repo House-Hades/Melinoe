@@ -2,6 +2,7 @@ package me.melinoe.mixin.mixins;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.melinoe.features.impl.visual.HideArmorModule;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
@@ -37,24 +38,18 @@ public abstract class HumanoidArmorLayerMixin {
         if (HideArmorModule.INSTANCE.getEnabled()) {
             // Only hide armor for players (AvatarRenderState)
             // This excludes zombies, skeletons, piglins, and other humanoid mobs
-            if (humanoidRenderState instanceof AvatarRenderState) {
-                boolean shouldHide = false;
-                
-                switch (equipmentSlot) {
-                    case HEAD:
-                        shouldHide = HideArmorModule.INSTANCE.getHideHelmet();
-                        break;
-                    case CHEST:
-                        shouldHide = HideArmorModule.INSTANCE.getHideChestplate();
-                        break;
-                    case LEGS:
-                        shouldHide = HideArmorModule.INSTANCE.getHideLeggings();
-                        break;
-                    case FEET:
-                        shouldHide = HideArmorModule.INSTANCE.getHideBoots();
-                        break;
-                }
-                
+            if (humanoidRenderState instanceof AvatarRenderState avatar) {
+
+                if (!HideArmorModule.INSTANCE.getHideOthers() && avatar.id != Minecraft.getInstance().player.getId()) return;
+
+                boolean shouldHide = switch (equipmentSlot) {
+                    case HEAD -> HideArmorModule.INSTANCE.getHideHelmet();
+                    case CHEST -> HideArmorModule.INSTANCE.getHideChestplate();
+                    case LEGS -> HideArmorModule.INSTANCE.getHideLeggings();
+                    case FEET -> HideArmorModule.INSTANCE.getHideBoots();
+                    default -> false;
+                };
+
                 if (shouldHide) {
                     ci.cancel();
                 }
