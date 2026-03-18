@@ -226,7 +226,7 @@ object TrackerModule : Module(
             val command = lookingAtWaypoint.getTeleportCommand()
             if (command != null) {
                 player.connection?.sendCommand(command.removePrefix("/"))
-                Message.success("<gray>Teleporting to <yellow>$targetPlayerName <gray>at <yellow>${lookingAtWaypoint.name}")
+                Message.success("<#AAAAAA>Teleporting to <#FFFF00><underlined>$targetPlayerName</underlined> <#AAAAAA>at <#FFFF00><bold>${lookingAtWaypoint.name}</bold>")
             }
         } else {
             Message.error("Look at a boss waypoint with a player to teleport")

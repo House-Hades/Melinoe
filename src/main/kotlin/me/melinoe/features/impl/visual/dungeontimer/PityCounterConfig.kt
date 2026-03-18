@@ -61,15 +61,15 @@ object PityCounterConfig {
                 val safeName = item.displayName.replace("'", "\\'")
                 
                 // Add the sprite icon using the item's texture path
-                "<white><sprite:\"minecraft:blocks\":\"${item.texturePath}\"></white> $color$safeName<gray>: <white>$pity</white>"
+                "<#FFFFFF><sprite:\"minecraft:blocks\":\"${item.texturePath}\"></#FFFFFF> $color$safeName<#AAAAAA>: <#FFFFFF>$pity</#FFFFFF>"
             }
             
-            "<hover:show_text:'$hoverText'><white>$icon</white></hover>"
+            "<hover:show_text:'$hoverText'><#FFFFFF>$icon</#FFFFFF></hover>"
         }
         
         if (segments.isEmpty()) return ""
         
         // Join all grouped rarities with the divider
-        return segments.joinToString(" <dark_gray>| <reset>")
+        return segments.joinToString(" <#555555>| <reset>")
     }
 }

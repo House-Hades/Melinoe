@@ -405,13 +405,13 @@ object KeybindsModule : Module(
 
         // Build the message
         val message = buildString {
-            append("<gray>Item ID Information\n")
-            append("<dark_gray><bold>›</bold> <gold>Display Name: <white>$displayName\n")
-            append("<dark_gray><bold>›</bold> <gold>Base ID: <white>$itemId\n")
+            append("<#AAAAAA>Item ID Information\n")
+            append("<#555555><bold>›</bold> <#FFD700>Display Name: <#FFFFFF>$displayName\n")
+            append("<#555555><bold>›</bold> <#FFD700>Base ID: <#FFFFFF>$itemId\n")
 
             // Show Unicode character info
             if (unicodeChar != null && unicodeChar.isNotEmpty()) {
-                append("<dark_gray><bold>›</bold> <gold>Unicode Char: <white>$unicodeChar\n")
+                append("<#555555><bold>›</bold> <#FFD700>Unicode Char: <#FFFFFF>$unicodeChar\n")
 
                 // Show Unicode escape sequence (properly handle surrogate pairs)
                 val codePoints = unicodeChar.codePoints().toArray()
@@ -427,26 +427,26 @@ object KeybindsModule : Module(
                         "\\u${String.format("%04X", it.code)}"
                     }
                 }
-                append("<dark_gray><bold>›</bold> <gold>Unicode Escape: <white>$escapeSequence\n")
+                append("<#555555><bold>›</bold> <#FFD700>Unicode Escape: <#FFFFFF>$escapeSequence\n")
             }
 
             // Show parsed range from lore
             if (parsedRange > 0) {
-                append("<dark_gray><bold>›</bold> <gold>Lore Range: <green>${parsedRange}f\n")
+                append("<#555555><bold>›</bold> <#FFD700>Lore Range: <#00FF00>${parsedRange}f\n")
             }
 
             // Show ItemType match status
             if (itemType != null) {
-                append("<dark_gray><bold>›</bold> <gold>ItemType: <green>${itemType.name}\n")
+                append("<#555555><bold>›</bold> <#FFD700>ItemType: <#00FF00>${itemType.name}\n")
                 val (range, offset) = ItemUtils.getItemRangeWithOffset(heldItem)
-                append("<dark_gray><bold>›</bold> <gold>Range: <green>${range}f <gray>(offset: <green>${offset}f<gray>)\n")
+                append("<#555555><bold>›</bold> <#FFD700>Range: <#00FF00>${range}f <#AAAAAA>(offset: <#00FF00>${offset}f<#AAAAAA>)\n")
             } else {
-                append("<dark_gray><bold>›</bold> <gold>ItemType: <gray>Not found\n")
+                append("<#555555><bold>›</bold> <#FFD700>ItemType: <#AAAAAA>Not found\n")
             }
 
             // Show custom model info
             if (customModel != null) {
-                append("<dark_gray><bold>›</bold> <gold>Custom Model: <white>$customModel\n")
+                append("<#555555><bold>›</bold> <#FFD700>Custom Model: <#FFFFFF>$customModel\n")
             }
 
             // Generate code snippets for ItemUtils if not already added
@@ -483,9 +483,9 @@ object KeybindsModule : Module(
                         "\\u${String.format("%04X", it.code)}"
                     }
                 }
-                append("\n<gray>$enumName <dark_gray>-> <gray>\"$escapeSequence\"")
+                append("\n<#AAAAAA>$enumName <#555555>-> <#AAAAAA>\"$escapeSequence\"")
             } else if (itemType != null) {
-                append("\n<green>✔ Item matched with utils")
+                append("\n<#00FF00>✔ Item matched with utils")
             }
         }
 

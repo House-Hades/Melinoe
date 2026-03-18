@@ -90,7 +90,7 @@ val mainCommand = Commodore("melinoe", "m", "mel") {
             }
             
             val message = buildString {
-                append("<gradient:#B8FFE1:#7CFFB2:#2E8F78>Pity Checker</gradient><dark_gray>:</dark_gray> <gray>$title\n\n")
+                append("<gradient:#B8FFE1:#7CFFB2:#2E8F78>Pity Checker</gradient><#555555>:</#555555> <#AAAAAA>$title\n\n")
                 
                 items.forEach { item ->
                     val coloredName = run {
@@ -104,14 +104,14 @@ val mainCommand = Commodore("melinoe", "m", "mel") {
                             "UNHOLY"     -> "<#bfbfbf>$name"
                             "COMPANION"  -> "<#ffaa00>$name"
                             "RUNE"       -> "<#616161>$name"
-                            else         -> "<gray>UNKNOWN</gray>"
+                            else         -> "<#AAAAAA>UNKNOWN</#AAAAAA>"
                         }
                     }
                     
                     val pity = DataConfig.getPityCounter(item.name)
                     val texture = item.texturePath
                     
-                    append("<white><sprite:\"minecraft:blocks\":\"$texture\"></white> $coloredName<dark_gray>:</dark_gray> <gray>$pity\n")
+                    append("<#FFFFFF><sprite:\"minecraft:blocks\":\"$texture\"></#FFFFFF> $coloredName<#555555>:</#555555> <#AAAAAA>$pity\n")
                 }
             }
             

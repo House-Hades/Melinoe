@@ -134,12 +134,12 @@ object ClickGUIModule : Module(
     private fun buildUpdateMessage(currentVersion: String, targetVersion: String, releaseUrl: String): MutableComponent {
         val sepTag = "<#606060>${getChatBreak()}"
         
-        val headerText = getCenteredText("<white>☽ </white><#7CFFB2><bold>UPDATE AVAILABLE</bold></#7CFFB2><white> ☽</white>")
+        val headerText = getCenteredText("<#FFFFFF>☽ </#FFFFFF><#7CFFB2><bold>UPDATE AVAILABLE</bold></#7CFFB2><#FFFFFF> ☽</#FFFFFF>")
         val melinoeText = getCenteredText("<bold><gradient:#B8FFE1:#7CFFB2:#2E8F78>Melinoe</gradient></bold><#AAAAAA> grows stronger, a new version awaits.</#AAAAAA>")
         val versionText = getCenteredText("<#AAAAAA>Current version: <#7CFFB2>v$currentVersion</#7CFFB2> → New version: <#7CFFB2>$targetVersion</#7CFFB2></#AAAAAA>")
         
-        val githubTag = "<click:open_url:'$releaseUrl'><hover:show_text:'<gray>Open the Modrinth Page'><#7CFFB2><underlined>ᴍᴏᴅʀɪɴᴛʜ</underlined></#7CFFB2></hover></click>"
-        val discordTag = "<click:open_url:'https://discord.gg/Nxhmxjt3kR'><hover:show_text:'<gray>Join the Melinoe Discord server'><#7CFFB2><underlined>ᴅɪѕᴄᴏʀᴅ</underlined></#7CFFB2></hover></click>"
+        val githubTag = "<click:open_url:'$releaseUrl'><hover:show_text:'<#AAAAAA>Open the Modrinth Page'><#7CFFB2><underlined>ᴍᴏᴅʀɪɴᴛʜ</underlined></#7CFFB2></hover></click>"
+        val discordTag = "<click:open_url:'https://discord.gg/Nxhmxjt3kR'><hover:show_text:'<#AAAAAA>Join the Melinoe Discord server'><#7CFFB2><underlined>ᴅɪѕᴄᴏʀᴅ</underlined></#7CFFB2></hover></click>"
         val dText = getCenteredText("<#AAAAAA>Download the latest release on $githubTag or $discordTag!</#AAAAAA>")
         
         val miniMessageStr = "$sepTag<br>$headerText<br>$melinoeText<br>$versionText<br>$dText<br>$sepTag"

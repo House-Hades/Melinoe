@@ -346,7 +346,7 @@ object BagTracker {
             val area = if (LocalAPI.isInDungeon()) LocalAPI.getCurrentCharacterArea() else BossData.findByItem(droppedItem)?.label ?: "Unknown"
             val shareText = "[${droppedItem.rarity}] Dropped ${droppedItem.displayName} at $preResetPity pity from $area!"
             
-            val buttonMessage = " <click:suggest_command:'${shareText}'><hover:show_text:\"<gray>Pity: $preResetPity<br> Click to share in chat!</gray>\"><gray><b>⧉</b></gray></hover></click>"
+            val buttonMessage = " <click:suggest_command:'${shareText}'><hover:show_text:\"<#AAAAAA>Pity: $preResetPity<br> Click to share in chat!</#AAAAAA>\"><#AAAAAA><b>⧉</b></#AAAAAA></hover></click>"
             val buttonComponent = buttonMessage.toNative()
             
             val finalMessage = Component.empty().append(originalComponent).append(buttonComponent)
@@ -465,64 +465,64 @@ object BagTracker {
         val style = when (item.rarity) {
             Item.Rarity.IRRADIATED -> RarityStyle(
                 0x189506,
-                "<white>\uD814\uDF19 </white><bold><gradient:#189506:#15cd15>IRRADIATED</bold>",
+                "<#FFFFFF>\uD814\uDF19 </#FFFFFF><bold><gradient:#189506:#15cd15>IRRADIATED</bold>",
                 "<#189506>",
                 "IRRADIATED"
             )
             Item.Rarity.GILDED -> RarityStyle(
                 0xb93f12,
-                "<white>\uD818\uDCF1 </white><bold><gradient:#b93f12:#df5320>GILDED</bold>",
+                "<#FFFFFF>\uD818\uDCF1 </#FFFFFF><bold><gradient:#b93f12:#df5320>GILDED</bold>",
                 "<#b93f12>",
                 "GILDED"
             )
             Item.Rarity.ROYAL -> RarityStyle(
                 0x7d1775,
-                "<white>\uD814\uDF1B </white><bold><gradient:#7d1775:#aa00aa>ROYAL</bold>",
+                "<#FFFFFF>\uD814\uDF1B </#FFFFFF><bold><gradient:#7d1775:#aa00aa>ROYAL</bold>",
                 "<#7d1775>",
                 "ROYAL"
             )
             Item.Rarity.BLOODSHOT -> RarityStyle(
                 0x9D0000,
-                "<white>\uD814\uDF1C </white><bold><gradient:#9D0000:#FF1A1A>BLOODSHOT</gradient></bold>",
+                "<#FFFFFF>\uD814\uDF1C </#FFFFFF><bold><gradient:#9D0000:#FF1A1A>BLOODSHOT</gradient></bold>",
                 "<#9D0000>",
                 "BLOODSHOT"
             )
             Item.Rarity.VOIDBOUND -> RarityStyle(
                 0x8d15f0,
-                "<white>\uD818\uDE35 </white><bold><gradient:#8d15f0:#be74fb>VOIDBOUND</gradient></bold>",
+                "<#FFFFFF>\uD818\uDE35 </#FFFFFF><bold><gradient:#8d15f0:#be74fb>VOIDBOUND</gradient></bold>",
                 "<#8d15f0>",
                 "VOIDBOUND"
             )
             Item.Rarity.UNHOLY -> RarityStyle(
                 0x5D6069,
-                "<white>\uD815\uDC66 </white><bold><gradient:#5D6069:#DCE8D5>UNHOLY</gradient></bold>",
+                "<#FFFFFF>\uD815\uDC66 </#FFFFFF><bold><gradient:#5D6069:#DCE8D5>UNHOLY</gradient></bold>",
                 "<#5D6069>",
                 "UNHOLY"
             )
             Item.Rarity.COMPANION -> RarityStyle(
                 0xae9000,
-                "<white>\uD814\uDF1A </white><bold><gradient:#ae9000:#ffaa00>COMPANION</bold>",
+                "<#FFFFFF>\uD814\uDF1A </#FFFFFF><bold><gradient:#ae9000:#ffaa00>COMPANION</bold>",
                 "<#ae9000>",
                 "COMPANION"
             )
             Item.Rarity.RUNE -> RarityStyle(
                 0x555555,
-                "<white>\uD815\uDC65 </white><bold><gradient:#555555:#616161>RUNE</bold>",
+                "<#FFFFFF>\uD815\uDC65 </#FFFFFF><bold><gradient:#555555:#616161>RUNE</bold>",
                 "<#555555>",
                 "RUNE"
             )
         }
         
-        val lootBoostStr = if (lootboost > 0) " <yellow>[+$lootboost% LB]" else ""
+        val lootBoostStr = if (lootboost > 0) " <#FFFF00>[+$lootboost% LB]" else ""
         val m = Message.Colors.MUTED
         val area = if (LocalAPI.isInDungeon()) LocalAPI.getCurrentCharacterArea() else BossData.findByItem(item)?.label ?: "Unknown"
         
         // Build message using MiniMessage
-        var message = "${style.prefix} $m- <gray>Dropped <underlined>${style.itemNameColor}${item.displayName}</underlined> <gray>at <yellow>$pityCount</yellow> <gray>pity from ${style.itemNameColor}$area$lootBoostStr"
+        var message = "${style.prefix} $m- <#AAAAAA>Dropped <underlined>${style.itemNameColor}${item.displayName}</underlined> <#AAAAAA>at <#FFFF00>$pityCount</#FFFF00> <#AAAAAA>pity from ${style.itemNameColor}$area$lootBoostStr"
         if (PityCounterModule.showAnnounceButton) {
             val shareText = "[${item.rarity}] Dropped ${item.displayName} at ${pityCount} pity from $area!"
             
-            message += " <click:suggest_command:'${shareText}'><hover:show_text:\"<gray>Click to share in chat!</gray>\"><gray><b>⧉</b></gray></hover></click>"
+            message += " <click:suggest_command:'${shareText}'><hover:show_text:\"<#AAAAAA>Click to share in chat!</#AAAAAA>\"><#AAAAAA><b>⧉</b></#AAAAAA></hover></click>"
         }
         
         val chatIndicator = GuiMessageTag(
