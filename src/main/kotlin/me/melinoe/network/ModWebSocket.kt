@@ -5,6 +5,7 @@ import com.google.gson.JsonParser
 import com.google.gson.Strictness
 import com.google.gson.stream.JsonReader
 import me.melinoe.Melinoe
+import me.melinoe.utils.TabListUtils
 import net.minecraft.client.Minecraft
 import java.io.StringReader
 import java.net.URI
@@ -87,6 +88,8 @@ object ModWebSocket {
                                         addProperty("action", "auth_response")
                                         addProperty("name", session.name)
                                         addProperty("uuid", session.profileId.toString())
+                                        addProperty("version", Melinoe.version.toString())
+                                        addProperty("server", TabListUtils.getServer())
                                     }
                                     webSocket.sendText(response.toString(), true)
 
