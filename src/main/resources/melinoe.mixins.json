@@ -26,6 +26,7 @@
     "mixins.ClientLevelMixin",
     "mixins.PlayerTabOverlayMixin",
     "mixins.SoundSystemMixin",
+    "mixins.EntityRendererMixin",
     "mixins.GuiMixin",
     "accessors.AbstractContainerScreenAccessor",
     "accessors.CompositeRenderTypeAccessor",
