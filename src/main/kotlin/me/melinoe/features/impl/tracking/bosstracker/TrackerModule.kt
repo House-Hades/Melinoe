@@ -18,7 +18,6 @@ import me.melinoe.utils.Color
 import me.melinoe.utils.LocalAPI
 import me.melinoe.utils.Message
 import me.melinoe.utils.ServerUtils
-import me.melinoe.utils.equalsOneOf
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import org.lwjgl.glfw.GLFW
 
@@ -47,10 +46,6 @@ object TrackerModule : Module(
     private val quickTeleportKey by KeybindSetting("Quick Teleport", GLFW.GLFW_KEY_Y, desc = "Teleport to the player at the boss when looking at the waypoint")
         .onPress { handleQuickTeleport() }.withDependency { showWaypoints }
     
-    // Previous world and dimension for detecting changes
-    private var previousWorld: String = ""
-    private var previousDimension: String = ""
-    
     private enum class AutoTrackState {
         IDLE, WAITING_TO_SEND, WAITING_FOR_GUI, WAITING_TO_CLOSE
     }
@@ -61,11 +56,11 @@ object TrackerModule : Module(
     
     // Timers
     private var distanceUpdateTimer = 0
+    private var previousDimension: String = ""
     
     init {
         on<RenderEvent.Extract> {
-            if (!enabled) return@on
-            if (!ServerUtils.isOnTelos()) return@on
+            if (!enabled || !ServerUtils.isOnTelos()) return@on
             
             val player = mc.player ?: return@on
             val now = System.currentTimeMillis()
@@ -163,10 +158,32 @@ object TrackerModule : Module(
             BossState.scanBossesMenu(screen)
         }
         
-        // Register world load event to clear bosses when changing realms
         on<WorldLoadEvent> {
-            if (!enabled) return@on
-            handleWorldChange()
+            if (!enabled || !ServerUtils.isOnTelos()) return@on
+            
+            val level = mc.level ?: return@on
+            val currentDim = level.dimension().location().path
+            
+            if (previousDimension.isEmpty()) {
+                previousDimension = currentDim
+                if (currentDim == Constants.DIMENSION_REALM) startAutoTrack()
+                return@on
+            }
+            
+            val wasDungeon = previousDimension == Constants.DIMENSION_DUNGEON
+            val isRealm = currentDim == Constants.DIMENSION_REALM
+            val isHub = currentDim == Constants.DIMENSION_HUB || currentDim == Constants.DIMENSION_DAILY
+            
+            if (isHub) {
+                Melinoe.logger.info("[BossTracker] Returned to Hub, clearing bosses")
+                BossState.clearAll()
+            } else if (isRealm && !wasDungeon) {
+                Melinoe.logger.info("[BossTracker] Entered Realm, clearing and auto-tracking")
+                BossState.clearAll()
+                startAutoTrack()
+            }
+            
+            previousDimension = currentDim
         }
         
         // Register world render event for waypoint rendering
@@ -196,7 +213,7 @@ object TrackerModule : Module(
     private fun startAutoTrack() {
         if (!autoTrack) return
         trackState = AutoTrackState.WAITING_TO_SEND
-        stateActionTime = System.currentTimeMillis() + 1000L // Give a 1 second buffer after realm entry for lag/safety
+        stateActionTime = System.currentTimeMillis() + 300L // Give a 0.3 second buffer after realm entry for lag/safety
     }
     
     /**
@@ -248,70 +265,5 @@ object TrackerModule : Module(
         val level = mc.level ?: return false
         val dimensionPath = level.dimension().location().path
         return dimensionPath == Constants.DIMENSION_REALM
-    }
-    
-    /**
-     * Handle world change - clear bosses when leaving realm or switching realms
-     */
-    private fun handleWorldChange() {
-        val currentWorld = LocalAPI.getCurrentCharacterWorld()
-        val level = mc.level
-        val currentDimension = level?.dimension()?.location()?.path ?: ""
-        
-        if (currentWorld.isEmpty() || currentDimension.isEmpty()) {
-            Melinoe.logger.info("[BossTracker] World change: empty world/dimension, skipping")
-            
-            previousWorld = ""
-            previousDimension = ""
-            trackState = AutoTrackState.IDLE // Reset process if disconnected
-            return
-        }
-        
-        if (previousWorld.isEmpty()) {
-            Melinoe.logger.info("[BossTracker] First world load: $currentWorld (dimension: $currentDimension)")
-            previousWorld = currentWorld
-            previousDimension = currentDimension
-            
-            if (currentDimension == Constants.DIMENSION_REALM) {
-                startAutoTrack()
-            }
-            return
-        }
-        
-        if (currentWorld == previousWorld && currentDimension == previousDimension) {
-            return
-        }
-        
-        Melinoe.logger.info("[BossTracker] World/Dimension change detected: '$previousWorld/$previousDimension' -> '$currentWorld/$currentDimension'")
-        
-        val wasDungeon = previousDimension == Constants.DIMENSION_DUNGEON
-        val isDungeonNow = currentDimension == Constants.DIMENSION_DUNGEON
-        
-        if (wasDungeon != isDungeonNow) {
-            Melinoe.logger.info("[BossTracker] Dungeon transition detected, preserving ${BossState.getAllBosses().size} bosses")
-            previousWorld = currentWorld
-            previousDimension = currentDimension
-            return
-        }
-        
-        val wasInHub = previousDimension.equalsOneOf(Constants.DIMENSION_HUB, Constants.DIMENSION_DAILY)
-        val isInHub = currentDimension.equalsOneOf(Constants.DIMENSION_HUB, Constants.DIMENSION_DAILY)
-        
-        if (!wasInHub && isInHub) {
-            Melinoe.logger.info("[BossTracker] Left realm for hub/missions, clearing ${BossState.getAllBosses().size} bosses")
-            BossState.clearAll()
-        } else if (previousDimension == Constants.DIMENSION_REALM && currentDimension == Constants.DIMENSION_REALM && currentWorld != previousWorld) {
-            Melinoe.logger.info("[BossTracker] Switched between realms, clearing ${BossState.getAllBosses().size} bosses")
-            BossState.clearAll()
-            startAutoTrack()
-        } else if (currentDimension == Constants.DIMENSION_REALM && (wasInHub || previousDimension != Constants.DIMENSION_REALM)) {
-            Melinoe.logger.info("[BossTracker] Entered realm from hub")
-            startAutoTrack()
-        } else {
-            Melinoe.logger.info("[BossTracker] World/Dimension change but no clear needed")
-        }
-        
-        previousWorld = currentWorld
-        previousDimension = currentDimension
     }
 }

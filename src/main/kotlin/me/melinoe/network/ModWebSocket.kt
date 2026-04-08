@@ -47,10 +47,28 @@ object ModWebSocket {
         activeModUsers.clear()
         isConnecting.set(false)
     }
-
+    
+    /**
+     * Informs the api of a realm switch
+     */
+    fun sendLocationUpdate(serverName: String) {
+        val ws = webSocket ?: return
+        CompletableFuture.runAsync {
+            try {
+                val request = JsonObject().apply {
+                    addProperty("action", "location_update")
+                    addProperty("server", serverName)
+                }
+                ws.sendText(request.toString(), true)
+            } catch (e: Exception) {
+                Melinoe.logger.error("Failed to send WebSocket location update: ${e.message}")
+            }
+        }
+    }
+    
     private class Listener : WebSocket.Listener {
         private val messageBuffer = StringBuilder()
-
+        
         override fun onOpen(webSocket: WebSocket) {
             messageBuffer.setLength(0)
             super.onOpen(webSocket)
@@ -89,7 +107,7 @@ object ModWebSocket {
                                         addProperty("name", session.name)
                                         addProperty("uuid", session.profileId.toString())
                                         addProperty("version", Melinoe.version.toString())
-                                        addProperty("server", TabListUtils.getServer())
+                                        addProperty("server", TabListUtils.getServer() ?: "Unknown")
                                     }
                                     webSocket.sendText(response.toString(), true)
 

@@ -2,6 +2,7 @@ package me.melinoe.utils
 
 import me.melinoe.Melinoe
 import me.melinoe.events.core.onReceive
+import me.melinoe.features.impl.tracking.bosstracker.BossState
 import me.melinoe.network.ModWebSocket
 import me.melinoe.network.RealmFetcher
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents
@@ -78,6 +79,10 @@ object ServerUtils {
         }
         
         ClientPlayConnectionEvents.DISCONNECT.register { handler, client ->
+            // Always reset local states regardless of server IP
+            LocalAPI.shutdown()
+            BossState.clearAll()
+            
             val serverAddress = handler.serverData?.ip ?: return@register
             
             if (serverAddress.contains("telosrealms.com", ignoreCase = true)) {

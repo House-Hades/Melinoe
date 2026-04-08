@@ -30,7 +30,10 @@ object LocalAPI {
     
     private var portalCountdownTicks = 0
     private var initialized = false
-
+    
+    private var lastFiredDimension = ""
+    private var lastFiredWorld = ""
+    
     /**
      * Initialize LocalAPI and register event handlers.
      * MUST be called AFTER EventBus.subscribe(LocalAPI) in Melinoe.kt
@@ -52,6 +55,14 @@ object LocalAPI {
         // Event-based boss bar updates - fires only when boss bars change
         on<BossBarUpdateEvent> {
             updateCharacterArea(bossBarMap)
+        }
+        
+        // When a new world loads, remove the world name until the new Tab List is received
+        on<WorldLoadEvent> {
+            val mc = Melinoe.mc
+            val level = mc.level ?: return@on
+            currentCharacterDimension = level.dimension().location().path
+            currentCharacterWorld = "" // Invalidate to prevent sending incorrect data
         }
         
         // Keep tick handler only for portal countdown (client-side timer) and dimension tracking
@@ -160,10 +171,53 @@ object LocalAPI {
         // Update realm/world from tab list (Server: line)
         val realm = tabData.server
         if (realm != null) {
-            currentCharacterWorld = realm.replace(Regex("[\\[\\]]+"), "")
+            val cleanRealm = realm.replace(Regex("[\\[\\]]+"), "")
+            if (cleanRealm != currentCharacterWorld) {
+                currentCharacterWorld = cleanRealm
+                checkLocationChange()
+            }
         }
     }
-
+    
+    private fun checkLocationChange() {
+        val currentDim = currentCharacterDimension
+        val currentWorld = currentCharacterWorld
+        
+        if (currentDim.isEmpty() || currentWorld.isEmpty()) return
+        
+        if (lastFiredDimension.isEmpty()) {
+            lastFiredDimension = currentDim
+            lastFiredWorld = currentWorld
+            
+            me.melinoe.network.ModWebSocket.sendLocationUpdate(currentWorld)
+            
+            if (currentDim == "realm") {
+                EventBus.post(HubToRealmEvent("Login", currentWorld))
+            }
+            return
+        }
+        
+        if (currentDim == lastFiredDimension && currentWorld == lastFiredWorld) return
+        
+        val wasHub = lastFiredDimension == "hub" || lastFiredDimension == "daily"
+        val isHub = currentDim == "hub" || currentDim == "daily"
+        val wasRealm = lastFiredDimension == "realm"
+        val isRealm = currentDim == "realm"
+        
+        if (wasHub && isRealm) {
+            EventBus.post(HubToRealmEvent(lastFiredWorld, currentWorld))
+        } else if (wasRealm && isHub) {
+            EventBus.post(RealmToHubEvent(lastFiredWorld, currentWorld))
+        } else if (wasRealm && isRealm && currentWorld != lastFiredWorld) {
+            EventBus.post(RealmToRealmEvent(lastFiredWorld, currentWorld))
+        }
+        
+        lastFiredDimension = currentDim
+        lastFiredWorld = currentWorld
+        
+        me.melinoe.network.ModWebSocket.sendLocationUpdate(currentWorld)
+    }
+    
     /**
      * Update character area from boss bars.
      * Now called only when boss bars change via BossBarUpdateEvent.
@@ -483,5 +537,7 @@ object LocalAPI {
         currentPortalCall = ""
         currentPortalCallTime = 0
         portalCountdownTicks = 0
+        lastFiredDimension = ""
+        lastFiredWorld = ""
     }
 }
