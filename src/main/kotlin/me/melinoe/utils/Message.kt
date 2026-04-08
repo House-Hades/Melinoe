@@ -58,8 +58,16 @@ fun createMelinoeGradient(): Component {
  * Creates the Melinoe prefix with gradient text and separator.
  * Format: [Gradient Melinoe] ›
  */
+fun getMelinoeWatermark(): String {
+    return (getMelinoeGradient() + " <bold>${Message.Colors.SEPARATOR}›</bold><reset>")
+}
+
+/**
+ * Creates the Melinoe prefix with gradient text and separator.
+ * Format: [Gradient Melinoe] ›
+ */
 fun createMelinoeWatermark(): Component {
-    return (getMelinoeGradient() + " <bold>${Message.Colors.SEPARATOR}›</bold><reset>").toNative()
+    return getMelinoeWatermark().toNative()
 }
 
 fun sendChatMessage(message: Any) {

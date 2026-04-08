@@ -15,10 +15,12 @@ import me.melinoe.events.core.on
 import me.melinoe.features.Category
 import me.melinoe.features.Module
 import me.melinoe.utils.Color
+import me.melinoe.utils.LocalAPI
 import me.melinoe.utils.Message
 import me.melinoe.utils.alert
 import me.melinoe.utils.getCenteredText
 import me.melinoe.utils.getChatBreak
+import me.melinoe.utils.getMelinoeWatermark
 import me.melinoe.utils.toNative
 import me.melinoe.utils.ui.rendering.NVGRenderer
 import net.minecraft.client.Minecraft
@@ -44,7 +46,7 @@ object ClickGUIModule : Module(
     val clickGUIColor by ColorSetting("Color", Color(27, 197, 97), desc = "The color of the Click GUI.") // bright green: 0x1BC561
     val roundedPanelBottom by BooleanSetting("Rounded Panel Bottoms", true, desc = "Whether to extend panels to make them rounded at the bottom.")
     
-    private val action by ActionSetting("Open HUD Editor", desc = "Opens the HUD editor when clicked.") { 
+    private val action by ActionSetting("Open HUD Editor", desc = "Opens the HUD editor when clicked.") {
         mc.execute { mc.setScreen(HudManager) }
     }
     
@@ -53,6 +55,10 @@ object ClickGUIModule : Module(
     val panelSetting by MapSetting("Panel Settings", mutableMapOf<String, PanelData>())
     data class PanelData(var x: Float = 10f, var y: Float = 10f, var extended: Boolean = true)
 
+    // Safety checks
+    private var clickGuiPressCount = 0
+    private var clickGuiLastPress = 0L
+    
     fun resetPositions() {
         // Only position the visible categories in the correct order
         val visibleCategories = listOf(Category.COMBAT, Category.VISUAL, Category.TRACKING, Category.MISC)
@@ -71,6 +77,28 @@ object ClickGUIModule : Module(
     }
 
     override fun onKeybind() {
+        // Dungeon safety check
+        if (LocalAPI.isInDungeon()) {
+            val currentTime = System.currentTimeMillis()
+            
+            // If more than 5 seconds have passed, reset the sequence
+            if (currentTime - clickGuiLastPress > 5000) {
+                clickGuiPressCount = 1
+                clickGuiLastPress = currentTime
+                Message.actionBar("${getMelinoeWatermark()} ${Message.Colors.ERROR}<bold>Warning:</bold> You are in a dungeon! Press 2 more times within 5s to open Click GUI.")
+                return // Prevent opening menu
+            } else {
+                clickGuiPressCount++
+                if (clickGuiPressCount < 3) {
+                    val remaining = 3 - clickGuiPressCount
+                    Message.actionBar("${getMelinoeWatermark()} ${Message.Colors.ERROR}Press $remaining more time to open Click GUI.")
+                    return // Prevent opening menu
+                }
+                // If we reach here, 3 presses completed successfully, reset
+                clickGuiPressCount = 0
+            }
+        }
+        
         toggle()
     }
 

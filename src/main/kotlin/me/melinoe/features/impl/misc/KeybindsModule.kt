@@ -90,6 +90,10 @@ object KeybindsModule : Module(
     private val itemInfoKeySetting =
         KeybindSetting("Item Info (Dev)", GLFW.GLFW_KEY_I, desc = "Show item ID info for hovered item in any GUI")
 
+    // Safety checks
+    private var realmSelectorPressCount = 0
+    private var realmSelectorLastPress = 0L
+    
     init {
         // Register the item info keybind setting
         registerSetting(itemInfoKeySetting)
@@ -141,6 +145,28 @@ object KeybindsModule : Module(
         if (!ServerUtils.isOnTelos()) {
             sendTelosOnlyError("Realm selector")
             return
+        }
+        
+        // Dungeon safety check
+        if (LocalAPI.isInDungeon()) {
+            val currentTime = System.currentTimeMillis()
+            
+            // If more than 5 seconds have passed, reset the sequence
+            if (currentTime - realmSelectorLastPress > 5000) {
+                realmSelectorPressCount = 1
+                realmSelectorLastPress = currentTime
+                Message.actionBar("${getMelinoeWatermark()} ${Message.Colors.ERROR}<bold>Warning:</bold> You are in a dungeon! Press 2 more times within 5s to open the Realm Selector.")
+                return // Prevent opening menu
+            } else {
+                realmSelectorPressCount++
+                if (realmSelectorPressCount < 3) {
+                    val remaining = 3 - realmSelectorPressCount
+                    Message.actionBar("${getMelinoeWatermark()} ${Message.Colors.ERROR}Press $remaining more time to open the Realm Selector.")
+                    return // Prevent opening menu
+                }
+                // If we reach here, 3 presses completed successfully, reset
+                realmSelectorPressCount = 0
+            }
         }
 
         // Open realm selector screen on the render thread
