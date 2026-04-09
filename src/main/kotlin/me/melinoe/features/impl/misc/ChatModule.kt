@@ -12,13 +12,8 @@ import me.melinoe.utils.emoji.EmojiShortcodes
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.GuiGraphics
-import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.HoverEvent
-import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.chat.Style
-import net.minecraft.network.chat.contents.PlainTextContents
-import net.minecraft.network.chat.contents.TranslatableContents
 import org.lwjgl.glfw.GLFW
 import java.io.File
 import java.util.Optional
@@ -421,7 +416,6 @@ object ChatModule : Module(
      */
     fun getProcessedMessage(original: Component): ProcessedMessage {
         val plainText = original.string
-        val calloutMatch = KeybindsModule.parseCallout(plainText)
         
         // Flag transient (temporary) client-side messages so they don't clog up the real chat log file
         if (plainText.contains("You cannot manually switch chat modes") || (plainText.contains("Melinoe") && plainText.contains("›"))) {
@@ -429,66 +423,16 @@ object ChatModule : Module(
         }
         
         return processedCache.getOrPut(original) {
-            val category = if (calloutMatch != null) ChatTab.CALLOUTS else determineCategory(plainText)
+            val isCallout = KeybindsModule.isCallout(plainText)
+            val category = if (isCallout) ChatTab.CALLOUTS else determineCategory(plainText)
             
             val shouldCensor = (hideGroupContent && category == ChatTab.GROUP) ||
                     (hideGuildContent && category == ChatTab.GUILD)
             
-            var processed = if (shouldCensor) censorComponent(original, plainText) else original
-            
-            if (calloutMatch != null) {
-                val myName = Minecraft.getInstance().player?.name?.string
-                if (!calloutMatch.player.equals(myName, ignoreCase = true)) {
-                    val contentIndex = plainText.indexOf(": ") + 2
-                    if (contentIndex >= 2) {
-                        val clickEvent = ClickEvent.RunCommand("/tp ${calloutMatch.player}")
-                        val hoverEvent = HoverEvent.ShowText(
-                            Component.literal("Click to teleport to ${calloutMatch.player}").withStyle(net.minecraft.ChatFormatting.YELLOW)
-                        )
-                        processed = makeClickableComponent(processed, contentIndex, IntArray(1) { 0 }, clickEvent, hoverEvent)
-                    }
-                }
-            }
+            val processed = if (shouldCensor) censorComponent(original, plainText) else original
             
             ProcessedMessage(category, processed, isTransient = false)
         }
-    }
-    
-    private fun makeClickableComponent(node: Component, contentStartIndex: Int, currentLen: IntArray, clickEvent: ClickEvent, hoverEvent: HoverEvent): Component {
-        val result: MutableComponent
-        val contents = node.contents
-        
-        if (contents is PlainTextContents) {
-            val text = contents.text()
-            val textLen = text.length
-            
-            if (currentLen[0] >= contentStartIndex) {
-                result = Component.literal(text).withStyle(node.style.withClickEvent(clickEvent).withHoverEvent(hoverEvent))
-                currentLen[0] += textLen
-            } else if (currentLen[0] + textLen > contentStartIndex) {
-                val splitIdx = contentStartIndex - currentLen[0]
-                val prefixPart = text.substring(0, splitIdx)
-                val contentPart = text.substring(splitIdx)
-                
-                result = Component.literal(prefixPart).withStyle(node.style)
-                result.append(Component.literal(contentPart).withStyle(node.style.withClickEvent(clickEvent).withHoverEvent(hoverEvent)))
-                currentLen[0] += textLen
-            } else {
-                result = Component.literal(text).withStyle(node.style)
-                currentLen[0] += textLen
-            }
-        } else if (contents is TranslatableContents) {
-            result = Component.translatable(contents.key, *contents.args).withStyle(node.style)
-        } else {
-            result = node.copy()
-            result.siblings.clear()
-        }
-        
-        for (sibling in node.siblings) {
-            result.append(makeClickableComponent(sibling, contentStartIndex, currentLen, clickEvent, hoverEvent))
-        }
-        
-        return result
     }
     
     /**

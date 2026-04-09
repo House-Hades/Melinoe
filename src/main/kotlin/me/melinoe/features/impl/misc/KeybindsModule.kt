@@ -18,6 +18,12 @@ import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.component.DataComponents
+import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.HoverEvent
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.network.chat.contents.PlainTextContents
+import net.minecraft.network.chat.contents.TranslatableContents
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.entity.monster.Evoker
@@ -171,6 +177,17 @@ object KeybindsModule : Module(
         }
     }
     
+    /**
+     * Used to identify if a string contains a callout
+     */
+    fun isCallout(plainText: String): Boolean {
+        val match = CHAT_MESSAGE_REGEX.find(plainText) ?: return false
+        val content = match.groupValues[3]
+        return CALLOUT_TELEPORT_REGEX.containsMatchIn(content) ||
+                CALLOUT_BOSS_HP_REGEX.containsMatchIn(content) ||
+                CALLOUT_DUNGEON_REGEX.containsMatchIn(content)
+    }
+    
     fun parseCallout(plainText: String): CalloutMatch? {
         val now = System.currentTimeMillis()
         
@@ -198,11 +215,72 @@ object KeybindsModule : Module(
         }
         
         if (target != null) {
-            globalCallouts.put("${realm}_${target.lowercase()}", CalloutData(now, hp))
+            // Only update the public global cooldown cache if it's not a guild/group message
+            if (!plainText.contains("[Guild]", ignoreCase = true) && !plainText.contains("[Group]", ignoreCase = true)) {
+                globalCallouts.put("${realm}_${target.lowercase()}", CalloutData(now, hp))
+            }
             calloutPlayers.put(player.lowercase(), Pair(realm, now))
             return CalloutMatch(realm, player)
         }
         return null
+    }
+    
+    /**
+     * Intercepts incoming messages to inject click-to-teleport logic
+     */
+    fun applyCalloutClickEvent(original: Component): Component {
+        val plainText = original.string
+        val calloutMatch = parseCallout(plainText) ?: return original
+        
+        val myName = mc.player?.name?.string
+        if (calloutMatch.player.equals(myName, ignoreCase = true)) return original
+        
+        val contentIndex = plainText.indexOf(": ") + 2
+        if (contentIndex < 2) return original
+        
+        val clickEvent = ClickEvent.RunCommand("/tp ${calloutMatch.player}")
+        val hoverEvent = HoverEvent.ShowText(
+            Component.literal("Click to teleport to ${calloutMatch.player}").withStyle(net.minecraft.ChatFormatting.YELLOW)
+        )
+        
+        return makeClickableComponent(original, contentIndex, IntArray(1) { 0 }, clickEvent, hoverEvent)
+    }
+    
+    private fun makeClickableComponent(node: Component, contentStartIndex: Int, currentLen: IntArray, clickEvent: ClickEvent, hoverEvent: HoverEvent): Component {
+        val result: MutableComponent
+        val contents = node.contents
+        
+        if (contents is PlainTextContents) {
+            val text = contents.text()
+            val textLen = text.length
+            
+            if (currentLen[0] >= contentStartIndex) {
+                result = Component.literal(text).withStyle(node.style.withClickEvent(clickEvent).withHoverEvent(hoverEvent))
+                currentLen[0] += textLen
+            } else if (currentLen[0] + textLen > contentStartIndex) {
+                val splitIdx = contentStartIndex - currentLen[0]
+                val prefixPart = text.substring(0, splitIdx)
+                val contentPart = text.substring(splitIdx)
+                
+                result = Component.literal(prefixPart).withStyle(node.style)
+                result.append(Component.literal(contentPart).withStyle(node.style.withClickEvent(clickEvent).withHoverEvent(hoverEvent)))
+                currentLen[0] += textLen
+            } else {
+                result = Component.literal(text).withStyle(node.style)
+                currentLen[0] += textLen
+            }
+        } else if (contents is TranslatableContents) {
+            result = Component.translatable(contents.key, *contents.args).withStyle(node.style)
+        } else {
+            result = node.copy()
+            result.siblings.clear()
+        }
+        
+        for (sibling in node.siblings) {
+            result.append(makeClickableComponent(sibling, contentStartIndex, currentLen, clickEvent, hoverEvent))
+        }
+        
+        return result
     }
     
     private fun getCurrentRealm(): String {
@@ -420,31 +498,43 @@ object KeybindsModule : Module(
             }
         }
         
+        // Cooldown bypass logic
+        val isPublicMode = ChatModule.currentServerCategory == ServerChatCategory.DEFAULT
+        
         if (targetName != null && messageToSend != null) {
             val realm = getCurrentRealm()
             val globalKey = "${realm}_${targetName.lowercase()}"
-            val lastData = globalCallouts.getIfPresent(globalKey)
             
-            if (lastData != null) {
-                val timeDiff = currentTime - lastData.time
-                val isBoss = trackedHp != -1
+            // Only apply global cooldown check if sending in the public chat mode
+            if (isPublicMode) {
+                val lastData = globalCallouts.getIfPresent(globalKey)
                 
-                val requiredCooldown = if (isBoss && lastData.hp != -1) {
-                    if (abs(lastData.hp - trackedHp) >= 10) 10000L else 15000L
-                } else {
-                    15000L
-                }
-                
-                if (timeDiff < requiredCooldown) {
-                    val remainingSeconds = (requiredCooldown - timeDiff) / 1000.0
-                    Message.error(String.format("Someone already called out $targetName in this realm! Please wait %.1fs.", remainingSeconds))
-                    return
+                if (lastData != null) {
+                    val timeDiff = currentTime - lastData.time
+                    val isBoss = trackedHp != -1
+                    
+                    val requiredCooldown = if (isBoss && lastData.hp != -1) {
+                        if (abs(lastData.hp - trackedHp) >= 10) 10000L else 15000L
+                    } else {
+                        15000L
+                    }
+                    
+                    if (timeDiff < requiredCooldown) {
+                        val remainingSeconds = (requiredCooldown - timeDiff) / 1000.0
+                        Message.error(String.format("Someone already called out $targetName in this realm! Please wait %.1fs.", remainingSeconds))
+                        return
+                    }
                 }
             }
             
             player.connection.sendChat(messageToSend)
             lastUsedTime = currentTime
-            globalCallouts.put(globalKey, CalloutData(currentTime, trackedHp))
+            
+            // Only overwrite the public cooldown if actually sent it in public mode
+            if (isPublicMode) {
+                globalCallouts.put(globalKey, CalloutData(currentTime, trackedHp))
+            }
+            
         } else {
             Message.error("No boss or portal detected!")
         }

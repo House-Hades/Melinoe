@@ -2,6 +2,7 @@ package me.melinoe.mixin.mixins;
 
 import me.melinoe.features.impl.misc.ChatModule;
 import me.melinoe.features.impl.misc.ChatTab;
+import me.melinoe.features.impl.misc.KeybindsModule;
 import me.melinoe.interfaces.ChatTabs;
 import me.melinoe.utils.emoji.EmojiReplacer;
 import net.minecraft.client.GuiMessage;
@@ -220,7 +221,7 @@ public abstract class ChatComponentMixin implements ChatTabs {
     }
 
     /**
-     * Immediately replaces any emoji shortcodes with their unicode character in incoming messages
+     * Processes emojis and injects unconditionally the click-to-teleport logic to the component immediately.
      */
     @ModifyVariable(
             method = "addMessage(Lnet/minecraft/network/chat/Component;)V",
@@ -228,7 +229,8 @@ public abstract class ChatComponentMixin implements ChatTabs {
             argsOnly = true,
             ordinal = 0
     )
-    private Component melinoe$replaceEmojisInChat(Component message) {
-        return EmojiReplacer.INSTANCE.replaceIn(message);
+    private Component melinoe$processIncomingMessage(Component message) {
+        Component withEmojis = EmojiReplacer.INSTANCE.replaceIn(message);
+        return KeybindsModule.INSTANCE.applyCalloutClickEvent(withEmojis);
     }
 }
