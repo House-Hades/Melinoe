@@ -164,12 +164,32 @@ object HealthBarModule : Module(
     
     private fun calculateBarColor(player: Player, pct: Float, tickDelta: Float): Int {
         val percentHundred = pct * 100f
+        val mid = midColorThreshold.toFloat()
+        val low = lowColorThreshold.toFloat()
         
-        // Choose base color
-        val baseColor = when {
-            percentHundred <= lowColorThreshold -> lowHealthColor.rgba
-            percentHundred <= midColorThreshold -> midHealthColor.rgba
-            else -> highHealthColor.rgba
+        // Blend the colors correctly if enabled, otherwise instantly snap
+        val baseColor = if (smoothHealth) {
+            when {
+                percentHundred >= mid -> {
+                    val range = 100f - mid
+                    val ratio = if (range > 0f) (percentHundred - mid) / range else 1f
+                    blendColors(midHealthColor.rgba, highHealthColor.rgba, ratio.coerceIn(0f, 1f))
+                }
+                percentHundred >= low -> {
+                    val range = mid - low
+                    val ratio = if (range > 0f) (percentHundred - low) / range else 1f
+                    blendColors(lowHealthColor.rgba, midHealthColor.rgba, ratio.coerceIn(0f, 1f))
+                }
+                else -> {
+                    lowHealthColor.rgba
+                }
+            }
+        } else {
+            when {
+                percentHundred <= low -> lowHealthColor.rgba
+                percentHundred <= mid -> midHealthColor.rgba
+                else -> highHealthColor.rgba
+            }
         }
         
         // Return normal color if not taking damage
