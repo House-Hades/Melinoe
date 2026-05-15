@@ -6,6 +6,7 @@ import me.melinoe.utils.ServerUtils
 import me.melinoe.utils.render.WaypointCache
 import me.melinoe.utils.render.WaypointData
 import me.melinoe.utils.render.WaypointRenderer
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext
 import net.minecraft.client.Camera
 import net.minecraft.world.phys.Vec3
 
@@ -23,7 +24,7 @@ object RendererWaypoints {
     /**
      * Render waypoints for all tracked bosses
      */
-    fun render(context: net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext) {
+    fun render(context: LevelRenderContext) {
         if (!ServerUtils.isOnTelos()) return
         if (!showWaypoints) return
         

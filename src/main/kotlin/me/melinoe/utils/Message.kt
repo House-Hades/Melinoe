@@ -5,7 +5,9 @@ import me.melinoe.Melinoe
 import me.melinoe.features.impl.ClickGUIModule
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer
-import net.minecraft.client.GuiMessageTag
+import net.minecraft.client.gui.components.ChatComponent
+import net.minecraft.client.multiplayer.chat.GuiMessageSource
+import net.minecraft.client.multiplayer.chat.GuiMessageTag
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.ComponentSerialization
 import net.minecraft.network.chat.MutableComponent
@@ -84,7 +86,7 @@ fun getCenteredText(text: String): String {
     if (strippedText.isEmpty()) return text
 
     val textWidth = Melinoe.mc.font.width(strippedText)
-    val chatWidth = Melinoe.mc.gui.chat.width
+    val chatWidth = ChatComponent.getWidth(Melinoe.mc.options.chatWidth().get())
 
     if (textWidth >= chatWidth) return text
 
@@ -93,8 +95,8 @@ fun getCenteredText(text: String): String {
 }
 
 fun getChatBreak(): String =
-    Melinoe.mc.gui?.chat?.width?.let { width ->
-        "<st>" + " ".repeat(width / Melinoe.mc.font.width(" ")) + "</st>"
+    Melinoe.mc.options.chatWidth().get().let { width ->
+        "<st>" + " ".repeat((width / Melinoe.mc.font.width(" ")).toInt()) + "</st>"
     } ?: ""
 
 /**
@@ -177,7 +179,7 @@ object Message {
                 .append(Component.literal(" "))
                 .append(message)
 
-            Melinoe.mc.gui?.chat?.addMessage(text, null, Melinoe_MESSAGE_INDICATOR)
+            Melinoe.mc.gui?.chat?.addMessage(text, null, GuiMessageSource.PLAYER, Melinoe_MESSAGE_INDICATOR)
         }
     }
 

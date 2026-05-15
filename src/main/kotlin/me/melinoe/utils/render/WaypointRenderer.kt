@@ -5,7 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
 import com.mojang.math.Axis
 import me.melinoe.Melinoe.mc
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext
 import net.minecraft.client.renderer.MultiBufferSource
 import net.minecraft.client.renderer.RenderType
 import net.minecraft.client.renderer.blockentity.BeaconRenderer
@@ -83,7 +83,7 @@ object WaypointRenderer {
      * This prevents MultiBufferSource from constantly flushing to the GPU
      */
     fun renderAllBatched(
-        context: WorldRenderContext,
+        context: LevelRenderContext,
         waypoints: List<WaypointData>,
         showBeam: Boolean = true,
         showLine: Boolean = false,

@@ -1,17 +1,13 @@
 package me.melinoe.clickgui
 
 import me.melinoe.features.Category
-import me.melinoe.features.Category.Companion.categories
 import me.melinoe.features.ModuleManager
 import me.melinoe.features.impl.ClickGUIModule
 import me.melinoe.utils.ui.HoverHandler
 import me.melinoe.utils.ui.animations.EaseOutAnimation
 import me.melinoe.utils.ui.rendering.NVGPIPRenderer
 import me.melinoe.utils.ui.rendering.NVGRenderer
-import me.melinoe.utils.Color
 import me.melinoe.utils.Colors
-import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
@@ -19,6 +15,7 @@ import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.network.chat.Component
 import kotlin.math.sign
 import me.melinoe.Melinoe
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import me.melinoe.utils.ui.mouseX as melinoeMouseX
 import me.melinoe.utils.ui.mouseY as melinoeMouseY
 
@@ -43,7 +40,7 @@ object ClickGUI : Screen(Component.literal("Click GUI")) {
     val gray38 = Colors.gray38
     val gray26 = Colors.gray26
 
-    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, deltaTicks: Float) {
+    override fun extractRenderState(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, deltaTicks: Float) {
         NVGPIPRenderer.draw(context, 0, 0, context.guiWidth(), context.guiHeight()) {
             val scaledMouseX = melinoeMouseX / ClickGUIModule.getStandardGuiScale()
             val scaledMouseY = melinoeMouseY / ClickGUIModule.getStandardGuiScale()
@@ -76,7 +73,7 @@ object ClickGUI : Screen(Component.literal("Click GUI")) {
 
             desc.render()
         }
-        super.render(context, mouseX, mouseY, deltaTicks)
+        super.extractRenderState(context, mouseX, mouseY, deltaTicks)
     }
 
     override fun mouseScrolled(

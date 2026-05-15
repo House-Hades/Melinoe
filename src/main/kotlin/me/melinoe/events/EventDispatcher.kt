@@ -4,7 +4,7 @@ import me.melinoe.Melinoe
 import me.melinoe.utils.render.RenderBatchManager
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents
 
 /**
  * Bridges Fabric lifecycle events into the melinoe EventBus.
@@ -24,11 +24,11 @@ object EventDispatcher {
             TickEvent.End(world).postAndCatch()
         }
 
-        WorldRenderEvents.END_EXTRACTION.register { handler ->
+        LevelRenderEvents.END_EXTRACTION.register { handler ->
             Melinoe.mc.level?.let { RenderEvent.Extract(handler, RenderBatchManager.renderConsumer).postAndCatch() }
         }
 
-        WorldRenderEvents.END_MAIN.register { context ->
+        LevelRenderEvents.END_MAIN.register { context ->
             Melinoe.mc.level?.let { RenderEvent.Last(context).postAndCatch() }
         }
         

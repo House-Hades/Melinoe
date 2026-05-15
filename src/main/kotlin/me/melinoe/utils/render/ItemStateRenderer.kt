@@ -16,7 +16,9 @@ import net.minecraft.client.gui.render.state.pip.PictureInPictureRenderState
 import net.minecraft.client.renderer.LightTexture
 import net.minecraft.client.renderer.MultiBufferSource
 import net.minecraft.client.renderer.RenderPipelines
+import net.minecraft.client.renderer.item.ItemStackRenderState
 import net.minecraft.client.renderer.item.TrackingItemStackRenderState
+import net.minecraft.client.renderer.state.gui.pip.PictureInPictureRenderState
 import net.minecraft.client.renderer.texture.OverlayTexture
 import net.minecraft.world.item.ItemDisplayContext
 import net.minecraft.world.item.ItemStack
@@ -27,24 +29,24 @@ import java.util.Objects
  * Special GUI renderer for item state previews.
  */
 class ItemStateRenderer(vertexConsumers: MultiBufferSource.BufferSource) :
-    PictureInPictureRenderer<ItemStateRenderer.State>(vertexConsumers) {
+    PictureInPictureRenderer<ItemStackRenderState>(vertexConsumers) {
 
     private var textureView: GpuTextureView? = null
-    private var lastState: State? = null
+    private var lastState: PictureInPictureRenderState? = null
 
     private val mc get() = Melinoe.mc
-
-    override fun renderToTexture(state: State, poseStack: PoseStack) {
+    
+    override fun renderToTexture(state: PictureInPictureRenderState, poseStack: PoseStack) {
         textureView = RenderSystem.outputColorTextureOverride
         lastState = state
         poseStack.scale(1f, -1f, -1f)
-
+        
         if (state.state.itemStackRenderState().usesBlockLight()) {
             mc.gameRenderer.lighting.setupFor(Lighting.Entry.ITEMS_3D)
         } else {
             mc.gameRenderer.lighting.setupFor(Lighting.Entry.ITEMS_FLAT)
         }
-
+        
         val dispatcher = mc.gameRenderer.featureRenderDispatcher
         state.state.itemStackRenderState().submit(
             poseStack,
