@@ -1,6 +1,9 @@
 package me.melinoe.utils.ui.rendering
 
+import com.mojang.blaze3d.opengl.GlConst
+import com.mojang.blaze3d.opengl.GlDevice
 import com.mojang.blaze3d.opengl.GlStateManager
+import com.mojang.blaze3d.opengl.GlTexture
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -9,22 +12,26 @@ import net.minecraft.client.gui.render.pip.PictureInPictureRenderer
 import net.minecraft.client.renderer.MultiBufferSource
 import net.minecraft.client.renderer.state.gui.pip.PictureInPictureRenderState
 import org.joml.Matrix3x2f
+import org.lwjgl.opengl.GL33C
 
 /**
  * Picture-in-Picture renderer that allows drawing NVG content into the vanilla GUI pipeline.
  */
-class NVGPIPRenderer(vertexConsumers: MultiBufferSource.BufferSource) :
-    PictureInPictureRenderer<NVGPIPRenderer.NVGRenderState>(vertexConsumers) {
+class NVGPIPRenderer(vertexConsumers: MultiBufferSource.BufferSource) : PictureInPictureRenderer<NVGPIPRenderer.NVGRenderState>(vertexConsumers) {
     
     override fun renderToTexture(state: NVGRenderState, poseStack: PoseStack) {
-        // In 26.1, the RenderPass is securely handled by the backend, meaning
-        // the Framebuffer Object (FBO) and Viewport are natively bound before this is called.
         val colorTex = RenderSystem.outputColorTextureOverride ?: return
+        val bufferManager = (RenderSystem.getDevice().backend as? GlDevice)?.directStateAccess() ?: return
+        val glDepthTex = (RenderSystem.outputDepthTextureOverride?.texture() as? GlTexture) ?: return
         
-        val width = colorTex.getWidth(0).toFloat()
-        val height = colorTex.getHeight(0).toFloat()
+        val (width, height) = colorTex.let { it.getWidth(0) to it.getHeight(0) }
+        (colorTex.texture() as? GlTexture)?.getFbo(bufferManager, glDepthTex)?.apply {
+            GlStateManager._glBindFramebuffer(GlConst.GL_FRAMEBUFFER, this)
+            GlStateManager._viewport(0, 0, width, height)
+        }
         
-        NVGRenderer.beginFrame(width, height)
+        GL33C.glBindSampler(0, 0)
+        NVGRenderer.beginFrame(width.toFloat(), height.toFloat())
         state.renderContent()
         NVGRenderer.endFrame()
         
@@ -87,20 +94,13 @@ class NVGPIPRenderer(vertexConsumers: MultiBufferSource.BufferSource) :
                 pose, scissor, bounds,
                 renderContent
             )
-            // Renamed from submitPicturesInPictureState in 26.1
             context.guiRenderState.addPicturesInPictureState(state)
         }
         
-        private fun createBounds(
-            x0: Int,
-            y0: Int,
-            x1: Int,
-            y1: Int,
-            pose: Matrix3x2f,
-            scissorArea: ScreenRectangle?
-        ): ScreenRectangle? {
+        private fun createBounds(x0: Int, y0: Int, x1: Int, y1: Int, pose: Matrix3x2f, scissorArea: ScreenRectangle?): ScreenRectangle? {
             val screenRect = ScreenRectangle(x0, y0, x1 - x0, y1 - y0).transformMaxBounds(pose)
             return if (scissorArea != null) scissorArea.intersection(screenRect) else screenRect
         }
     }
 }
+

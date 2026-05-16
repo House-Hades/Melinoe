@@ -16,7 +16,7 @@ interface IrisCompat {
     fun registerRenderType(pipeline: RenderPipeline, shaderType: IrisShaderType) {
         registerPipeline(pipeline, shaderType)
     }
-
+    
     companion object : IrisCompat by resolve() {
         init {
             registerRenderType(CustomRenderLayer.LINE_LIST.pipeline(), IrisShaderType.LINES)
@@ -35,7 +35,7 @@ enum class IrisShaderType {
 
 internal object IrisCompatImpl : IrisCompat {
     private val instance by lazy { IrisApi.getInstance() }
-
+    
     override fun registerPipeline(pipeline: RenderPipeline, shaderType: IrisShaderType) {
         val type = when (shaderType) {
             IrisShaderType.BASIC -> IrisProgram.BASIC
@@ -49,4 +49,3 @@ internal object IrisCompatImpl : IrisCompat {
 internal object IrisCompatNoOp : IrisCompat
 
 internal fun resolve(): IrisCompat = if (FabricLoader.getInstance().isModLoaded("iris")) IrisCompatImpl else IrisCompatNoOp
-

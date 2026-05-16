@@ -238,7 +238,7 @@ object NaturesGiftModule : Module(
         
         // Check if it's a Nature's Gift item
         val itemType = ItemUtils.ItemType.fromItemStack(bootsSlot)
-        return if (itemType.equalsOneOf(ItemUtils.ItemType.UT_NATURE, ItemUtils.ItemType.EX_NATURE)) {
+        return if (itemType.equalsOneOf(ItemUtils.ItemType.UT_NATURE)) {
             bootsSlot
         } else {
             null
@@ -252,7 +252,6 @@ object NaturesGiftModule : Module(
         // Set health threshold based on item type
         cachedHealthThreshold = when (itemType) {
             ItemUtils.ItemType.UT_NATURE -> 30.0f
-            ItemUtils.ItemType.EX_NATURE -> 35.0f
             else -> 30.0f
         }
         

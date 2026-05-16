@@ -54,6 +54,7 @@ dependencies {
 }
 
 loom {
+    accessWidenerPath = rootProject.file("src/main/resources/melinoe.accesswidener")
     runConfigs.named("client") {
         isIdeConfigGenerated = true
         vmArgs.addAll(

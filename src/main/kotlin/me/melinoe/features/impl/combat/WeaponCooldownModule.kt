@@ -8,17 +8,15 @@ import me.melinoe.events.core.on
 import me.melinoe.features.Category
 import me.melinoe.features.Module
 import me.melinoe.utils.Color
+import me.melinoe.utils.ItemUtils
 import me.melinoe.utils.createSoundSettings
 import me.melinoe.utils.emoji.EmojiReplacer
 import me.melinoe.utils.playSoundSettings
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.player.LocalPlayer
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
-import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
-import java.util.IdentityHashMap
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
@@ -96,9 +94,6 @@ object WeaponCooldownModule : Module(
     private var indicatorStartTime = 0L
     private var customTitle: Component? = null
     private var titleDisplayTicks = 0
-    
-    // Caches to prevent registry lookups & string allocations every tick
-    private val weaponItemCache = IdentityHashMap<Item, Boolean>()
     
     init {
         on<TickEvent.End> {
@@ -181,10 +176,10 @@ object WeaponCooldownModule : Module(
             val barY2 = barY + BAR_WIDTH
             
             // Draw outline
-            context.horizontalLine(barX, barX2 - 1, barY, BAR_BORDER_COLOR)
-            context.horizontalLine(barX, barX2 - 1, barY2 - 1, BAR_BORDER_COLOR)
-            context.verticalLine(barX, barY, barY2 - 1, BAR_BORDER_COLOR)
-            context.verticalLine(barX2 - 1, barY, barY2 - 1, BAR_BORDER_COLOR)
+            context.fill(barX, barY, barX2, barY + 1, BAR_BORDER_COLOR)
+            context.fill(barX, barY2 - 1, barX2, barY2, BAR_BORDER_COLOR)
+            context.fill(barX, barY, barX + 1, barY2, BAR_BORDER_COLOR)
+            context.fill(barX2 - 1, barY, barX2, barY2, BAR_BORDER_COLOR)
             
             val innerX1 = barX + 1
             val innerY1 = barY + 1
@@ -255,18 +250,9 @@ object WeaponCooldownModule : Module(
     
     private fun getCurrentPlayerWeapon(player: LocalPlayer): ItemStack {
         val mainHandStack = player.mainHandItem
-        if (isWeapon(mainHandStack)) return mainHandStack
+        if (ItemUtils.isWeapon(mainHandStack)) return mainHandStack
         
         return ItemStack.EMPTY
-    }
-    
-    private fun isWeapon(stack: ItemStack): Boolean {
-        if (stack.isEmpty) return false
-        val item = stack.item
-        
-        return weaponItemCache.getOrPut(item) {
-            BuiltInRegistries.ITEM.getKey(item).path.endsWith("_shovel")
-        }
     }
     
     override fun onDisable() {

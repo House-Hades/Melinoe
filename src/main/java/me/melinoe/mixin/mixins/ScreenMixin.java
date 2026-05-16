@@ -34,12 +34,12 @@ public class ScreenMixin {
             }
         }
     }
-//
-//    @Inject(method = "extractBackground", at = @At("HEAD"), cancellable = true)
-//    protected void onExtractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a, CallbackInfo ci) {
-//        Screen screen = (Screen) (Object) this;
-//        if (new GuiEvent.DrawBackground(screen, graphics, mouseX, mouseY).postAndCatch()) {
-//            ci.cancel();
-//        }
-//    }
+
+    @Inject(method = "extractBackground", at = @At("HEAD"), cancellable = true)
+    protected void onExtractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a, CallbackInfo ci) {
+        Screen screen = (Screen) (Object) this;
+        if (new GuiEvent.DrawBackground(screen, graphics, mouseX, mouseY).postAndCatch()) {
+            ci.cancel();
+        }
+    }
 }
