@@ -128,7 +128,7 @@ object SessionManagerModule : Module(
         }
         
         // Detect world/context changes
-        val currentWorld = client.level!!.dimension().location().toString()
+        val currentWorld = client.level!!.dimension().identifier().toString()
         val currentPlayer = client.player!!.uuid
         
         if (currentWorld != lastWorldStr || currentPlayer != lastPlayerId) {
@@ -259,7 +259,7 @@ object SessionManagerModule : Module(
         fill(cachedBoxWidth - 2, 2 + strHeightHalf, cachedBoxWidth - 1, cachedBoxHeight - 2, borderColor) // Right
         
         // Draw Title
-        drawString(font, titleComponent, 8, 2, borderColor, false)
+        text(font, titleComponent, 8, 2, borderColor, false)
         
         // Draw Content
         var yOffset = font.lineHeight + 4
@@ -268,11 +268,11 @@ object SessionManagerModule : Module(
         
         for ((label, value) in cachedLines) {
             // Label (Left)
-            drawString(font, label, leftPadding, yOffset, textColorSetting.rgba, false)
+            text(font, label, leftPadding, yOffset, textColorSetting.rgba, false)
             
             // Value (Right)
             val valueX = cachedBoxWidth - font.width(value) - 6
-            drawString(font, value, valueX, yOffset, valueColorSetting.rgba, false)
+            text(font, value, valueX, yOffset, valueColorSetting.rgba, false)
             
             yOffset += lineSpacing
         }

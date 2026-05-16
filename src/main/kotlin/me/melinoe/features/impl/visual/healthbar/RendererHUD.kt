@@ -2,7 +2,7 @@ package me.melinoe.features.impl.visual.healthbar
 
 import net.minecraft.client.Camera
 import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
@@ -58,7 +58,7 @@ class RendererHUD(private val mc: Minecraft) {
      * Render cached health bar on HUD
      */
     fun renderHud(
-        guiGraphics: GuiGraphics,
+        guiGraphics: GuiGraphicsExtractor,
         healthPercentage: Float,
         colorTop: Int,
         colorBottom: Int,
@@ -104,13 +104,13 @@ class RendererHUD(private val mc: Minecraft) {
      * Project world coordinates to screen coordinates
      */
     private fun worldToScreen(worldPos: Vec3, camera: Camera, yPosition: Double): Vec3? {
-        val cameraPos = camera.position
+        val cameraPos = camera.position()
         val relativeX = worldPos.x - cameraPos.x
         val relativeY = worldPos.y - cameraPos.y
         val relativeZ = worldPos.z - cameraPos.z
         
-        val yaw = Math.toRadians(camera.yRot.toDouble())
-        val pitch = Math.toRadians(camera.xRot.toDouble())
+        val yaw = Math.toRadians(camera.yRot().toDouble())
+        val pitch = Math.toRadians(camera.xRot().toDouble())
         
         // Transform to camera space
         val cosYaw = cos(-yaw)
@@ -140,7 +140,7 @@ class RendererHUD(private val mc: Minecraft) {
         
         // Apply screen-space offset for negative Y
         if (yPosition < 0) {
-            val cameraPitch = camera.xRot
+            val cameraPitch = camera.xRot()
             val pitchNormalized = cameraPitch / 90.0
             val baseOffset = -yPosition * (window.guiScaledHeight * 0.1)
             val pitchMultiplier = 0.9 + (pitchNormalized * 0.05) + (abs(pitchNormalized) * 0.25)
@@ -160,7 +160,7 @@ class RendererHUD(private val mc: Minecraft) {
      * Draw health bar using HUD rendering
      */
     private fun drawSimpleHealthBarHUD(
-        guiGraphics: GuiGraphics,
+        guiGraphics: GuiGraphicsExtractor,
         width: Float,
         height: Float,
         healthPercentage: Float,
@@ -207,7 +207,7 @@ class RendererHUD(private val mc: Minecraft) {
      * Draw health text using HUD rendering
      */
     private fun drawHealthTextHUD(
-        guiGraphics: GuiGraphics,
+        guiGraphics: GuiGraphicsExtractor,
         healthText: String,
         barWidth: Float,
         barHeight: Float,
@@ -242,7 +242,7 @@ class RendererHUD(private val mc: Minecraft) {
         when (textOutline) {
             1 -> { // Shadow
                 val shadowColor = 0xFF000000.toInt()
-                guiGraphics.drawString(
+                guiGraphics.text(
                     font,
                     healthText,
                     (textX + 1).toInt(),
@@ -256,7 +256,7 @@ class RendererHUD(private val mc: Minecraft) {
                 for (offsetX in -1..1) {
                     for (offsetY in -1..1) {
                         if (offsetX == 0 && offsetY == 0) continue
-                        guiGraphics.drawString(
+                        guiGraphics.text(
                             font,
                             healthText,
                             (textX + offsetX).toInt(),
@@ -271,7 +271,7 @@ class RendererHUD(private val mc: Minecraft) {
         }
         
         // Draw main text
-        guiGraphics.drawString(
+        guiGraphics.text(
             font,
             healthText,
             textX.toInt(),

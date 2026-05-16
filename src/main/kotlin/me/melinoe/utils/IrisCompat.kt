@@ -6,7 +6,6 @@ import me.melinoe.utils.render.CustomRenderLayer
 import net.fabricmc.loader.api.FabricLoader
 import net.irisshaders.iris.api.v0.IrisApi
 import net.irisshaders.iris.api.v0.IrisProgram
-import net.minecraft.client.renderer.RenderType
 
 /**
  * Iris shader compatibility handler.
@@ -14,17 +13,17 @@ import net.minecraft.client.renderer.RenderType
  */
 interface IrisCompat {
     fun registerPipeline(pipeline: RenderPipeline, shaderType: IrisShaderType) {}
-    fun registerRenderType(pipeline: RenderType.CompositeRenderType, shaderType: IrisShaderType) {
-        registerPipeline((pipeline as CompositeRenderTypeAccessor).renderPipeline, shaderType)
+    fun registerRenderType(pipeline: RenderPipeline, shaderType: IrisShaderType) {
+        registerPipeline(pipeline, shaderType)
     }
 
     companion object : IrisCompat by resolve() {
         init {
-            registerRenderType(CustomRenderLayer.LINE_LIST, IrisShaderType.LINES)
-            registerRenderType(CustomRenderLayer.LINE_LIST_ESP, IrisShaderType.LINES)
-            registerRenderType(CustomRenderLayer.TRIANGLE_STRIP, IrisShaderType.BASIC)
-            registerRenderType(CustomRenderLayer.TRIANGLE_STRIP_ESP, IrisShaderType.BASIC)
-            registerRenderType(CustomRenderLayer.QUADS, IrisShaderType.BASIC)
+            registerRenderType(CustomRenderLayer.LINE_LIST.pipeline(), IrisShaderType.LINES)
+            registerRenderType(CustomRenderLayer.LINE_LIST_ESP.pipeline(), IrisShaderType.LINES)
+            registerRenderType(CustomRenderLayer.TRIANGLE_STRIP.pipeline(), IrisShaderType.BASIC)
+            registerRenderType(CustomRenderLayer.TRIANGLE_STRIP_ESP.pipeline(), IrisShaderType.BASIC)
+            registerRenderType(CustomRenderLayer.QUADS.pipeline(), IrisShaderType.BASIC)
         }
     }
 }

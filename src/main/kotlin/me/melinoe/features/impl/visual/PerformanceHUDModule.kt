@@ -12,7 +12,7 @@ import me.melinoe.utils.Colors
 import me.melinoe.utils.ServerUtils
 import me.melinoe.utils.toFixed
 import me.melinoe.utils.render.textDim
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 
 /**
  * Performance HUD Module - displays FPS, TPS, and ping.
@@ -62,7 +62,7 @@ object PerformanceHUDModule : Module(
         width to if (direction == HORIZONTAL) lineHeight else height
     }
 
-    private fun GuiGraphics.drawText(name: String, value: String, x: Int, y: Int): Int {
+    private fun GuiGraphicsExtractor.drawText(name: String, value: String, x: Int, y: Int): Int {
         var width = 0
         width += textDim(name, x, y, nameColor, true).first
         width += textDim(value, x + width, y, valueColor, true).first

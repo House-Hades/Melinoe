@@ -7,12 +7,13 @@ import com.mojang.math.Axis
 import me.melinoe.Melinoe.mc
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext
 import net.minecraft.client.renderer.MultiBufferSource
-import net.minecraft.client.renderer.RenderType
 import net.minecraft.client.renderer.blockentity.BeaconRenderer
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.client.renderer.rendertype.RenderTypes
+import net.minecraft.resources.Identifier
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
+import org.joml.Vector3f
 import kotlin.math.max
 import kotlin.math.sin
 
@@ -28,20 +29,20 @@ data class WaypointData(
     val color: FloatArray,
     val alpha: Float,
     val textAlpha: Float,
-    val icon: ResourceLocation?,
+    val icon: Identifier?,
     val isFlashing: Boolean
 )
 
 object WaypointCache {
-    private val iconCache = mutableMapOf<ResourceLocation, ResourceLocation>()
+    private val iconCache = mutableMapOf<Identifier, Identifier>()
     private val truncatedTextCache = mutableMapOf<String, String>()
     
-    fun getResolvedIcon(icon: ResourceLocation): ResourceLocation {
+    fun getResolvedIcon(icon: Identifier): Identifier {
         return iconCache.getOrPut(icon) {
             var path = icon.path
             if (!path.startsWith("textures/")) path = "textures/$path"
             if (!path.endsWith(".png")) path = "$path.png"
-            ResourceLocation.fromNamespaceAndPath(icon.namespace, path)
+            Identifier.fromNamespaceAndPath(icon.namespace, path)
         }
     }
     
@@ -89,20 +90,20 @@ object WaypointRenderer {
         showLine: Boolean = false,
         showText: Boolean = true,
         textScale: Float = 0.7f,
-        lineWidth: Float = 2.0f
+        lineWidth: Float = 2.0f // Kept for API compatibility, though rendering engines enforce fixed widths now.
     ) {
         if (waypoints.isEmpty()) return
         
-        val poseStack = context.matrices() ?: return
-        val bufferSource = context.consumers() ?: return
-        val cameraObj = context.gameRenderer().mainCamera ?: return
-        val cameraPos = cameraObj.position
+        val poseStack = context.poseStack()
+        val bufferSource = context.bufferSource()
+        val cameraObj = context.gameRenderer().mainCamera
+        val cameraPos = cameraObj.position()
         
         val time = System.currentTimeMillis()
         
         // Pass 1: Filled Boxes (RenderType.debugQuads)
         if (showBeam) {
-            val quadBuffer = bufferSource.getBuffer(RenderType.debugQuads())
+            val quadBuffer = bufferSource.getBuffer(RenderTypes.debugQuads())
             for (wp in waypoints) {
                 val alphaMult = if (wp.isFlashing) 0.625f + 0.375f * sin((time % 2000L) / 2000.0 * Math.PI * 2).toFloat() else 1.0f
                 renderFilledBox(poseStack, quadBuffer, cameraPos, wp.pos, wp.color, wp.alpha * alphaMult)
@@ -113,7 +114,7 @@ object WaypointRenderer {
         if (showBeam) {
             val partialTicks = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
             val worldTime = mc.level?.gameTime ?: 0L
-            val beamBuffer = bufferSource.getBuffer(RenderType.beaconBeam(BeaconRenderer.BEAM_LOCATION, true))
+            val beamBuffer = bufferSource.getBuffer(RenderTypes.beaconBeam(BeaconRenderer.BEAM_LOCATION, true))
             
             for (wp in waypoints) {
                 val alphaMult = if (wp.isFlashing) 0.625f + 0.375f * sin((time % 2000L) / 2000.0 * Math.PI * 2).toFloat() else 1.0f
@@ -123,19 +124,16 @@ object WaypointRenderer {
         
         // Pass 3: Lines (RenderType.lines)
         if (showLine) {
-            val prevLineWidth = RenderSystem.getShaderLineWidth()
-            RenderSystem.lineWidth(lineWidth)
-            val lineBuffer = bufferSource.getBuffer(RenderType.lines())
+            val lineBuffer = bufferSource.getBuffer(RenderTypes.lines())
             
             for (wp in waypoints) {
                 val alphaMult = if (wp.isFlashing) 0.625f + 0.375f * sin((time % 2000L) / 2000.0 * Math.PI * 2).toFloat() else 1.0f
                 renderLineFromCamera(poseStack, lineBuffer, cameraObj, wp.pos, wp.color, wp.alpha * alphaMult)
             }
-            RenderSystem.lineWidth(prevLineWidth)
         }
         
         // Pre-group icons so we don't switch textures constantly
-        val iconsMap = mutableMapOf<ResourceLocation, MutableList<WaypointData>>()
+        val iconsMap = mutableMapOf<Identifier, MutableList<WaypointData>>()
         for (wp in waypoints) {
             if (wp.icon != null) {
                 val resolvedIcon = WaypointCache.getResolvedIcon(wp.icon)
@@ -145,7 +143,7 @@ object WaypointRenderer {
         
         // Pass 4: Icons (See-through layer)
         for ((icon, wps) in iconsMap) {
-            val seeThroughBuffer = bufferSource.getBuffer(RenderType.textSeeThrough(icon))
+            val seeThroughBuffer = bufferSource.getBuffer(RenderTypes.textSeeThrough(icon))
             for (wp in wps) {
                 val alphaMult = if (wp.isFlashing) 0.625f + 0.375f * sin((time % 2000L) / 2000.0 * Math.PI * 2).toFloat() else 1.0f
                 renderIconLayer(poseStack, seeThroughBuffer, cameraObj, wp, wp.textAlpha * alphaMult * 0.5f, showText)
@@ -154,7 +152,7 @@ object WaypointRenderer {
         
         // Pass 5: Icons (Solid layer)
         for ((icon, wps) in iconsMap) {
-            val solidBuffer = bufferSource.getBuffer(RenderType.text(icon))
+            val solidBuffer = bufferSource.getBuffer(RenderTypes.text(icon))
             for (wp in wps) {
                 val alphaMult = if (wp.isFlashing) 0.625f + 0.375f * sin((time % 2000L) / 2000.0 * Math.PI * 2).toFloat() else 1.0f
                 renderIconLayer(poseStack, solidBuffer, cameraObj, wp, wp.textAlpha * alphaMult, showText)
@@ -240,7 +238,7 @@ object WaypointRenderer {
         poseStack: PoseStack, buffer: VertexConsumer, camera: net.minecraft.client.Camera,
         wp: WaypointData, alpha: Float, showText: Boolean
     ) {
-        val cameraPos = camera.position
+        val cameraPos = camera.position()
         val textWorldPos = Vec3(wp.pos.x + 0.5, wp.pos.y + 1.5, wp.pos.z + 0.5)
         
         val renderCoords = if (wp.distance > 32.0) {
@@ -250,8 +248,8 @@ object WaypointRenderer {
         
         poseStack.pushPose()
         poseStack.translate(renderCoords.x - cameraPos.x, renderCoords.y - cameraPos.y, renderCoords.z - cameraPos.z)
-        poseStack.mulPose(Axis.YP.rotationDegrees(-camera.yRot))
-        poseStack.mulPose(Axis.XP.rotationDegrees(camera.xRot))
+        poseStack.mulPose(Axis.YP.rotationDegrees(-camera.yRot()))
+        poseStack.mulPose(Axis.XP.rotationDegrees(camera.xRot()))
         poseStack.scale(-0.1f, -0.1f, 0.1f)
         
         val iconSize = 20f
@@ -268,7 +266,7 @@ object WaypointRenderer {
     ) {
         if (wp.displayText.isEmpty()) return
         
-        val cameraPos = camera.position
+        val cameraPos = camera.position()
         val textWorldPos = Vec3(wp.pos.x + 0.5, wp.pos.y + 1.5, wp.pos.z + 0.5)
         
         val renderCoords = if (wp.distance > 32.0) {
@@ -278,8 +276,8 @@ object WaypointRenderer {
         
         poseStack.pushPose()
         poseStack.translate(renderCoords.x - cameraPos.x, renderCoords.y - cameraPos.y, renderCoords.z - cameraPos.z)
-        poseStack.mulPose(Axis.YP.rotationDegrees(-camera.yRot))
-        poseStack.mulPose(Axis.XP.rotationDegrees(camera.xRot))
+        poseStack.mulPose(Axis.YP.rotationDegrees(-camera.yRot()))
+        poseStack.mulPose(Axis.XP.rotationDegrees(camera.xRot()))
         poseStack.scale(-0.1f, -0.1f, 0.1f)
         
         val textWidth = font.width(wp.displayText)
@@ -297,16 +295,20 @@ object WaypointRenderer {
     private fun renderLineFromCamera(
         poseStack: PoseStack, buffer: VertexConsumer, camera: net.minecraft.client.Camera, target: Vec3, color: FloatArray, alpha: Float
     ) {
-        val cameraPos = camera.position
-        val startPos = cameraPos.add(Vec3.directionFromRotation(camera.xRot, camera.yRot))
+        val cameraPos = camera.position()
+        val startPos = cameraPos.add(Vec3.directionFromRotation(camera.xRot(), camera.yRot()))
         val endPos = target.add(0.5, 0.5, 0.5)
         
         poseStack.pushPose()
         poseStack.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z)
         val matrix = poseStack.last()
         
-        buffer.addVertex(matrix.pose(), startPos.x.toFloat(), startPos.y.toFloat(), startPos.z.toFloat()).setColor(color[0], color[1], color[2], alpha).setNormal(matrix, 0f, 1f, 0f)
-        buffer.addVertex(matrix.pose(), endPos.x.toFloat(), endPos.y.toFloat(), endPos.z.toFloat()).setColor(color[0], color[1], color[2], alpha).setNormal(matrix, 0f, 1f, 0f)
+        buffer.addVertex(matrix, Vector3f(startPos.x.toFloat(), startPos.y.toFloat(), startPos.z.toFloat()))
+            .setColor(color[0], color[1], color[2], alpha)
+            .setNormal(matrix, Vector3f(0f, 1f, 0f))
+        buffer.addVertex(matrix, Vector3f(endPos.x.toFloat(), endPos.y.toFloat(), endPos.z.toFloat()))
+            .setColor(color[0], color[1], color[2], alpha)
+            .setNormal(matrix, Vector3f(0f, 1f, 0f))
         poseStack.popPose()
     }
     
@@ -363,11 +365,11 @@ object WaypointRenderer {
         entry: PoseStack.Pose, buffer: VertexConsumer, color: FloatArray, y: Int,
         x: Float, z: Float, u: Float, v: Float
     ) {
-        buffer.addVertex(entry.pose(), x, y.toFloat(), z)
+        buffer.addVertex(entry, Vector3f(x, y.toFloat(), z))
             .setColor(color[0], color[1], color[2], if (color.size > 3) color[3] else 1f)
             .setUv(u, v)
             .setOverlay(net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY)
             .setLight(15728880)
-            .setNormal(entry, 0f, 1f, 0f)
+            .setNormal(entry, Vector3f(0f, 1f, 0f))
     }
 }

@@ -2,6 +2,7 @@ package me.melinoe.features.impl.visual.dungeontimer
 
 import me.melinoe.Melinoe
 import me.melinoe.utils.data.DungeonData
+import net.minecraft.client.gui.components.ChatComponent
 import net.minecraft.network.chat.Component
 
 /**
@@ -20,7 +21,7 @@ fun DungeonData.isMultiStageDungeon(): Boolean =
 fun centerComponent(component: Component): Component {
     val plainText = component.string
     val textWidth = Melinoe.mc.font.width(plainText)
-    val chatWidth = Melinoe.mc.gui.chat.width
+    val chatWidth = ChatComponent.getWidth(Melinoe.mc.options.chatWidth().get())
     
     if (textWidth >= chatWidth) return component
     

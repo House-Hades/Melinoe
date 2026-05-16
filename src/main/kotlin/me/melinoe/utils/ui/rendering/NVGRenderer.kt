@@ -6,7 +6,7 @@ import me.melinoe.utils.Color.Companion.alpha
 import me.melinoe.utils.Color.Companion.blue
 import me.melinoe.utils.Color.Companion.green
 import me.melinoe.utils.Color.Companion.red
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import org.lwjgl.nanovg.NVGColor
 import org.lwjgl.nanovg.NVGPaint
 import org.lwjgl.nanovg.NanoSVG.*
@@ -28,7 +28,7 @@ object NVGRenderer {
 
     val defaultFont: Font by lazy {
         try {
-            Font("Default", mc.resourceManager.getResource(ResourceLocation.parse("melinoe:font.ttf")).get().open())
+            Font("Default", mc.resourceManager.getResource(Identifier.parse("melinoe:font.ttf")).get().open())
         } catch (e: Exception) {
             Melinoe.logger.error("Failed to load font: melinoe:font.ttf", e)
             Font("Default", java.io.ByteArrayInputStream(ByteArray(0)))
@@ -374,7 +374,7 @@ object NVGRenderer {
      */
     private fun getEmojiTextureId(path: String): Int {
         return nvgEmojis.getOrPut(path) {
-            val location = ResourceLocation.parse(path)
+            val location = Identifier.parse(path)
             
             // Replicate Minecraft BitmapProvider appending rules just in case
             val textureLocation = if (location.path.startsWith("textures/")) location else location.withPrefix("textures/")

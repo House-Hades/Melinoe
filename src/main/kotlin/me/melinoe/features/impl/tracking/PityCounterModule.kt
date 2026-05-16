@@ -24,7 +24,7 @@ import me.melinoe.utils.data.persistence.TypeSafeDataAccess
 import net.minecraft.ChatFormatting
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 
@@ -110,13 +110,14 @@ object PityCounterModule : Module(
     }
     
     init {
+        
         // Register callback for instant updates when pity changes
         DataConfig.registerUpdateCallback {
             updateCache()
         }
         
         // Initial cache load
-        updateCache()
+//        updateCache()
         
         on<DungeonEntryEvent> { handleDungeonEntry(dungeon) } // Listen for dungeon entry
         on<DungeonChangeEvent> { handleDungeonEntry(newDungeon) } // Listen for dungeon changes
@@ -151,7 +152,7 @@ object PityCounterModule : Module(
     private fun getItemStack(item: Item): ItemStack {
         return cachedItemStacks.getOrPut(item) {
             val itemStack = ItemStack(Items.CARROT_ON_A_STICK)
-            itemStack.set(DataComponents.ITEM_MODEL, ResourceLocation.parse(item.texturePath))
+            itemStack.set(DataComponents.ITEM_MODEL, Identifier.parse(item.texturePath))
             itemStack
         }
     }
@@ -433,7 +434,7 @@ object PityCounterModule : Module(
         fill(boxWidth - 2, 2 + strHeightHalf, boxWidth - 1, boxHeight - 2, borderColor)
         
         // Draw title
-        drawString(font, cachedTitleComponent!!, 8, 2, borderColor, false)
+        text(font, cachedTitleComponent!!, 8, 2, borderColor, false)
         
         // Draw items
         var yOffset = font.lineHeight + 4
@@ -450,7 +451,7 @@ object PityCounterModule : Module(
             val itemY = yOffset + (font.lineHeight / 2f) - (targetItemSize / 2f)
             pose().translate(xOffset.toFloat(), itemY)
             pose().scale(scaleFactor, scaleFactor)
-            renderItem(itemStack, 0, 0)
+            item(itemStack, 0, 0)
             pose().popMatrix()
             
             xOffset += itemPadding
@@ -463,8 +464,8 @@ object PityCounterModule : Module(
                 drawX = textureEnd + (spaceAvailable - renderData.nameWidth) / 2
             }
             
-            drawString(font, renderData.displayName, drawX, yOffset, renderData.rarityColor, false)
-            drawString(font, renderData.pityValueStr, valueX, yOffset, valueColor.rgba, false)
+            text(font, renderData.displayName, drawX, yOffset, renderData.rarityColor, false)
+            text(font, renderData.pityValueStr, valueX, yOffset, valueColor.rgba, false)
             
             yOffset += lineSpacing
         }

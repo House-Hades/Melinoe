@@ -120,7 +120,7 @@ object BossDefeatHandler {
             if (queuedMessages.isNotEmpty()) {
                 queuedMessages.forEach { component ->
                     // Re-send the component to preserve formatting
-                    Melinoe.mc.execute { Melinoe.mc.gui?.chat?.addMessage(component) }
+                    Melinoe.mc.execute { Melinoe.mc.gui.chat.addClientSystemMessage(component) }
                 }
                 queuedMessages.clear()
             }
@@ -202,12 +202,12 @@ object BossDefeatHandler {
         // Centered Dungeon/Boss Name
         val headerSpaces = getCenteredText(plainHeaderText).takeWhile { it == ' ' }
         val finalHeader = Component.literal(headerSpaces).append(headerComponent ?: "<#FFFF00><bold>$strippedValue</bold></#FFFF00>".toNative())
-        Melinoe.mc.execute { Melinoe.mc.gui?.chat?.addMessage(finalHeader) }
+        Melinoe.mc.execute { Melinoe.mc.gui.chat.addClientSystemMessage(finalHeader) }
         
         // Space prior to either the Timer or Pity Module (only for world bosses)
         val isWorldBoss = bossData?.bossType == BossType.WORLD
         if (isWorldBoss && (pityLines.isNotEmpty() || timerLines.isNotEmpty())) {
-            Melinoe.mc.execute { Melinoe.mc.gui?.chat?.addMessage(" ".toNative()) }
+            Melinoe.mc.execute { Melinoe.mc.gui.chat.addClientSystemMessage(" ".toNative()) }
         }
         
         // Pity Module Lines
@@ -219,7 +219,7 @@ object BossDefeatHandler {
         for (line in timerLines) {
             val lineSpaces = getCenteredText(line.string).takeWhile { it == ' ' }
             val finalLine = Component.literal(lineSpaces).append(line)
-            Melinoe.mc.execute { Melinoe.mc.gui?.chat?.addMessage(finalLine) }
+            Melinoe.mc.execute { Melinoe.mc.gui.chat.addClientSystemMessage(finalLine) }
         }
         
         Message.separator()
@@ -287,12 +287,12 @@ object BossDefeatHandler {
             
             // Add medal with same color as username
             Melinoe.mc.execute {
-                Melinoe.mc.gui?.chat?.addMessage(mmString.toNative())
+                Melinoe.mc.gui.chat.addClientSystemMessage(mmString.toNative())
             }
         } else {
             val spaces = getCenteredText(strippedValue).takeWhile { it == ' ' }
             Melinoe.mc.execute {
-                Melinoe.mc.gui?.chat?.addMessage("$spaces$cleanValue".toNative())
+                Melinoe.mc.gui.chat.addClientSystemMessage("$spaces$cleanValue".toNative())
             }
         }
     }

@@ -149,7 +149,7 @@ object ClickGUIModule : Module(
             val currentVersion = Melinoe.version.friendlyString
             val message = buildUpdateMessage(currentVersion, version, RELEASE_LINK + version.removePrefix("v"))
             
-            Melinoe.mc.gui?.chat?.addMessage(message)
+            Melinoe.mc.gui.chat.addClientSystemMessage(message)
             
             // Play alert sound
             alert("Melinoe Update Available", playSound = true)

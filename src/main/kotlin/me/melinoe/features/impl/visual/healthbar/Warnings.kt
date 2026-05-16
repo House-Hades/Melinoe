@@ -137,7 +137,7 @@ class Warnings(private val mc: Minecraft) {
     fun handleWorldChange() {
         val currentRealm = LocalAPI.getCurrentCharacterWorld()
         val level = mc.level
-        val currentDimension = level?.dimension()?.location()?.path ?: ""
+        val currentDimension = level?.dimension()?.identifier()?.path ?: ""
         
         if (currentRealm.isEmpty() || currentDimension.isEmpty()) return
         
@@ -220,7 +220,7 @@ class Warnings(private val mc: Minecraft) {
             mc.execute {
                 try {
                     val soundEvent = net.minecraft.sounds.SoundEvent.createVariableRangeEvent(
-                        net.minecraft.resources.ResourceLocation.parse(soundId)
+                        net.minecraft.resources.Identifier.parse(soundId)
                     )
                     playSoundAtPlayer(soundEvent, volume, pitch)
                 } catch (e: Exception) {

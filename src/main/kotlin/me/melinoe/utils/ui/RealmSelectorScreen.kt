@@ -3,7 +3,7 @@ package me.melinoe.utils.ui
 import me.melinoe.network.RealmFetcher
 import me.melinoe.utils.LocalAPI
 import me.melinoe.utils.startsWithOneOf
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.Button
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.network.chat.Component
@@ -157,9 +157,9 @@ object RealmSelectorScreen : Screen(Component.literal("Realm Selector")) {
         }
     }
     
-    override fun render(guiGraphics: GuiGraphics, mouseX: Int, mouseY: Int, partialTick: Float) {
+    override fun extractRenderState(guiGraphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
         // Render background without blur to avoid "Can only blur once per frame" crash
-        renderTransparentBackground(guiGraphics)
+        extractTransparentBackground(guiGraphics)
         
         // Get current server to disable its button
         val currentServerFull = LocalAPI.getCurrentCharacterWorld()
@@ -271,20 +271,20 @@ object RealmSelectorScreen : Screen(Component.literal("Realm Selector")) {
             val textY = gridStartY + totalGridHeight + 15
             
             // Draw "Current:" in bold dark red
-            guiGraphics.drawString(font, currentLabel, textX, textY, melinoeRed, true)
+            guiGraphics.text(font, currentLabel, textX, textY, melinoeRed, true)
             
             // Draw server name in bright red (0xFFFF3333) without bold
             val brightRed = 0xFFFF3333.toInt()
-            guiGraphics.drawString(font, serverName, textX + labelWidth, textY, brightRed, true)
+            guiGraphics.text(font, serverName, textX + labelWidth, textY, brightRed, true)
         }
         
-        super.render(guiGraphics, mouseX, mouseY, partialTick)
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick)
     }
     
     /**
      * Renders the colored title "Realm Selector" with 2.0x font scale
      */
-    private fun renderColoredTitle(guiGraphics: GuiGraphics, yPosition: Int) {
+    private fun renderColoredTitle(guiGraphics: GuiGraphicsExtractor, yPosition: Int) {
         val coloredText = arrayOf(
             "§lR", "§le", "§la", "§ll", "§lm", " ", "§lS", "§le", "§ll", "§le", "§lc", "§lt", "§lo", "§lr"
         )
@@ -325,7 +325,7 @@ object RealmSelectorScreen : Screen(Component.literal("Realm Selector")) {
             val charText = coloredText[i]
             val color = colors[i]
             
-            guiGraphics.drawString(font, charText, currentX, scaledTitleY, color, true)
+            guiGraphics.text(font, charText, currentX, scaledTitleY, color, true)
             currentX += font.width(charText)
         }
         

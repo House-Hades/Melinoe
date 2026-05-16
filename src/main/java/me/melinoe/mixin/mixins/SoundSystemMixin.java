@@ -5,7 +5,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.SoundEngine;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -17,7 +17,7 @@ public class SoundSystemMixin {
     
     @Inject(method = "play", at = @At("HEAD"))
     private void onPlaySound(SoundInstance sound, CallbackInfoReturnable<?> cir) {
-        ResourceLocation soundId = sound.getLocation();
+        Identifier soundId = sound.getIdentifier();
         
         // Detect bag open sound
         if (soundId.toString().startsWith("noise:player.bags.open")) {

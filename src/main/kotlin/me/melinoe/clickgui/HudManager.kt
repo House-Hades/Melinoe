@@ -7,7 +7,7 @@ import me.melinoe.clickgui.settings.impl.HudElement
 import me.melinoe.utils.Colors
 import me.melinoe.utils.ui.mouseX as melinoeMouseX
 import me.melinoe.utils.ui.mouseY as melinoeMouseY
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
@@ -44,8 +44,8 @@ object HudManager : Screen(Component.literal("HUD Manager")) {
                 GLFW.glfwGetKey(windowHandle, GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS
     }
 
-    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, deltaTicks: Float) {
-        super.render(context, mouseX, mouseY, deltaTicks)
+    override fun extractRenderState(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, deltaTicks: Float) {
+        super.extractRenderState(context, mouseX, mouseY, deltaTicks)
 
         val sw = Melinoe.mc.window.screenWidth
         val sh = Melinoe.mc.window.screenHeight
@@ -117,8 +117,8 @@ object HudManager : Screen(Component.literal("HUD Manager")) {
                 hoveredHud.value.screenY.toFloat(),
             )
             context.pose().scale(2f, 2f)
-            context.drawString(Melinoe.mc.font, hoveredHud.name, 0, 0, Colors.WHITE.rgba)
-            context.drawWordWrap(Melinoe.mc.font, Component.literal(hoveredHud.description), 0, 10, 150, Colors.WHITE.rgba)
+            context.text(Melinoe.mc.font, hoveredHud.name, 0, 0, Colors.WHITE.rgba)
+            context.textWithWordWrap(Melinoe.mc.font, Component.literal(hoveredHud.description), 0, 10, 150, Colors.WHITE.rgba)
             context.pose().popMatrix()
         }
 

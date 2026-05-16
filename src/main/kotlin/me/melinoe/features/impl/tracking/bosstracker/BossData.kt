@@ -2,7 +2,7 @@ package me.melinoe.features.impl.tracking.bosstracker
 
 import me.melinoe.utils.TelosItemUtils
 import net.minecraft.core.BlockPos
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.item.ItemStack
 import java.util.regex.Pattern
 
@@ -13,7 +13,7 @@ enum class BossData(
     val label: String,
     val playerCallPattern: Pattern,
     val spawnPosition: BlockPos,
-    val modelIdentifier: ResourceLocation
+    val modelIdentifier: Identifier,
 ) {
     ANUBIS(
         "Anubis",

@@ -1,16 +1,13 @@
 package me.melinoe.utils.ui.rendering
 
-import com.mojang.blaze3d.opengl.GlConst
-import com.mojang.blaze3d.opengl.GlDevice
 import com.mojang.blaze3d.opengl.GlStateManager
-import com.mojang.blaze3d.opengl.GlTexture
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.PoseStack
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.navigation.ScreenRectangle
 import net.minecraft.client.gui.render.pip.PictureInPictureRenderer
-import net.minecraft.client.gui.render.state.pip.PictureInPictureRenderState
 import net.minecraft.client.renderer.MultiBufferSource
+import net.minecraft.client.renderer.state.gui.pip.PictureInPictureRenderState
 import org.joml.Matrix3x2f
 
 /**
@@ -18,32 +15,30 @@ import org.joml.Matrix3x2f
  */
 class NVGPIPRenderer(vertexConsumers: MultiBufferSource.BufferSource) :
     PictureInPictureRenderer<NVGPIPRenderer.NVGRenderState>(vertexConsumers) {
-
+    
     override fun renderToTexture(state: NVGRenderState, poseStack: PoseStack) {
+        // In 26.1, the RenderPass is securely handled by the backend, meaning
+        // the Framebuffer Object (FBO) and Viewport are natively bound before this is called.
         val colorTex = RenderSystem.outputColorTextureOverride ?: return
-        val bufferManager = (RenderSystem.getDevice() as? GlDevice)?.directStateAccess() ?: return
-        val glDepthTex = (RenderSystem.outputDepthTextureOverride?.texture() as? GlTexture) ?: return
-
-        val (width, height) = colorTex.let { it.getWidth(0) to it.getHeight(0) }
-        (colorTex.texture() as? GlTexture)?.getFbo(bufferManager, glDepthTex)?.apply {
-            GlStateManager._glBindFramebuffer(GlConst.GL_FRAMEBUFFER, this)
-            GlStateManager._viewport(0, 0, width, height)
-        }
-
-        NVGRenderer.beginFrame(width.toFloat(), height.toFloat())
+        
+        val width = colorTex.getWidth(0).toFloat()
+        val height = colorTex.getHeight(0).toFloat()
+        
+        NVGRenderer.beginFrame(width, height)
         state.renderContent()
         NVGRenderer.endFrame()
-
+        
+        // Restore typical Minecraft GL state that NVG might have disrupted
         GlStateManager._disableDepthTest()
         GlStateManager._disableCull()
         GlStateManager._enableBlend()
         GlStateManager._blendFuncSeparate(770, 771, 1, 0)
     }
-
+    
     override fun getTranslateY(height: Int, windowScaleFactor: Int): Float = height / 2f
     override fun getRenderStateClass(): Class<NVGRenderState> = NVGRenderState::class.java
     override fun getTextureLabel(): String = "nvg_renderer"
-
+    
     data class NVGRenderState(
         private val x: Int,
         private val y: Int,
@@ -54,7 +49,7 @@ class NVGPIPRenderer(vertexConsumers: MultiBufferSource.BufferSource) :
         private val bounds: ScreenRectangle?,
         val renderContent: () -> Unit
     ) : PictureInPictureRenderState {
-
+        
         override fun scale(): Float = 1f
         override fun x0(): Int = x
         override fun y0(): Int = y
@@ -63,12 +58,12 @@ class NVGPIPRenderer(vertexConsumers: MultiBufferSource.BufferSource) :
         override fun scissorArea(): ScreenRectangle? = scissor
         override fun bounds(): ScreenRectangle? = bounds
     }
-
+    
     companion object {
         /**
          * Draw NVG content as a special GUI element.
          *
-         * @param context The GuiGraphics to draw to
+         * @param context The GuiGraphicsExtractor to draw to
          * @param x The x position
          * @param y The y position
          * @param width The width of the rendering area
@@ -76,7 +71,7 @@ class NVGPIPRenderer(vertexConsumers: MultiBufferSource.BufferSource) :
          * @param renderContent A lambda that draws the NVG content
          */
         fun draw(
-            context: GuiGraphics,
+            context: GuiGraphicsExtractor,
             x: Int,
             y: Int,
             width: Int,
@@ -86,15 +81,16 @@ class NVGPIPRenderer(vertexConsumers: MultiBufferSource.BufferSource) :
             val scissor = context.scissorStack.peek()
             val pose = Matrix3x2f(context.pose())
             val bounds = createBounds(x, y, x + width, y + height, pose, scissor)
-
+            
             val state = NVGRenderState(
                 x, y, width, height,
                 pose, scissor, bounds,
                 renderContent
             )
-            context.guiRenderState.submitPicturesInPictureState(state)
+            // Renamed from submitPicturesInPictureState in 26.1
+            context.guiRenderState.addPicturesInPictureState(state)
         }
-
+        
         private fun createBounds(
             x0: Int,
             y0: Int,

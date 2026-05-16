@@ -5,7 +5,7 @@ import me.melinoe.features.Module
 import me.melinoe.clickgui.settings.impl.HUDSetting
 import me.melinoe.clickgui.settings.impl.SelectorSetting
 import net.minecraft.core.component.DataComponents
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
@@ -39,16 +39,16 @@ object ArmorHUDModule : Module(
         
         if (example || player == null) {
             // Helper to create an item with a custom model
-            fun createCustomItem(model: ResourceLocation): ItemStack {
+            fun createCustomItem(model: Identifier): ItemStack {
                 val stack = ItemStack(Items.CARROT_ON_A_STICK)
                 stack.set(DataComponents.ITEM_MODEL, model)
                 return stack
             }
             
-            armorItems.add(createCustomItem(ResourceLocation.fromNamespaceAndPath("telos", "material/armour/heavy/helmet/ut-mandorla")))
-            armorItems.add(createCustomItem(ResourceLocation.fromNamespaceAndPath("telos", "material/armour/magical/chestplate/ex-spiritbloom")))
-            armorItems.add(createCustomItem(ResourceLocation.fromNamespaceAndPath("telos", "material/armour/light/leggings/ut-onyx")))
-            armorItems.add(createCustomItem(ResourceLocation.fromNamespaceAndPath("telos", "material/armour/heavy/boots/ut-timelost")))
+            armorItems.add(createCustomItem(Identifier.fromNamespaceAndPath("telos", "material/armour/heavy/helmet/ut-mandorla")))
+            armorItems.add(createCustomItem(Identifier.fromNamespaceAndPath("telos", "material/armour/magical/chestplate/ex-spiritbloom")))
+            armorItems.add(createCustomItem(Identifier.fromNamespaceAndPath("telos", "material/armour/light/leggings/ut-onyx")))
+            armorItems.add(createCustomItem(Identifier.fromNamespaceAndPath("telos", "material/armour/heavy/boots/ut-timelost")))
         } else {
             armorItems.add(player.getItemBySlot(EquipmentSlot.HEAD))
             armorItems.add(player.getItemBySlot(EquipmentSlot.CHEST))
@@ -62,7 +62,7 @@ object ArmorHUDModule : Module(
         
         for (stack in armorItems) {
             if (!stack.isEmpty) {
-                renderItem(stack, currentX, currentY)
+                item(stack, currentX, currentY)
             }
             
             if (isHorizontal) {

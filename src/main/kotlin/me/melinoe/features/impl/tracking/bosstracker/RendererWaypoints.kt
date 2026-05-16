@@ -30,8 +30,8 @@ object RendererWaypoints {
         
         val player = mc.player ?: return
         val camera = mc.gameRenderer.mainCamera ?: return
-        val cameraPos = camera.position
-        val cameraDirection = Vec3.directionFromRotation(camera.xRot, camera.yRot)
+        val cameraPos = camera.position()
+        val cameraDirection = Vec3.directionFromRotation(camera.xRot(), camera.yRot())
         
         // Fetch current area safely to determine shadowlands logic filtering
         val inShadowlands = try {
@@ -131,8 +131,8 @@ object RendererWaypoints {
      * Check if a position is within the camera's view frustum
      */
     private fun isInFrustum(pos: Vec3, camera: Camera): Boolean {
-        val cameraPos = camera.position
-        val lookVec = camera.lookVector
+        val cameraPos = camera.position()
+        val lookVec = camera.forwardVector()
         
         val toWaypoint = Vec3(
             pos.x - cameraPos.x,
@@ -140,7 +140,7 @@ object RendererWaypoints {
             pos.z - cameraPos.z
         ).normalize()
         
-        val dot = lookVec.x * toWaypoint.x + lookVec.y * toWaypoint.y + lookVec.z * toWaypoint.z
+        val dot = lookVec.x() * toWaypoint.x + lookVec.y() * toWaypoint.y + lookVec.z() * toWaypoint.z
         
         return dot > Constants.FRUSTUM_DOT_THRESHOLD
     }

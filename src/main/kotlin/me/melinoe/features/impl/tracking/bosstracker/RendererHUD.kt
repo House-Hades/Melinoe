@@ -10,8 +10,8 @@ import net.minecraft.core.BlockPos
 import net.minecraft.core.GlobalPos
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.chat.Component
+import net.minecraft.resources.Identifier
 import net.minecraft.resources.ResourceKey
-import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.LodestoneTracker
@@ -68,7 +68,7 @@ object RendererHUD {
             
             // Check if we should show the tracker (only in realms)
             val level = mc.level
-            val dimensionPath = level?.dimension()?.location()?.path
+            val dimensionPath = level?.dimension()?.identifier()?.path
             if (dimensionPath != Constants.DIMENSION_REALM && !example) return@render Pair(0, 0)
             
             val isChatFocused = mc.screen is net.minecraft.client.gui.screens.ChatScreen
@@ -110,7 +110,7 @@ object RendererHUD {
             fill(cachedBoxWidth - 2, 2 + strHeightHalf, cachedBoxWidth - 1, cachedBoxHeight - 2, borderColor)
             
             // Draw title
-            drawString(font, titleComponent, 8, 2, borderColor, false)
+            text(font, titleComponent, 8, 2, borderColor, false)
             
             // Draw boss lines
             if (cachedBossLines.isNotEmpty()) {
@@ -123,19 +123,19 @@ object RendererHUD {
                 for (line in cachedBossLines) {
                     var xOffset = leftPadding
                     
-                    renderItem(line.icon, xOffset, yOffset - 2)
+                    item(line.icon, xOffset, yOffset - 2)
                     xOffset += iconSize + iconPadding
                     
                     if (line.compass != null) {
-                        renderItem(line.compass, xOffset, yOffset - 2)
+                        item(line.compass, xOffset, yOffset - 2)
                         xOffset += iconSize + iconPadding
                     }
                     
-                    drawString(font, line.textComponent, xOffset, yOffset, labelColor, false)
+                    text(font, line.textComponent, xOffset, yOffset, labelColor, false)
                     yOffset += lineSpacing
                 }
             } else {
-                drawString(font, emptyTrackerComponent, 6, font.lineHeight + 4, 0xFF808080.toInt(), false)
+                text(font, emptyTrackerComponent, 6, font.lineHeight + 4, 0xFF808080.toInt(), false)
             }
             
             Pair(cachedBoxWidth, cachedBoxHeight)
@@ -278,7 +278,7 @@ object RendererHUD {
         val compass = ItemStack(Items.COMPASS)
         val dimensionKey = ResourceKey.create(
             net.minecraft.core.registries.Registries.DIMENSION,
-            ResourceLocation.fromNamespaceAndPath("telos", "realm")
+            Identifier.fromNamespaceAndPath("telos", "realm")
         )
         val globalPos = GlobalPos(dimensionKey, BlockPos(-15, 243, 88))
         val lodestoneTracker = LodestoneTracker(Optional.of(globalPos), false)

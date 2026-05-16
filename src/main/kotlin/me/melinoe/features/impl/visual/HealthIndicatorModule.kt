@@ -15,7 +15,7 @@ import me.melinoe.utils.equalsOneOf
 import me.melinoe.utils.playSoundAtPlayer
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
 
@@ -80,7 +80,7 @@ object HealthIndicatorModule : Module(
         val component = Component.literal(lowHealthText).withStyle(Style.EMPTY.withColor(displayColor))
         val displayComponent = EmojiReplacer.replaceIn(component)
         val textWidth = mc.font.width(displayComponent)
-        drawString(mc.font, displayComponent, 0, 0, displayColor, true)
+        text(mc.font, displayComponent, 0, 0, displayColor, true)
         textWidth to mc.font.lineHeight
     }.withDependency { enableLowHealth }
     
@@ -118,7 +118,7 @@ object HealthIndicatorModule : Module(
         val component = Component.literal(mediumHealthText).withStyle(Style.EMPTY.withColor(displayColor))
         val displayComponent = EmojiReplacer.replaceIn(component)
         val textWidth = mc.font.width(displayComponent)
-        drawString(mc.font, displayComponent, 0, 0, displayColor, true)
+        text(mc.font, displayComponent, 0, 0, displayColor, true)
         textWidth to mc.font.lineHeight
     }.withDependency { enableMediumHealth }
     
@@ -193,7 +193,7 @@ object HealthIndicatorModule : Module(
     private fun handleWorldChange() {
         val currentRealm = LocalAPI.getCurrentCharacterWorld()
         val level = mc.level
-        val currentDimension = level?.dimension()?.location()?.path ?: ""
+        val currentDimension = level?.dimension()?.identifier()?.path ?: ""
         
         // Skip if empty
         if (currentRealm.isEmpty() || currentDimension.isEmpty()) {
@@ -243,7 +243,7 @@ object HealthIndicatorModule : Module(
         val (soundId, volume, pitch) = soundData
         mc.execute {
             try {
-                val soundEvent = SoundEvent.createVariableRangeEvent(ResourceLocation.parse(soundId))
+                val soundEvent = SoundEvent.createVariableRangeEvent(Identifier.parse(soundId))
                 playSoundAtPlayer(soundEvent, volume, pitch)
             } catch (e: Exception) {
                 playSoundAtPlayer(SoundEvents.NOTE_BLOCK_PLING.value(), volume, pitch)

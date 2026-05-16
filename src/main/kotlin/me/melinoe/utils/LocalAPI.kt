@@ -61,7 +61,7 @@ object LocalAPI {
         on<WorldLoadEvent> {
             val mc = Melinoe.mc
             val level = mc.level ?: return@on
-            currentCharacterDimension = level.dimension().location().path
+            currentCharacterDimension = level.dimension().identifier().path
             currentCharacterWorld = "" // Invalidate to prevent sending incorrect data
         }
         
@@ -71,7 +71,7 @@ object LocalAPI {
             val mc = Melinoe.mc
             val level = mc.level
             if (level != null) {
-                val newDimension = level.dimension().location().path
+                val newDimension = level.dimension().identifier().path
                 if (newDimension != currentCharacterDimension) {
                     val previousDimension = currentCharacterDimension
                     currentCharacterDimension = newDimension

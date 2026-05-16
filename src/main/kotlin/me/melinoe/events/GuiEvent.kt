@@ -1,6 +1,6 @@
 package me.melinoe.events
 
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
@@ -21,7 +21,7 @@ abstract class GuiEvent(val screen: Screen) : CancellableEvent() {
     /**
      * Called when rendering the game overlay (HUD).
      */
-    class Render(screen: Screen, val guiGraphics: GuiGraphics, val tickCounter: Any) : GuiEvent(screen)
+    class Render(screen: Screen, val guiGraphics: GuiGraphicsExtractor, val tickCounter: Any) : GuiEvent(screen)
     
     /**
      * Called when a GUI screen is opened/initialized.
@@ -61,20 +61,20 @@ abstract class GuiEvent(val screen: Screen) : CancellableEvent() {
     /**
      * Called during main GUI rendering.
      */
-    class Draw(screen: Screen, val guiGraphics: GuiGraphics, val mouseX: Int, val mouseY: Int) : GuiEvent(screen)
+    class Draw(screen: Screen, val guiGraphics: GuiGraphicsExtractor, val mouseX: Int, val mouseY: Int) : GuiEvent(screen)
 
     /**
      * Called during background rendering.
      */
-    class DrawBackground(screen: Screen, val guiGraphics: GuiGraphics, val mouseX: Int, val mouseY: Int) : GuiEvent(screen)
+    class DrawBackground(screen: Screen, val guiGraphics: GuiGraphicsExtractor, val mouseX: Int, val mouseY: Int) : GuiEvent(screen)
 
     /**
      * Called when rendering individual slots.
      */
-    class DrawSlot(screen: Screen, val guiGraphics: GuiGraphics, val slot: Slot) : GuiEvent(screen)
+    class DrawSlot(screen: Screen, val guiGraphics: GuiGraphicsExtractor, val slot: Slot) : GuiEvent(screen)
 
     /**
      * Called when rendering tooltips.
      */
-    class DrawTooltip(screen: Screen, val guiGraphics: GuiGraphics, val mouseX: Int, val mouseY: Int) : GuiEvent(screen)
+    class DrawTooltip(screen: Screen, val guiGraphics: GuiGraphicsExtractor, val mouseX: Int, val mouseY: Int) : GuiEvent(screen)
 }

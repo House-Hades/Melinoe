@@ -26,7 +26,7 @@ import net.minecraft.network.chat.contents.PlainTextContents
 import net.minecraft.network.chat.contents.TranslatableContents
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.decoration.ArmorStand
-import net.minecraft.world.entity.monster.Evoker
+import net.minecraft.world.entity.monster.illager.Evoker
 import org.lwjgl.glfw.GLFW
 import java.util.Locale
 import java.util.concurrent.TimeUnit

@@ -16,11 +16,11 @@ object EventDispatcher {
             WorldLoadEvent().postAndCatch()
         }
 
-        ClientTickEvents.START_WORLD_TICK.register { world ->
+        ClientTickEvents.START_LEVEL_TICK.register { world ->
             TickEvent.Start(world).postAndCatch()
         }
 
-        ClientTickEvents.END_WORLD_TICK.register { world ->
+        ClientTickEvents.END_LEVEL_TICK.register { world ->
             TickEvent.End(world).postAndCatch()
         }
 

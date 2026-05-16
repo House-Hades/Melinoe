@@ -14,7 +14,7 @@ import me.melinoe.utils.data.persistence.TypeSafeDataAccess
 import me.melinoe.utils.noControlCodes
 import me.melinoe.utils.toNative
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
-import net.minecraft.client.GuiMessageTag
+import net.minecraft.client.multiplayer.chat.GuiMessageTag
 import net.minecraft.network.chat.Component
 import net.minecraft.world.entity.item.ItemEntity
 
@@ -352,7 +352,7 @@ object BagTracker {
             val finalMessage = Component.empty().append(originalComponent).append(buttonComponent)
             
             Melinoe.mc.execute {
-                Melinoe.mc.gui?.chat?.addMessage(finalMessage)
+                Melinoe.mc.gui.chat.addClientSystemMessage(finalMessage)
             }
         }
     }
@@ -532,7 +532,7 @@ object BagTracker {
             "${style.logName} Drop"
         )
         
-        mc.gui?.chat?.addMessage(message.toNative(), null, chatIndicator)
+        mc.gui.chat.addPlayerMessage(message.toNative(), null, chatIndicator)
         
         val logMessage = "Sent pity reset message: Dropped ${item.displayName} at $pityCount pity${if (lootboost > 0) " [+$lootboost% Loot Boost]" else ""}"
         Melinoe.logger.info(logMessage)
