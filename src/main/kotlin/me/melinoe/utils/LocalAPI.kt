@@ -116,7 +116,7 @@ object LocalAPI {
 
         // Parse character type from format: "(MASTERY)(GAMEMODE) (LEVEL) (CLASS)"
         // Gives specific colors for group ironmans - utilized for the DiscordRPC Module
-        currentCharacterType = when (charInfo[0].substring(2).hashCode()) {
+        currentCharacterType = when (charInfo[0].drop(2).hashCode()) {
             880 -> "normal"
             881 -> "hardcore_ironman"
             1771714 -> "black"
