@@ -173,6 +173,8 @@ object WaypointRenderer {
                 renderTextLayerBatched(poseStack, bufferSource, cameraObj, font, wp, wp.textAlpha * alphaMult, net.minecraft.client.gui.Font.DisplayMode.NORMAL)
             }
         }
+        
+        bufferSource.endBatch()
     }
     
     private fun renderFilledBox(poseStack: PoseStack, buffer: VertexConsumer, cameraPos: Vec3, pos: Vec3, color: FloatArray, alpha: Float) {

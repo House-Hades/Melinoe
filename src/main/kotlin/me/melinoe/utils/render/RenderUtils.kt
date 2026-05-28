@@ -108,7 +108,8 @@ private fun PoseStack.renderBatchedLines(
                     last, buffer,
                     Vector3f(fromX.toFloat(), fromY.toFloat(), fromZ.toFloat()),
                     Vec3(dirX, dirY, dirZ),
-                    line.color1, line.color2
+                    line.color1, line.color2,
+                    thickness
                 )
             }
             
@@ -134,7 +135,8 @@ private fun PoseStack.renderBatchedWireBoxes(
         for (box in boxes[depthState]) {
             PrimitiveRenderer.renderLineBox(
                 last, buffer, box.aabb,
-                box.r, box.g, box.b, box.a
+                box.r, box.g, box.b, box.a,
+                box.thickness
             )
         }
         
@@ -464,7 +466,8 @@ object PrimitiveRenderer {
         pose: PoseStack.Pose,
         buffer: VertexConsumer,
         aabb: AABB,
-        r: Float, g: Float, b: Float, a: Float
+        r: Float, g: Float, b: Float, a: Float,
+        lineWidth: Float = 3f
     ) {
         val x0 = aabb.minX.toFloat()
         val y0 = aabb.minY.toFloat()
@@ -499,8 +502,8 @@ object PrimitiveRenderer {
             val dy = cY1 - cY0
             val dz = cZ1 - cZ0
             
-            buffer.addVertex(pose, Vector3f(cX0, cY0, cZ0)).setColor(r, g, b, a).setNormal(pose, Vector3f(dx, dy, dz))
-            buffer.addVertex(pose, Vector3f(cX1, cY1, cZ1)).setColor(r, g, b, a).setNormal(pose, Vector3f(dx, dy, dz))
+            buffer.addVertex(pose, Vector3f(cX0, cY0, cZ0)).setColor(r, g, b, a).setNormal(pose, Vector3f(dx, dy, dz)).setLineWidth(lineWidth)
+            buffer.addVertex(pose, Vector3f(cX1, cY1, cZ1)).setColor(r, g, b, a).setNormal(pose, Vector3f(dx, dy, dz)).setLineWidth(lineWidth)
         }
     }
     
@@ -568,23 +571,26 @@ object PrimitiveRenderer {
         start: Vector3f,
         direction: Vec3,
         startColor: Int,
-        endColor: Int
+        endColor: Int,
+        lineWidth: Float = 3f
     ) {
         val endX = start.x() + direction.x.toFloat()
         val endY = start.y() + direction.y.toFloat()
         val endZ = start.z() + direction.z.toFloat()
-        
+
         val nx = direction.x.toFloat()
         val ny = direction.y.toFloat()
         val nz = direction.z.toFloat()
-        
+
         buffer.addVertex(pose, Vector3f(start.x(), start.y(), start.z()))
             .setColor(startColor)
             .setNormal(pose, Vector3f(nx, ny, nz))
-        
+            .setLineWidth(lineWidth)
+
         buffer.addVertex(pose, Vector3f(endX, endY, endZ))
             .setColor(endColor)
             .setNormal(pose, Vector3f(nx, ny, nz))
+            .setLineWidth(lineWidth)
     }
     
     /**

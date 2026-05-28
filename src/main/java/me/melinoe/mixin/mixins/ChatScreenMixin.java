@@ -57,7 +57,7 @@ public class ChatScreenMixin {
 
     /**
      * Replaces standard shortcodes with actual Emoji icons the instant they are completed.
-     * We hook `render` because ChatScreen does not override `tick()` in 1.21.10.
+     * We hook `render` because ChatScreen does not override `tick()`
      */
     @Inject(method = "extractRenderState", at = @At("HEAD"))
     private void melinoe$processLiveChatInput(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a, CallbackInfo ci) {

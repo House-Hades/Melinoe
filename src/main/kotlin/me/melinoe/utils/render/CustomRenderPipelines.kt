@@ -19,7 +19,7 @@ object CustomRenderPipelines {
     val LINE_LIST: RenderPipeline = RenderPipelines.register(
         RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
             .withLocation(Identifier.fromNamespaceAndPath("melinoe", "pipeline/lines"))
-            .withVertexFormat(DefaultVertexFormat.POSITION_COLOR_NORMAL, VertexFormat.Mode.LINES)
+            .withVertexFormat(DefaultVertexFormat.POSITION_COLOR_NORMAL_LINE_WIDTH, VertexFormat.Mode.LINES)
             .withCull(false)
             .withColorTargetState(ColorTargetState(
                 Optional.of(BlendFunction.TRANSLUCENT),
@@ -37,7 +37,7 @@ object CustomRenderPipelines {
     val LINE_LIST_ESP: RenderPipeline = RenderPipelines.register(
         RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
             .withLocation(Identifier.fromNamespaceAndPath("melinoe", "pipeline/lines_esp"))
-            .withVertexFormat(DefaultVertexFormat.POSITION_COLOR_NORMAL, VertexFormat.Mode.LINES)
+            .withVertexFormat(DefaultVertexFormat.POSITION_COLOR_NORMAL_LINE_WIDTH, VertexFormat.Mode.LINES)
             .withCull(false)
             .withColorTargetState(ColorTargetState(
                 Optional.of(BlendFunction.TRANSLUCENT),
