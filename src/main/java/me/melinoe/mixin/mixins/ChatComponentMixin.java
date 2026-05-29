@@ -74,14 +74,14 @@ public abstract class ChatComponentMixin implements ChatTabs {
      * Triggered when the user resizes the game window or changes chat scale
      * Clear the queues and enable a flag to block transient messages from saving
      */
-    @Inject(method = "rescaleChat", at = @At("HEAD"))
-    private void melinoe$onRescaleStart(CallbackInfo ci) {
+    @Inject(method = "refreshTrimmedMessages", at = @At("HEAD"))
+    private void melinoe$onRefreshStart(CallbackInfo ci) {
         this.melinoe$tabDisplayQueues.clear();
         this.melinoe$isRescaling = true; // Block transient messages from re-rendering
     }
 
-    @Inject(method = "rescaleChat", at = @At("RETURN"))
-    private void melinoe$onRescaleEnd(CallbackInfo ci) {
+    @Inject(method = "refreshTrimmedMessages", at = @At("RETURN"))
+    private void melinoe$onRefreshEnd(CallbackInfo ci) {
         this.melinoe$isRescaling = false; // Restore state
     }
 
@@ -191,7 +191,7 @@ public abstract class ChatComponentMixin implements ChatTabs {
     @ModifyConstant(
             method = {
                     "addMessageToDisplayQueue",
-                    "addClientSystemMessage"
+                    "addMessageToQueue"
             },
             constant = @Constant(intValue = 100)
     )

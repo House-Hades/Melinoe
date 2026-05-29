@@ -94,10 +94,11 @@ fun getCenteredText(text: String): String {
     return " ".repeat(spacesNeeded) + text
 }
 
-fun getChatBreak(): String =
-    Melinoe.mc.options.chatWidth().get().let { width ->
-        "<st>" + " ".repeat((width / Melinoe.mc.font.width(" ")).toInt()) + "</st>"
-    } ?: ""
+fun getChatBreak(): String {
+    val width = ChatComponent.getWidth(Melinoe.mc.options.chatWidth().get())
+    val spaceWidth = Melinoe.mc.font.width(" ").coerceAtLeast(1)
+    return "<st>" + " ".repeat((width / spaceWidth).coerceAtLeast(0)) + "</st>"
+}
 
 /**
  * Helper functions for creating styled text components cleanly powered by MiniMessage.
