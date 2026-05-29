@@ -7,9 +7,6 @@ import me.melinoe.events.RenderEvent
 import me.melinoe.events.core.on
 import me.melinoe.utils.Color
 import me.melinoe.utils.Color.Companion.multiplyAlpha
-import me.melinoe.utils.component1
-import me.melinoe.utils.component2
-import me.melinoe.utils.component3
 import me.melinoe.utils.unaryMinus
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.minecraft.client.renderer.MultiBufferSource
@@ -39,11 +36,11 @@ internal data class TextData(
 )
 
 class RenderConsumer {
-    internal val lines: List<ObjectArrayList<LineData>> = listOf(ObjectArrayList(), ObjectArrayList())
-    internal val wireBoxes: List<ObjectArrayList<BoxData>> = listOf(ObjectArrayList(), ObjectArrayList())
-    internal val filledBoxes: List<ObjectArrayList<BoxData>> = listOf(ObjectArrayList(), ObjectArrayList())
-    internal val triangleStrips: List<ObjectArrayList<TriangleStripData>> = listOf(ObjectArrayList(), ObjectArrayList())
-    internal val texts: ObjectArrayList<TextData> = ObjectArrayList()
+    internal val lines: List<ObjectArrayList<LineData>> = listOf(ObjectArrayList<LineData>(), ObjectArrayList<LineData>())
+    internal val wireBoxes: List<ObjectArrayList<BoxData>> = listOf(ObjectArrayList<BoxData>(), ObjectArrayList<BoxData>())
+    internal val filledBoxes: List<ObjectArrayList<BoxData>> = listOf(ObjectArrayList<BoxData>(), ObjectArrayList<BoxData>())
+    internal val triangleStrips: List<ObjectArrayList<TriangleStripData>> = listOf(ObjectArrayList<TriangleStripData>(), ObjectArrayList<TriangleStripData>())
+    internal val texts: ObjectArrayList<TextData> = ObjectArrayList<TextData>()
     
     fun clear() {
         lines.forEach { it.clear() }
@@ -59,9 +56,9 @@ object RenderBatchManager {
     
     init {
         on<RenderEvent.Last> {
-            val matrix = context.matrices() ?: return@on
-            val bufferSource = context.consumers() as? MultiBufferSource.BufferSource ?: return@on
-            val camera = context.gameRenderer().mainCamera?.position ?: return@on
+            val matrix = context.poseStack()
+            val bufferSource = context.bufferSource()
+            val camera = context.gameRenderer().mainCamera.position()
             
             matrix.pushPose()
             matrix.translate(-camera.x, -camera.y, -camera.z)
@@ -92,15 +89,17 @@ private fun PoseStack.renderBatchedLines(
         // Group lines by thickness for efficient rendering
         val linesByThickness = lines[depthState].groupBy { it.thickness }
         
-        for ((thickness, thickLines) in linesByThickness) {
-            // Set line width for this batch
-            com.mojang.blaze3d.systems.RenderSystem.lineWidth(thickness)
+        for ((thickness, thickLinesList) in linesByThickness) {
             
             val buffer = bufferSource.getBuffer(lineRenderLayers[depthState])
             
-            for (line in thickLines) {
-                val (fromX, fromY, fromZ) = line.from
-                val (toX, toY, toZ) = line.to
+            for (line in thickLinesList) {
+                val fromX = line.from.x
+                val fromY = line.from.y
+                val fromZ = line.from.z
+                val toX = line.to.x
+                val toY = line.to.y
+                val toZ = line.to.z
                 val dirX = toX - fromX
                 val dirY = toY - fromY
                 val dirZ = toZ - fromZ
@@ -109,15 +108,15 @@ private fun PoseStack.renderBatchedLines(
                     last, buffer,
                     Vector3f(fromX.toFloat(), fromY.toFloat(), fromZ.toFloat()),
                     Vec3(dirX, dirY, dirZ),
-                    line.color1, line.color2
+                    line.color1, line.color2,
+                    thickness
                 )
             }
             
             bufferSource.endBatch(lineRenderLayers[depthState])
         }
         
-        // Reset line width to default
-        com.mojang.blaze3d.systems.RenderSystem.lineWidth(1.0f)
+        // Removed RenderSystem.lineWidth(1.0f) as OpenGL handles line thickness natively via the bound RenderType now
     }
 }
 
@@ -136,7 +135,8 @@ private fun PoseStack.renderBatchedWireBoxes(
         for (box in boxes[depthState]) {
             PrimitiveRenderer.renderLineBox(
                 last, buffer, box.aabb,
-                box.r, box.g, box.b, box.a
+                box.r, box.g, box.b, box.a,
+                box.thickness
             )
         }
         
@@ -184,7 +184,7 @@ private fun PoseStack.renderBatchedTriangleStrips(
             val buffer = bufferSource.getBuffer(triangleRenderLayers[depthState])
             
             for (point in strip.points) {
-                buffer.addVertex(last, point.pos.x.toFloat(), point.pos.y.toFloat(), point.pos.z.toFloat())
+                buffer.addVertex(last, Vector3f(point.pos.x.toFloat(), point.pos.y.toFloat(), point.pos.z.toFloat()))
                     .setColor(point.color)
             }
             
@@ -221,7 +221,7 @@ private fun PoseStack.renderBatchedTexts(
             bufferSource,
             if (textData.depth) net.minecraft.client.gui.Font.DisplayMode.NORMAL else net.minecraft.client.gui.Font.DisplayMode.SEE_THROUGH,
             0,
-            net.minecraft.client.renderer.LightTexture.FULL_BRIGHT
+            15728880 // FULL_BRIGHT constant
         )
         
         popPose()
@@ -364,9 +364,13 @@ fun RenderEvent.Extract.drawThickLine(
     thickness: Float = 0.125f,
     depth: Boolean = false
 ) {
-    // Calculate direction vector using component destructuring
-    val (fromX, fromY, fromZ) = from
-    val (toX, toY, toZ) = to
+    // Calculate direction vector manually avoiding destructuring ambiguities
+    val fromX = from.x
+    val fromY = from.y
+    val fromZ = from.z
+    val toX = to.x
+    val toY = to.y
+    val toZ = to.z
     val dx = toX - fromX
     val dy = toY - fromY
     val dz = toZ - fromZ
@@ -462,7 +466,8 @@ object PrimitiveRenderer {
         pose: PoseStack.Pose,
         buffer: VertexConsumer,
         aabb: AABB,
-        r: Float, g: Float, b: Float, a: Float
+        r: Float, g: Float, b: Float, a: Float,
+        lineWidth: Float = 3f
     ) {
         val x0 = aabb.minX.toFloat()
         val y0 = aabb.minY.toFloat()
@@ -486,19 +491,19 @@ object PrimitiveRenderer {
             val i0 = edges[i] * 3
             val i1 = edges[i + 1] * 3
             
-            val x0 = corners[i0]
-            val y0 = corners[i0 + 1]
-            val z0 = corners[i0 + 2]
-            val x1 = corners[i1]
-            val y1 = corners[i1 + 1]
-            val z1 = corners[i1 + 2]
+            val cX0 = corners[i0]
+            val cY0 = corners[i0 + 1]
+            val cZ0 = corners[i0 + 2]
+            val cX1 = corners[i1]
+            val cY1 = corners[i1 + 1]
+            val cZ1 = corners[i1 + 2]
             
-            val dx = x1 - x0
-            val dy = y1 - y0
-            val dz = z1 - z0
+            val dx = cX1 - cX0
+            val dy = cY1 - cY0
+            val dz = cZ1 - cZ0
             
-            buffer.addVertex(pose, x0, y0, z0).setColor(r, g, b, a).setNormal(pose, dx, dy, dz)
-            buffer.addVertex(pose, x1, y1, z1).setColor(r, g, b, a).setNormal(pose, dx, dy, dz)
+            buffer.addVertex(pose, Vector3f(cX0, cY0, cZ0)).setColor(r, g, b, a).setNormal(pose, Vector3f(dx, dy, dz)).setLineWidth(lineWidth)
+            buffer.addVertex(pose, Vector3f(cX1, cY1, cZ1)).setColor(r, g, b, a).setNormal(pose, Vector3f(dx, dy, dz)).setLineWidth(lineWidth)
         }
     }
     
@@ -512,6 +517,7 @@ object PrimitiveRenderer {
         val matrix = pose.pose()
         
         fun vertex(x: Float, y: Float, z: Float) {
+            // Note: If you encounter parameter errors here, standard matrices support float signatures.
             buffer.addVertex(matrix, x, y, z).setColor(r, g, b, a)
         }
         
@@ -565,23 +571,26 @@ object PrimitiveRenderer {
         start: Vector3f,
         direction: Vec3,
         startColor: Int,
-        endColor: Int
+        endColor: Int,
+        lineWidth: Float = 3f
     ) {
         val endX = start.x() + direction.x.toFloat()
         val endY = start.y() + direction.y.toFloat()
         val endZ = start.z() + direction.z.toFloat()
-        
+
         val nx = direction.x.toFloat()
         val ny = direction.y.toFloat()
         val nz = direction.z.toFloat()
-        
-        buffer.addVertex(pose, start.x(), start.y(), start.z())
+
+        buffer.addVertex(pose, Vector3f(start.x(), start.y(), start.z()))
             .setColor(startColor)
-            .setNormal(pose, nx, ny, nz)
-        
-        buffer.addVertex(pose, endX, endY, endZ)
+            .setNormal(pose, Vector3f(nx, ny, nz))
+            .setLineWidth(lineWidth)
+
+        buffer.addVertex(pose, Vector3f(endX, endY, endZ))
             .setColor(endColor)
-            .setNormal(pose, nx, ny, nz)
+            .setNormal(pose, Vector3f(nx, ny, nz))
+            .setLineWidth(lineWidth)
     }
     
     /**
@@ -640,13 +649,13 @@ object PrimitiveRenderer {
         val z2 = end.z.toFloat()
         
         // Four corners of the quad
-        buffer.addVertex(pose, x1 - perpX, y1, z1 - perpZ)
+        buffer.addVertex(pose, Vector3f(x1 - perpX, y1, z1 - perpZ))
             .setColor(startColor)
-            .setNormal(pose, dirX, dirY, dirZ)
+            .setNormal(pose, Vector3f(dirX, dirY, dirZ))
         
-        buffer.addVertex(pose, x1 + perpX, y1, z1 + perpZ)
+        buffer.addVertex(pose, Vector3f(x1 + perpX, y1, z1 + perpZ))
             .setColor(startColor)
-            .setNormal(pose, dirX, dirY, dirZ)
+            .setNormal(pose, Vector3f(dirX, dirY, dirZ))
     }
 }
 

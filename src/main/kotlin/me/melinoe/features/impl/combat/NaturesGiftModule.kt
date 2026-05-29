@@ -23,7 +23,7 @@ import me.melinoe.utils.equalsOneOf
 import me.melinoe.utils.playSoundSettings
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.ItemStack
@@ -70,7 +70,7 @@ object NaturesGiftModule : Module(
             ItemStack(net.minecraft.world.item.Items.CHAINMAIL_BOOTS).apply {
                 set(
                     net.minecraft.core.component.DataComponents.ITEM_MODEL,
-                    ResourceLocation.fromNamespaceAndPath("telos", "material/armour/light/boots/ut-nature")
+                    Identifier.fromNamespaceAndPath("telos", "material/armour/light/boots/ut-nature")
                 )
             }
         } else {
@@ -95,11 +95,11 @@ object NaturesGiftModule : Module(
         val textHeight = textRenderer.lineHeight
         
         // Render the item icon (aligned with text)
-        renderItem(displayItem, 0, 0)
+        item(displayItem, 0, 0)
         
         // Draw the text next to the icon (vertically centered with icon)
         val textYOffset = (iconSize - textHeight) / 2
-        drawString(textRenderer, text, iconSize + iconPadding, textYOffset, color, true)
+        text(textRenderer, text, iconSize + iconPadding, textYOffset, color, true)
         
         (iconSize + iconPadding + textWidth) to iconSize
     }
@@ -129,7 +129,7 @@ object NaturesGiftModule : Module(
         val textWidth = textRenderer.width(title)
         val textHeight = textRenderer.lineHeight
         
-        drawString(textRenderer, title, 0, 0, titleColor.rgba, true)
+        text(textRenderer, title, 0, 0, titleColor.rgba, true)
         
         textWidth to textHeight
     }
@@ -238,7 +238,7 @@ object NaturesGiftModule : Module(
         
         // Check if it's a Nature's Gift item
         val itemType = ItemUtils.ItemType.fromItemStack(bootsSlot)
-        return if (itemType.equalsOneOf(ItemUtils.ItemType.UT_NATURE, ItemUtils.ItemType.EX_NATURE)) {
+        return if (itemType.equalsOneOf(ItemUtils.ItemType.UT_NATURE)) {
             bootsSlot
         } else {
             null
@@ -252,7 +252,6 @@ object NaturesGiftModule : Module(
         // Set health threshold based on item type
         cachedHealthThreshold = when (itemType) {
             ItemUtils.ItemType.UT_NATURE -> 30.0f
-            ItemUtils.ItemType.EX_NATURE -> 35.0f
             else -> 30.0f
         }
         

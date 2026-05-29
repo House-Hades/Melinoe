@@ -198,7 +198,7 @@ object TimerModule : Module(
         }
     }
     
-    private fun net.minecraft.client.gui.GuiGraphics.renderExampleHUD(textRenderer: net.minecraft.client.gui.Font, lineHeight: Int): Pair<Int, Int> {
+    private fun net.minecraft.client.gui.GuiGraphicsExtractor.renderExampleHUD(textRenderer: net.minecraft.client.gui.Font, lineHeight: Int): Pair<Int, Int> {
         val line1Label = "Dungeon: "
         val line1Value = "Example Dungeon"
         val line2Label = "Current Time: "
@@ -229,7 +229,7 @@ object TimerModule : Module(
     /**
      * Renders the actual HUD display.
      */
-    private fun net.minecraft.client.gui.GuiGraphics.renderActualHUD(textRenderer: net.minecraft.client.gui.Font, lineHeight: Int): Pair<Int, Int> {
+    private fun net.minecraft.client.gui.GuiGraphicsExtractor.renderActualHUD(textRenderer: net.minecraft.client.gui.Font, lineHeight: Int): Pair<Int, Int> {
         val dungeon = timerState.getCurrentDungeon() ?: return 0 to 0
         
         val line1Label = "Dungeon: "

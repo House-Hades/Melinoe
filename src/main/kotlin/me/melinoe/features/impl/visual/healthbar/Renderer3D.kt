@@ -49,14 +49,14 @@ class Renderer3D(private val mc: Minecraft) {
         )
         
         // Calculate render position relative to camera
-        val cameraPos = camera.position
+        val cameraPos = camera.position()
         var renderPos = playerPos.subtract(cameraPos.x, cameraPos.y, cameraPos.z)
         
         // Apply Y position offset with pitch-based arc rotation for negative Y
         if (yPosition < 0) {
             val playerYaw = player.getYRot(tickDelta)
             val baseDistance = abs(yPosition)
-            val cameraPitch = camera.xRot
+            val cameraPitch = camera.xRot()
             val pitchRatio = ((cameraPitch + 90f) / 180f).coerceIn(0f, 1f)
             val arcAngleRad = Math.toRadians((1f - pitchRatio) * 180.0)
             val horizontalDistance = baseDistance * cos(arcAngleRad)
@@ -73,8 +73,8 @@ class Renderer3D(private val mc: Minecraft) {
         matrices.translate(renderPos.x, renderPos.y, renderPos.z)
         
         // Billboarding - always face the camera
-        matrices.mulPose(org.joml.Quaternionf().rotationY(Math.toRadians((-camera.yRot + 180).toDouble()).toFloat()))
-        matrices.mulPose(org.joml.Quaternionf().rotationX(Math.toRadians((-camera.xRot).toDouble()).toFloat()))
+        matrices.mulPose(org.joml.Quaternionf().rotationY(Math.toRadians((-camera.yRot() + 180).toDouble()).toFloat()))
+        matrices.mulPose(org.joml.Quaternionf().rotationX(Math.toRadians((-camera.xRot()).toDouble()).toFloat()))
         
         val matrix = matrices.last().pose()
         
@@ -235,7 +235,7 @@ class Renderer3D(private val mc: Minecraft) {
                     bufferSource,
                     net.minecraft.client.gui.Font.DisplayMode.SEE_THROUGH,
                     0,
-                    net.minecraft.client.renderer.LightTexture.FULL_BRIGHT
+                    15728880
                 )
             }
             2 -> { // Outline
@@ -253,7 +253,7 @@ class Renderer3D(private val mc: Minecraft) {
                             bufferSource,
                             net.minecraft.client.gui.Font.DisplayMode.SEE_THROUGH,
                             0,
-                            net.minecraft.client.renderer.LightTexture.FULL_BRIGHT
+                            15728880
                         )
                     }
                 }
@@ -272,7 +272,7 @@ class Renderer3D(private val mc: Minecraft) {
             bufferSource,
             net.minecraft.client.gui.Font.DisplayMode.SEE_THROUGH,
             0,
-            net.minecraft.client.renderer.LightTexture.FULL_BRIGHT
+            15728880
         )
         
         bufferSource.endBatch()

@@ -61,7 +61,7 @@ object LocalAPI {
         on<WorldLoadEvent> {
             val mc = Melinoe.mc
             val level = mc.level ?: return@on
-            currentCharacterDimension = level.dimension().location().path
+            currentCharacterDimension = level.dimension().identifier().path
             currentCharacterWorld = "" // Invalidate to prevent sending incorrect data
         }
         
@@ -71,7 +71,7 @@ object LocalAPI {
             val mc = Melinoe.mc
             val level = mc.level
             if (level != null) {
-                val newDimension = level.dimension().location().path
+                val newDimension = level.dimension().identifier().path
                 if (newDimension != currentCharacterDimension) {
                     val previousDimension = currentCharacterDimension
                     currentCharacterDimension = newDimension
@@ -116,7 +116,7 @@ object LocalAPI {
 
         // Parse character type from format: "(MASTERY)(GAMEMODE) (LEVEL) (CLASS)"
         // Gives specific colors for group ironmans - utilized for the DiscordRPC Module
-        currentCharacterType = when (charInfo[0].substring(2).hashCode()) {
+        currentCharacterType = when (charInfo[0].drop(2).hashCode()) {
             880 -> "normal"
             881 -> "hardcore_ironman"
             1771714 -> "black"

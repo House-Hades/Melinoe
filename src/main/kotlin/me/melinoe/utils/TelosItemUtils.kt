@@ -1,7 +1,7 @@
 package me.melinoe.utils
 
 import net.minecraft.core.component.DataComponents
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 
@@ -13,39 +13,39 @@ object TelosItemUtils {
     
     // ==================== BOSS RESOURCE LOCATIONS ====================
     
-    val BOSS_ANUBIS = ResourceLocation.fromNamespaceAndPath("telos", "material/boss/anubis")
-    val BOSS_ASTAROTH = ResourceLocation.fromNamespaceAndPath("telos", "material/boss/astaroth")
-    val BOSS_CHUNGUS = ResourceLocation.fromNamespaceAndPath("telos", "material/boss/chungus")
-    val BOSS_FREDDY = ResourceLocation.fromNamespaceAndPath("telos", "material/boss/freddy")
-    val BOSS_GLUMI = ResourceLocation.fromNamespaceAndPath("telos", "material/boss/glumi")
-    val BOSS_ILLARIUS = ResourceLocation.fromNamespaceAndPath("telos", "material/boss/illarius")
-    val BOSS_LOTIL = ResourceLocation.fromNamespaceAndPath("telos", "material/boss/lotil")
-    val BOSS_OOZUL = ResourceLocation.fromNamespaceAndPath("telos", "material/boss/oozul")
-    val BOSS_TIDOL = ResourceLocation.fromNamespaceAndPath("telos", "material/boss/tidol")
-    val BOSS_VALUS = ResourceLocation.fromNamespaceAndPath("telos", "material/boss/valus")
-    val BOSS_HOLLOWBANE = ResourceLocation.fromNamespaceAndPath("telos", "material/boss/hollowbane")
-    val BOSS_CLAUS = ResourceLocation.fromNamespaceAndPath("telos", "material/boss/claus")
-    val BOSS_RAPHAEL = ResourceLocation.fromNamespaceAndPath("telos", "material/pet/onyx")
-    val BOSS_DEFENDER = ResourceLocation.fromNamespaceAndPath("telos", "material/boss/defender")
+    val BOSS_ANUBIS = Identifier.fromNamespaceAndPath("telos", "material/boss/anubis")
+    val BOSS_ASTAROTH = Identifier.fromNamespaceAndPath("telos", "material/boss/astaroth")
+    val BOSS_CHUNGUS = Identifier.fromNamespaceAndPath("telos", "material/boss/chungus")
+    val BOSS_FREDDY = Identifier.fromNamespaceAndPath("telos", "material/boss/freddy")
+    val BOSS_GLUMI = Identifier.fromNamespaceAndPath("telos", "material/boss/glumi")
+    val BOSS_ILLARIUS = Identifier.fromNamespaceAndPath("telos", "material/boss/illarius")
+    val BOSS_LOTIL = Identifier.fromNamespaceAndPath("telos", "material/boss/lotil")
+    val BOSS_OOZUL = Identifier.fromNamespaceAndPath("telos", "material/boss/oozul")
+    val BOSS_TIDOL = Identifier.fromNamespaceAndPath("telos", "material/boss/tidol")
+    val BOSS_VALUS = Identifier.fromNamespaceAndPath("telos", "material/boss/valus")
+    val BOSS_HOLLOWBANE = Identifier.fromNamespaceAndPath("telos", "material/boss/hollowbane")
+    val BOSS_CLAUS = Identifier.fromNamespaceAndPath("telos", "material/boss/claus")
+    val BOSS_RAPHAEL = Identifier.fromNamespaceAndPath("telos", "material/pet/onyx")
+    val BOSS_DEFENDER = Identifier.fromNamespaceAndPath("telos", "material/boss/defender")
 
-    val BOSS_REAPER = ResourceLocation.fromNamespaceAndPath("telos", "material/boss/reaper")
-    val BOSS_HERALD = ResourceLocation.fromNamespaceAndPath("telos", "material/boss/herald")
-    val BOSS_WARDEN = ResourceLocation.fromNamespaceAndPath("telos", "material/boss/warden")
+    val BOSS_REAPER = Identifier.fromNamespaceAndPath("telos", "material/boss/reaper")
+    val BOSS_HERALD = Identifier.fromNamespaceAndPath("telos", "material/boss/herald")
+    val BOSS_WARDEN = Identifier.fromNamespaceAndPath("telos", "material/boss/warden")
     
     // ==================== POUCH/TOTEM RESOURCE LOCATIONS ====================
     
-    val POUCH_ROYAL = ResourceLocation.fromNamespaceAndPath("telos", "material/pouch/royal")
-    val POUCH_BLOODSHOT = ResourceLocation.fromNamespaceAndPath("telos", "material/pouch/bloodshot")
-    val POUCH_COMPANION = ResourceLocation.fromNamespaceAndPath("telos", "material/pouch/companion")
-    val POUCH_UNHOLY = ResourceLocation.fromNamespaceAndPath("telos", "material/pouch/unholy")
-    val POUCH_VOIDBOUND = ResourceLocation.fromNamespaceAndPath("telos", "material/pouch/voidbound")
-    val POUCH_HALLOWEEN = ResourceLocation.fromNamespaceAndPath("telos", "material/pouch/halloween")
-    val POUCH_VALENTINE = ResourceLocation.fromNamespaceAndPath("telos", "material/pouch/valentine")
-    val POUCH_CHRISTMAS = ResourceLocation.fromNamespaceAndPath("telos", "material/pouch/christmas")
+    val POUCH_ROYAL = Identifier.fromNamespaceAndPath("telos", "material/pouch/royal")
+    val POUCH_BLOODSHOT = Identifier.fromNamespaceAndPath("telos", "material/pouch/bloodshot")
+    val POUCH_COMPANION = Identifier.fromNamespaceAndPath("telos", "material/pouch/companion")
+    val POUCH_UNHOLY = Identifier.fromNamespaceAndPath("telos", "material/pouch/unholy")
+    val POUCH_VOIDBOUND = Identifier.fromNamespaceAndPath("telos", "material/pouch/voidbound")
+    val POUCH_HALLOWEEN = Identifier.fromNamespaceAndPath("telos", "material/pouch/halloween")
+    val POUCH_VALENTINE = Identifier.fromNamespaceAndPath("telos", "material/pouch/valentine")
+    val POUCH_CHRISTMAS = Identifier.fromNamespaceAndPath("telos", "material/pouch/christmas")
     
     // ==================== STRING KEY MAPPINGS ====================
     
-    private val keyToResourceLocation = mapOf(
+    private val keyToIdentifier = mapOf(
         // Bosses
         "anubis" to BOSS_ANUBIS,
         "astaroth" to BOSS_ASTAROTH,
@@ -80,10 +80,10 @@ object TelosItemUtils {
     // ==================== LOOKUP METHODS ====================
     
     /**
-     * Get a ResourceLocation from a string key (case-insensitive)
+     * Get a Identifier from a string key (case-insensitive)
      */
-    fun getResourceLocation(key: String): ResourceLocation? {
-        return keyToResourceLocation[key.lowercase()]
+    fun getIdentifier(key: String): Identifier? {
+        return keyToIdentifier[key.lowercase()]
     }
     
     // ==================== ITEMSTACK CREATION ====================
@@ -92,9 +92,9 @@ object TelosItemUtils {
      * Create an ItemStack with a custom model identifier.
      * Uses CARROT_ON_A_STICK as the base item (standard for Telos custom models).
      */
-    fun createItemStack(resourceLocation: ResourceLocation): ItemStack {
+    fun createItemStack(Identifier: Identifier): ItemStack {
         val item = ItemStack(Items.CARROT_ON_A_STICK)
-        item.set(DataComponents.ITEM_MODEL, resourceLocation)
+        item.set(DataComponents.ITEM_MODEL, Identifier)
         return item
     }
     
@@ -102,13 +102,13 @@ object TelosItemUtils {
      * Create an ItemStack from a string key
      */
     fun createItemStack(key: String): ItemStack? {
-        return getResourceLocation(key)?.let { createItemStack(it) }
+        return getIdentifier(key)?.let { createItemStack(it) }
     }
     
     /**
      * Check if a string key is registered
      */
     fun isRegistered(key: String): Boolean {
-        return keyToResourceLocation.containsKey(key.lowercase())
+        return keyToIdentifier.containsKey(key.lowercase())
     }
 }

@@ -5,11 +5,12 @@ import me.melinoe.features.impl.misc.ChatTab;
 import me.melinoe.features.impl.misc.KeybindsModule;
 import me.melinoe.interfaces.ChatTabs;
 import me.melinoe.utils.emoji.EmojiReplacer;
-import net.minecraft.client.GuiMessage;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.gui.components.ComponentRenderUtils;
+import net.minecraft.client.multiplayer.chat.GuiMessage;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
@@ -17,11 +18,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
@@ -77,14 +74,14 @@ public abstract class ChatComponentMixin implements ChatTabs {
      * Triggered when the user resizes the game window or changes chat scale
      * Clear the queues and enable a flag to block transient messages from saving
      */
-    @Inject(method = "rescaleChat", at = @At("HEAD"))
-    private void melinoe$onRescaleStart(CallbackInfo ci) {
+    @Inject(method = "refreshTrimmedMessages", at = @At("HEAD"))
+    private void melinoe$onRefreshStart(CallbackInfo ci) {
         this.melinoe$tabDisplayQueues.clear();
         this.melinoe$isRescaling = true; // Block transient messages from re-rendering
     }
 
-    @Inject(method = "rescaleChat", at = @At("RETURN"))
-    private void melinoe$onRescaleEnd(CallbackInfo ci) {
+    @Inject(method = "refreshTrimmedMessages", at = @At("RETURN"))
+    private void melinoe$onRefreshEnd(CallbackInfo ci) {
         this.melinoe$isRescaling = false; // Restore state
     }
 
@@ -122,7 +119,7 @@ public abstract class ChatComponentMixin implements ChatTabs {
         List<GuiMessage.Line> newLines = new ArrayList<>();
         for (int i = 0; i < wrappedLines.size(); i++) {
             boolean isLast = (i == wrappedLines.size() - 1);
-            newLines.add(new GuiMessage.Line(message.addedTime(), wrappedLines.get(i), message.tag(), isLast));
+            newLines.add(new GuiMessage.Line(message, wrappedLines.get(i), isLast));
         }
 
         // Add to main history (ALL tab) as permanent log
@@ -194,7 +191,7 @@ public abstract class ChatComponentMixin implements ChatTabs {
     @ModifyConstant(
             method = {
                     "addMessageToDisplayQueue",
-                    "addMessage(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/MessageSignature;Lnet/minecraft/client/GuiMessageTag;)V"
+                    "addMessageToQueue"
             },
             constant = @Constant(intValue = 100)
     )
@@ -205,15 +202,15 @@ public abstract class ChatComponentMixin implements ChatTabs {
     /**
      * Ticks our ChatModule logic before rendering chat elements
      */
-    @Inject(method = "render", at = @At("HEAD"))
-    private void melinoe$checkChatRefresh(GuiGraphics guiGraphics, int tickCount, int mouseX, int mouseY, boolean focused, CallbackInfo ci) {
-        ChatModule.INSTANCE.onRender(tickCount);
+    @Inject(method = "extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/client/gui/Font;IIILnet/minecraft/client/gui/components/ChatComponent$DisplayMode;Z)V", at = @At("HEAD"))
+    private void melinoe$checkChatRefresh(GuiGraphicsExtractor graphics, Font font, int ticks, int mouseX, int mouseY, ChatComponent.DisplayMode displayMode, boolean changeCursorOnInsertions, CallbackInfo ci) {
+        ChatModule.INSTANCE.onRender(ticks);
     }
 
     /**
      * Intercepts incoming messages to catch chat mode switches
      */
-    @Inject(method = "addMessage(Lnet/minecraft/network/chat/Component;)V", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "addServerSystemMessage", at = @At("HEAD"), cancellable = true)
     private void melinoe$catchServerChatModeSwitch(Component message, CallbackInfo ci) {
         if (ChatModule.INSTANCE.handleChatModeMessage(message.getString())) {
             ci.cancel(); // Hide the raw server notification if we successfully handled it internally
@@ -224,7 +221,7 @@ public abstract class ChatComponentMixin implements ChatTabs {
      * Processes emojis and injects unconditionally the click-to-teleport logic to the component immediately.
      */
     @ModifyVariable(
-            method = "addMessage(Lnet/minecraft/network/chat/Component;)V",
+            method = "addPlayerMessage",
             at = @At("HEAD"),
             argsOnly = true,
             ordinal = 0

@@ -8,16 +8,15 @@ import java.util.regex.Pattern
  * Optimized to parse tab list once and extract multiple values in a single pass.
  */
 object TabListUtils {
-    private val TPS_PATTERN = Pattern.compile("^TPS:\\s(\\d+)$")
-    private val FAME_PATTERN = Pattern.compile("^Fame:\\s([\\d,]+)$")
-    private val LEVEL_PATTERN = Pattern.compile("^Class:(.+)$")
-    private val SERVER_PATTERN = Pattern.compile("^Server:\\s(.+)$")
-    private val LOOTBOOST_PATTERN = Pattern.compile("^Loot Boost:\\s\\+(\\d+)$")
-    private val SPEED_PATTERN = Pattern.compile("^Speed:\\s\\+(\\d+(?:\\.\\d+)?)$")
-    private val EVASION_PATTERN = Pattern.compile("^Evasion:\\s\\+(\\d+(?:\\.\\d+)?)$")
+    private val TPS_PATTERN = Pattern.compile("TPS:\\s*(\\d+)")
+    private val FAME_PATTERN = Pattern.compile("Fame:\\s*([\\d,]+)")
+    private val LEVEL_PATTERN = Pattern.compile("Class:\\s*(.+)")
+    private val SERVER_PATTERN = Pattern.compile("Server:\\s*(.+)")
+    private val LOOTBOOST_PATTERN = Pattern.compile("Loot Boost:\\s*\\+(\\d+)")
+    private val SPEED_PATTERN = Pattern.compile("Speed:\\s*\\+(\\d+(?:\\.\\d+)?)")
+    private val EVASION_PATTERN = Pattern.compile("Evasion:\\s*\\+(\\d+(?:\\.\\d+)?)")
     
-    // Regex for non-ASCII character removal
-    private val NON_ASCII_REGEX = Regex("[^\\p{ASCII}]")
+    // private val NON_ASCII_REGEX = Regex("[^\\p{ASCII}]")
 
     /**
      * Data class to hold parsed tab list information.
@@ -35,10 +34,10 @@ object TabListUtils {
     /**
      * Get the tab list as a list of strings.
      * This is the only method that accesses the network handler.
-     * Only works on Telos server.
+     * Only works on Telos.
      */
     private fun getTabList(): List<String>? {
-        // Only parse tab list on Telos server
+        // Only parse tab list on Telos
         if (!ServerUtils.isOnTelos()) return null
         
         val networkHandler = Melinoe.mc.connection ?: return null
@@ -50,14 +49,14 @@ object TabListUtils {
         return try {
             playerCollection
                 .mapNotNull { it.tabListDisplayName?.string }
-                .map { it.noControlCodes.trim() }
+                .map { stripAllFormatting(it).trim() }
                 .filter { it.isNotEmpty() }
         } catch (e: Exception) {
             // Handle any concurrent modification or array bounds issues gracefully
             null
         }
     }
-
+    
     /**
      * Parse all tab list data in a single pass.
      * This is the most efficient way to extract multiple values.
@@ -78,8 +77,8 @@ object TabListUtils {
             when {
                 charInfo == null -> {
                     val matcher = LEVEL_PATTERN.matcher(line)
-                    if (matcher.matches()) {
-                        charInfo = matcher.group(1)
+                    if (matcher.find()) {
+                        charInfo = matcher.group(1).trim()
                         continue
                     }
                 }
@@ -88,8 +87,8 @@ object TabListUtils {
             when {
                 server == null -> {
                     val matcher = SERVER_PATTERN.matcher(line)
-                    if (matcher.matches()) {
-                        server = matcher.group(1)
+                    if (matcher.find()) {
+                        server = matcher.group(1).trim()
                         continue
                     }
                 }
@@ -98,8 +97,8 @@ object TabListUtils {
             when {
                 tps == null -> {
                     val matcher = TPS_PATTERN.matcher(line)
-                    if (matcher.matches()) {
-                        tps = matcher.group(1)
+                    if (matcher.find()) {
+                        tps = matcher.group(1).trim()
                         continue
                     }
                 }
@@ -108,8 +107,8 @@ object TabListUtils {
             when {
                 fame == null -> {
                     val matcher = FAME_PATTERN.matcher(line)
-                    if (matcher.matches()) {
-                        fame = matcher.group(1)
+                    if (matcher.find()) {
+                        fame = matcher.group(1).trim()
                         continue
                     }
                 }
@@ -118,8 +117,8 @@ object TabListUtils {
             when {
                 lootboost == null -> {
                     val matcher = LOOTBOOST_PATTERN.matcher(line)
-                    if (matcher.matches()) {
-                        lootboost = matcher.group(1)
+                    if (matcher.find()) {
+                        lootboost = matcher.group(1).trim()
                         continue
                     }
                 }
@@ -128,8 +127,8 @@ object TabListUtils {
             when {
                 speed == null -> {
                     val matcher = SPEED_PATTERN.matcher(line)
-                    if (matcher.matches()) {
-                        speed = matcher.group(1)
+                    if (matcher.find()) {
+                        speed = matcher.group(1).trim()
                         continue
                     }
                 }
@@ -138,8 +137,8 @@ object TabListUtils {
             when {
                 evasion == null -> {
                     val matcher = EVASION_PATTERN.matcher(line)
-                    if (matcher.matches()) {
-                        evasion = matcher.group(1)
+                    if (matcher.find()) {
+                        evasion = matcher.group(1).trim()
                         continue
                     }
                 }
@@ -152,7 +151,7 @@ object TabListUtils {
                 break
             }
         }
-
+ 
         return TabListData(charInfo, server, tps, fame, lootboost, speed, evasion)
     }
 
@@ -165,8 +164,8 @@ object TabListUtils {
 
         for (line in tabList) {
             val matcher = pattern.matcher(line)
-            if (matcher.matches()) {
-                return matcher.group(1)
+            if (matcher.find()) {
+                return matcher.group(1).trim()
             }
         }
         return null
@@ -196,7 +195,7 @@ object TabListUtils {
      * Get loot boost from tab list.
      */
     fun getLootboost(): String? = getLineMatches(LOOTBOOST_PATTERN)
-
+    
     /**
      * Get speed from tab list.
      */
@@ -221,9 +220,9 @@ object TabListUtils {
 
     /**
      * Strip all formatting codes from a string.
-     * Uses efficient noControlCodes extension and regex for non-ASCII.
+     * Uses efficient noControlCodes extension.
      */
     fun stripAllFormatting(input: String): String {
-        return input.noControlCodes.replace(NON_ASCII_REGEX, "")
+        return input.noControlCodes
     }
 }

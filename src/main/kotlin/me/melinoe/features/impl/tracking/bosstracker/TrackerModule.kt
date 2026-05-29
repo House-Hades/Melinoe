@@ -162,7 +162,7 @@ object TrackerModule : Module(
             if (!enabled || !ServerUtils.isOnTelos()) return@on
             
             val level = mc.level ?: return@on
-            val currentDim = level.dimension().location().path
+            val currentDim = level.dimension().identifier().path
             
             if (previousDimension.isEmpty()) {
                 previousDimension = currentDim
@@ -263,7 +263,7 @@ object TrackerModule : Module(
      */
     private fun shouldShowTracker(): Boolean {
         val level = mc.level ?: return false
-        val dimensionPath = level.dimension().location().path
+        val dimensionPath = level.dimension().identifier().path
         return dimensionPath == Constants.DIMENSION_REALM
     }
 }

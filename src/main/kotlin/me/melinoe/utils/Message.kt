@@ -5,7 +5,9 @@ import me.melinoe.Melinoe
 import me.melinoe.features.impl.ClickGUIModule
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer
-import net.minecraft.client.GuiMessageTag
+import net.minecraft.client.gui.components.ChatComponent
+import net.minecraft.client.multiplayer.chat.GuiMessageSource
+import net.minecraft.client.multiplayer.chat.GuiMessageTag
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.ComponentSerialization
 import net.minecraft.network.chat.MutableComponent
@@ -84,7 +86,7 @@ fun getCenteredText(text: String): String {
     if (strippedText.isEmpty()) return text
 
     val textWidth = Melinoe.mc.font.width(strippedText)
-    val chatWidth = Melinoe.mc.gui.chat.width
+    val chatWidth = ChatComponent.getWidth(Melinoe.mc.options.chatWidth().get())
 
     if (textWidth >= chatWidth) return text
 
@@ -92,10 +94,11 @@ fun getCenteredText(text: String): String {
     return " ".repeat(spacesNeeded) + text
 }
 
-fun getChatBreak(): String =
-    Melinoe.mc.gui?.chat?.width?.let { width ->
-        "<st>" + " ".repeat(width / Melinoe.mc.font.width(" ")) + "</st>"
-    } ?: ""
+fun getChatBreak(): String {
+    val width = ChatComponent.getWidth(Melinoe.mc.options.chatWidth().get())
+    val spaceWidth = Melinoe.mc.font.width(" ").coerceAtLeast(1)
+    return "<st>" + " ".repeat((width / spaceWidth).coerceAtLeast(0)) + "</st>"
+}
 
 /**
  * Helper functions for creating styled text components cleanly powered by MiniMessage.
@@ -176,8 +179,8 @@ object Message {
                 .append(watermark)
                 .append(Component.literal(" "))
                 .append(message)
-
-            Melinoe.mc.gui?.chat?.addMessage(text, null, Melinoe_MESSAGE_INDICATOR)
+            
+            Melinoe.mc.gui.chat.addPlayerMessage(text, null, Melinoe_MESSAGE_INDICATOR)
         }
     }
 
@@ -197,7 +200,7 @@ object Message {
      */
     fun raw(message: Component) {
         Melinoe.mc.execute {
-            Melinoe.mc.gui?.chat?.addMessage(message)
+            Melinoe.mc.gui.chat.addClientSystemMessage(message)
         }
     }
 
@@ -235,15 +238,15 @@ object Message {
      * @param message The action bar message content (supports MiniMessage formatting)
      */
     fun actionBar(message: String) {
-        actionBar(message.toNative())
+        actionBar(MINI_MESSAGE.deserialize(message))
     }
 
     /**
      * Sends a component to the action bar (temporary overlay above hotbar).
      */
-    fun actionBar(message: Component) {
+    fun actionBar(message: net.kyori.adventure.text.Component) {
         Melinoe.mc.execute {
-            Melinoe.mc.player?.displayClientMessage(message, true)
+            Melinoe.mc.player?.sendActionBar(message)
         }
     }
 
@@ -290,7 +293,7 @@ object Message {
                 .append(Component.literal(" "))
                 .append(message.toNative())
 
-            Melinoe.mc.gui?.chat?.addMessage(text, null, Melinoe_MESSAGE_INDICATOR)
+            Melinoe.mc.gui.chat.addPlayerMessage(text, null, Melinoe_MESSAGE_INDICATOR)
         }
     }
 
@@ -304,7 +307,7 @@ object Message {
 
         Melinoe.mc.execute {
             val component = "$colorTag$breakLine".toNative()
-            Melinoe.mc.gui?.chat?.addMessage(component)
+            Melinoe.mc.gui.chat.addClientSystemMessage(component)
         }
     }
 

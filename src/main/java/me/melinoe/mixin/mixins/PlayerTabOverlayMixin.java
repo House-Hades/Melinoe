@@ -8,7 +8,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.FontDescription;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class PlayerTabOverlayMixin {
 
     @Unique
-    private static final ResourceLocation melinoe$ICON_FONT = ResourceLocation.fromNamespaceAndPath("melinoe", "icons");
+    private static final Identifier melinoe$ICON_FONT = Identifier.fromNamespaceAndPath("melinoe", "icons");
 
     @Unique
     private static final Style melinoe$ICON_STYLE = Style.EMPTY

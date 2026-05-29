@@ -226,7 +226,7 @@ object LifetimeStatsModule : Module(
         fill(boxWidth - 2, 2 + strHeightHalf, boxWidth - 1, boxHeight - 2, borderColor)
         
         // Draw title in bold
-        drawString(font, cachedTitleComponent!!, 8, 2, borderColor, false)
+        text(font, cachedTitleComponent!!, 8, 2, borderColor, false)
         
         // Draw stats
         if (statRenderList.isNotEmpty()) {
@@ -237,15 +237,15 @@ object LifetimeStatsModule : Module(
             for (i in 0 until statRenderList.size) {
                 val stat = statRenderList[i]
                 
-                drawString(font, stat.labelText, leftPadding, yOffset, labelColor.rgba, false)
+                text(font, stat.labelText, leftPadding, yOffset, labelColor.rgba, false)
                 
                 val valueX = boxWidth - stat.valueWidth - rightPadding
-                drawString(font, stat.valueText, valueX, yOffset, valueColor.rgba, false)
+                text(font, stat.valueText, valueX, yOffset, valueColor.rgba, false)
                 
                 yOffset += lineSpacing
             }
         } else {
-            drawString(font, "No stats data", 6, font.lineHeight + 4, 0xFF808080.toInt(), false)
+            text(font, "No stats data", 6, font.lineHeight + 4, 0xFF808080.toInt(), false)
         }
         
         return@render cachedRenderPair

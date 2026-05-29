@@ -2,7 +2,7 @@ package me.melinoe.mixin.mixins;
 
 import me.melinoe.features.impl.misc.ChatModule;
 import me.melinoe.utils.emoji.EmojiShortcodes;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.input.KeyEvent;
@@ -57,10 +57,10 @@ public class ChatScreenMixin {
 
     /**
      * Replaces standard shortcodes with actual Emoji icons the instant they are completed.
-     * We hook `render` because ChatScreen does not override `tick()` in 1.21.10.
+     * We hook `render` because ChatScreen does not override `tick()`
      */
-    @Inject(method = "render", at = @At("HEAD"))
-    private void melinoe$processLiveChatInput(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
+    @Inject(method = "extractRenderState", at = @At("HEAD"))
+    private void melinoe$processLiveChatInput(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a, CallbackInfo ci) {
         if (this.input != null) {
             EmojiShortcodes.INSTANCE.processEditBox(this.input);
         }
@@ -70,11 +70,11 @@ public class ChatScreenMixin {
      * Draws the Chat Tab UI above the standard chat input box
      */
     @Inject(
-            method = "render",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/CommandSuggestions;render(Lnet/minecraft/client/gui/GuiGraphics;II)V")
+            method = "extractRenderState",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/CommandSuggestions;extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;II)V")
     )
-    private void melinoe$renderChatTabs(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
-        ChatModule.INSTANCE.renderTabs(guiGraphics, mouseX, mouseY);
+    private void melinoe$renderChatTabs(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a, CallbackInfo ci) {
+        ChatModule.INSTANCE.renderTabs(graphics, mouseX, mouseY);
     }
 
     /**

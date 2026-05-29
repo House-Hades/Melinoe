@@ -1,6 +1,5 @@
 package me.melinoe.features.impl.visual.healthbar
 
-import me.melinoe.Melinoe
 import me.melinoe.clickgui.settings.Setting.Companion.withDependency
 import me.melinoe.clickgui.settings.impl.*
 import me.melinoe.events.RenderEvent
@@ -8,8 +7,8 @@ import me.melinoe.events.core.on
 import me.melinoe.features.Category
 import me.melinoe.features.Module
 import me.melinoe.utils.Color
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext
-import net.minecraft.client.gui.GuiGraphics
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.world.entity.player.Player
 import kotlin.math.roundToInt
 
@@ -119,10 +118,10 @@ object HealthBarModule : Module(
         }
     }
     
-    private fun render3D(context: WorldRenderContext, player: Player, pct: Float, topColor: Int, bottomColor: Int, finalTextColor: Int, finalPosition: Int, text: String, tickDelta: Float) {
-        val matrices = context.matrices() ?: return
-        val camera = context.gameRenderer().mainCamera ?: return
-        val bufferSource = context.consumers() as? net.minecraft.client.renderer.MultiBufferSource.BufferSource ?: return
+    private fun render3D(context: LevelRenderContext, player: Player, pct: Float, topColor: Int, bottomColor: Int, finalTextColor: Int, finalPosition: Int, text: String, tickDelta: Float) {
+        val matrices = context.poseStack()
+        val camera = context.gameRenderer().mainCamera
+        val bufferSource = context.bufferSource()
         
         renderer3D.render(
             matrices, camera, player, tickDelta, pct, topColor, bottomColor, backgroundColor.rgba, borderColor.rgba,
@@ -138,7 +137,7 @@ object HealthBarModule : Module(
     }
     
     // Draws the HUD element
-    fun renderHud(guiGraphics: GuiGraphics) {
+    fun renderHud(guiGraphics: GuiGraphicsExtractor) {
         if (!enabled || renderMode != 1) return
         val player = mc.player ?: return
         if (mc.options.cameraType.isFirstPerson && !showInFirstPerson) return

@@ -18,10 +18,10 @@ import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.component.DataComponents
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.network.chat.Component
+import net.minecraft.resources.Identifier
 import kotlin.random.Random
 
 val devCommand = Commodore("melinoedev", "mdev") {
@@ -72,32 +72,32 @@ val devCommand = Commodore("melinoedev", "mdev") {
             val itemStack = when (bagType.lowercase()) {
                 "bloodshot" -> {
                     val stack = ItemStack(Items.STICK)
-                    stack.set(DataComponents.ITEM_MODEL, ResourceLocation.fromNamespaceAndPath("telos", "entity/pouch/bloodshot_totem"))
+                    stack.set(DataComponents.ITEM_MODEL, Identifier.fromNamespaceAndPath("telos", "entity/pouch/bloodshot_totem"))
                     stack
                 }
                 "unholy" -> {
                     val stack = ItemStack(Items.STICK)
-                    stack.set(DataComponents.ITEM_MODEL, ResourceLocation.fromNamespaceAndPath("telos", "entity/pouch/unholy_totem"))
+                    stack.set(DataComponents.ITEM_MODEL, Identifier.fromNamespaceAndPath("telos", "entity/pouch/unholy_totem"))
                     stack
                 }
                 "voidbound" -> {
                     val stack = ItemStack(Items.STICK)
-                    stack.set(DataComponents.ITEM_MODEL, ResourceLocation.fromNamespaceAndPath("telos", "entity/pouch/voidbound_totem"))
+                    stack.set(DataComponents.ITEM_MODEL, Identifier.fromNamespaceAndPath("telos", "entity/pouch/voidbound_totem"))
                     stack
                 }
                 "royal" -> {
                     val stack = ItemStack(Items.STICK)
-                    stack.set(DataComponents.ITEM_MODEL, ResourceLocation.fromNamespaceAndPath("telos", "entity/pouch/royal_totem"))
+                    stack.set(DataComponents.ITEM_MODEL, Identifier.fromNamespaceAndPath("telos", "entity/pouch/royal_totem"))
                     stack
                 }
                 "companion" -> {
                     val stack = ItemStack(Items.STICK)
-                    stack.set(DataComponents.ITEM_MODEL, ResourceLocation.fromNamespaceAndPath("telos", "entity/pouch/companion"))
+                    stack.set(DataComponents.ITEM_MODEL, Identifier.fromNamespaceAndPath("telos", "entity/pouch/companion"))
                     stack
                 }
                 "event" -> {
                     val stack = ItemStack(Items.STICK)
-                    stack.set(DataComponents.ITEM_MODEL, ResourceLocation.fromNamespaceAndPath("telos", "entity/pouch/halloween_totem"))
+                    stack.set(DataComponents.ITEM_MODEL, Identifier.fromNamespaceAndPath("telos", "entity/pouch/halloween_totem"))
                     stack
                 }
                 else -> null
@@ -377,7 +377,7 @@ private fun sendCenteredComponent(component: Component) {
     val plainText = component.string.noControlCodes
     val spaces = getCenteredText(plainText).takeWhile { it == ' ' }
     Melinoe.mc.execute {
-        Melinoe.mc.gui?.chat?.addMessage(Component.literal(spaces).append(component))
+        Melinoe.mc.gui.chat.addClientSystemMessage(Component.literal(spaces).append(component))
     }
 }
 
@@ -388,7 +388,7 @@ private fun sendCenteredMM(mmString: String) {
     val plainText = mmString.replace(Regex("<[^>]*>"), "").noControlCodes
     val spaces = getCenteredText(plainText).takeWhile { it == ' ' }
     Melinoe.mc.execute {
-        Melinoe.mc.gui?.chat?.addMessage("$spaces$mmString".toNative())
+        Melinoe.mc.gui.chat.addClientSystemMessage("$spaces$mmString".toNative())
     }
 }
 

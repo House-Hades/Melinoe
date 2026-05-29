@@ -17,18 +17,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MessageHandlerMixin {
 
     @Inject(method = "handleSystemMessage", at = @At("HEAD"), cancellable = true)
-    private void onSystemMessage(Component message, boolean overlay, CallbackInfo ci) {
-        if (!overlay) {
-            String value = message.getString();
-            
-            // Post the event first so handlers can mark messages for cancellation
-            EventBus.INSTANCE.post(new ChatPacketEvent(value, message));
-            
-            // Then check if this message should be cancelled
-            if (ChatManager.INSTANCE.shouldCancelMessage(message)) {
-                ci.cancel();
-                return;
-            }
+    private void onSystemMessage(Component message, boolean remote, CallbackInfo ci) {
+        String value = message.getString();
+
+        // Post the event first so handlers can mark messages for cancellation
+        EventBus.INSTANCE.post(new ChatPacketEvent(value, message));
+
+        // Then check if this message should be cancelled
+        if (ChatManager.INSTANCE.shouldCancelMessage(message)) {
+            ci.cancel();
         }
     }
 }

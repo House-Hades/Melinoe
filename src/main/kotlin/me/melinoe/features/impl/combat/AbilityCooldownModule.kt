@@ -8,17 +8,15 @@ import me.melinoe.events.core.on
 import me.melinoe.features.Category
 import me.melinoe.features.Module
 import me.melinoe.utils.Color
+import me.melinoe.utils.ItemUtils
 import me.melinoe.utils.createSoundSettings
 import me.melinoe.utils.emoji.EmojiReplacer
 import me.melinoe.utils.playSoundSettings
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.player.LocalPlayer
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
-import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
-import java.util.IdentityHashMap
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
@@ -72,7 +70,7 @@ object AbilityCooldownModule : Module(
         val textWidth = textRenderer.width(title)
         val textHeight = textRenderer.lineHeight
         
-        drawString(textRenderer, title, 0, 0, titleColor.rgba, true)
+        text(textRenderer, title, 0, 0, titleColor.rgba, true)
         
         textWidth to textHeight
     }
@@ -97,9 +95,6 @@ object AbilityCooldownModule : Module(
     private var customTitle: Component? = null
     private var titleDisplayTicks = 0
     
-    // Caches to prevent registry lookups & string allocations every tick
-    private val abilityItemCache = IdentityHashMap<Item, Boolean>()
-    
     init {
         on<TickEvent.End> {
             if (!enabled) return@on
@@ -116,6 +111,7 @@ object AbilityCooldownModule : Module(
             // Track cooldown even if we switched items
             if (!trackedAbility.isEmpty) {
                 previousCooldownProgress = cooldownProgress
+                
                 cooldownProgress = player.cooldowns.getCooldownPercent(trackedAbility, 0f)
                 
                 // Triggers exactly when it hits 0.0f
@@ -161,7 +157,7 @@ object AbilityCooldownModule : Module(
         return (255 shl 24) or (r shl 16) or (g shl 8) or b
     }
     
-    fun renderHud(context: GuiGraphics) {
+    fun renderHud(context: GuiGraphicsExtractor) {
         if (!enabled) return
         if (!showHud.value) return
         if (displayedAbility.isEmpty) return
@@ -180,10 +176,10 @@ object AbilityCooldownModule : Module(
             val barY2 = barY + BAR_WIDTH
             
             // Draw outline
-            context.hLine(barX, barX2 - 1, barY, BAR_BORDER_COLOR)
-            context.hLine(barX, barX2 - 1, barY2 - 1, BAR_BORDER_COLOR)
-            context.vLine(barX, barY, barY2 - 1, BAR_BORDER_COLOR)
-            context.vLine(barX2 - 1, barY, barY2 - 1, BAR_BORDER_COLOR)
+            context.fill(barX, barY, barX2, barY + 1, BAR_BORDER_COLOR)
+            context.fill(barX, barY2 - 1, barX2, barY2, BAR_BORDER_COLOR)
+            context.fill(barX, barY, barX + 1, barY2, BAR_BORDER_COLOR)
+            context.fill(barX2 - 1, barY, barX2, barY2, BAR_BORDER_COLOR)
             
             val innerX1 = barX + 1
             val innerY1 = barY + 1
@@ -220,10 +216,10 @@ object AbilityCooldownModule : Module(
         // Draw Item Icon
         val iconX = barX + BAR_HEIGHT + 1
         val iconY = barY + (BAR_WIDTH - 16) / 2
-        context.renderItem(displayedAbility, iconX, iconY)
+        context.item(displayedAbility, iconX, iconY)
     }
     
-    private fun drawExclamationIndicator(context: GuiGraphics, cx: Int, cy: Int, alpha: Float) {
+    private fun drawExclamationIndicator(context: GuiGraphicsExtractor, cx: Int, cy: Int, alpha: Float) {
         val a = (alpha * 255f).toInt() shl 24
         val surroundingColor = 0x0000FF00 or a
         val exclamationColor = 0x00252326 or a
@@ -254,21 +250,12 @@ object AbilityCooldownModule : Module(
     
     private fun getCurrentPlayerAbility(player: LocalPlayer): ItemStack {
         val mainHandStack = player.mainHandItem
-        if (isAbility(mainHandStack)) return mainHandStack
+        if (ItemUtils.isAbility(mainHandStack)) return mainHandStack
         
         val offHandStack = player.offhandItem
-        if (isAbility(offHandStack)) return offHandStack
+        if (ItemUtils.isAbility(offHandStack)) return offHandStack
         
         return ItemStack.EMPTY
-    }
-    
-    private fun isAbility(stack: ItemStack): Boolean {
-        if (stack.isEmpty) return false
-        val item = stack.item
-        
-        return abilityItemCache.getOrPut(item) {
-            BuiltInRegistries.ITEM.getKey(item).path.endsWith("_hoe")
-        }
     }
     
     override fun onDisable() {

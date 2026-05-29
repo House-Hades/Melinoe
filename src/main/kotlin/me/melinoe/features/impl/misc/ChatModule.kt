@@ -1,5 +1,6 @@
 package me.melinoe.features.impl.misc
 
+import me.melinoe.Melinoe
 import me.melinoe.clickgui.settings.Setting.Companion.withDependency
 import me.melinoe.clickgui.settings.impl.BooleanSetting
 import me.melinoe.clickgui.settings.impl.DropdownSetting
@@ -11,7 +12,8 @@ import me.melinoe.utils.Message
 import me.melinoe.utils.emoji.EmojiShortcodes
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Font
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.client.gui.components.ChatComponent
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
 import org.lwjgl.glfw.GLFW
@@ -532,7 +534,7 @@ object ChatModule : Module(
     private fun ensureActiveTabVisible() {
         val mc = Minecraft.getInstance()
         val font = mc.font
-        val maxWidth = mc.gui.chat.width
+        val maxWidth = ChatComponent.getWidth(Melinoe.mc.options.chatWidth().get())
         var currentX = 0
         val tabPadding = 2
         val tabSpacing = 2
@@ -557,12 +559,12 @@ object ChatModule : Module(
     /**
      * Draws the Tab buttons above the chat input box
      */
-    fun renderTabs(guiGraphics: GuiGraphics, mouseX: Int, mouseY: Int) {
+    fun renderTabs(guiGraphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int) {
         if (!enabled || !enableChatTabs) return
         
         val mc = Minecraft.getInstance()
         val font = mc.font
-        val maxWidth = mc.gui.chat.width
+        val maxWidth = ChatComponent.getWidth(Melinoe.mc.options.chatWidth().get())
         val currentY = mc.window.guiScaledHeight - 32 // Offset just above input box
         val tabPadding = 2
         val tabSpacing = 2
@@ -583,7 +585,7 @@ object ChatModule : Module(
                     isHovered -> 0xFFEEEEEE.toInt()     // Light gray on hover
                     else -> 0xFFAAAAAA.toInt()          // Normal gray
                 }
-                guiGraphics.drawString(font, tab.displayName, currentX + tabPadding, currentY + tabPadding, textColor, true)
+                guiGraphics.text(font, tab.displayName, currentX + tabPadding, currentY + tabPadding, textColor, true)
             }
             currentX += tabWidth + tabSpacing
         }
@@ -599,7 +601,7 @@ object ChatModule : Module(
         
         val mc = Minecraft.getInstance()
         val font = mc.font
-        val maxWidth = mc.gui.chat.width
+        val maxWidth = ChatComponent.getWidth(Melinoe.mc.options.chatWidth().get())
         val currentY = mc.window.guiScaledHeight - 32
         val tabPadding = 2
         val tabSpacing = 2
