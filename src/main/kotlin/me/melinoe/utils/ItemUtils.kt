@@ -125,6 +125,14 @@ object ItemUtils {
     fun isHeraldEssence(stack: ItemStack): Boolean {
         return ItemType.fromItemStack(stack) === ItemType.UT_HERALD_ESSENCE
     }
+
+    /**
+     * Check if an armor piece has an activatable ability with a cooldown
+     */
+    fun hasArmorAbility(stack: ItemStack): Boolean {
+        if (stack.isEmpty) return false
+        return parseItemCooldown(stack) > 0f
+    }
     
     /**
      * Check if an item is a weapon based on item components

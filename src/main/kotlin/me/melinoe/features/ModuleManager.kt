@@ -160,7 +160,7 @@ object ModuleManager {
             AutoClickerModule,
             WeaponRangeModule,
             AbilityRangeModule,
-            NaturesGiftModule,
+            ArmorCooldownsModule,
             WeaponCooldownModule,
             AbilityCooldownModule,
             AssassinStacksModule,

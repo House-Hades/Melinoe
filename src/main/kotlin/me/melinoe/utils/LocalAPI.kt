@@ -5,7 +5,7 @@ import me.melinoe.events.*
 import me.melinoe.events.core.EventBus
 import me.melinoe.events.core.on
 import me.melinoe.events.core.onReceive
-import me.melinoe.features.impl.combat.NaturesGiftModule
+import me.melinoe.features.impl.combat.ArmorCooldownsModule
 import me.melinoe.utils.data.DungeonData
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 import kotlin.math.max
@@ -462,7 +462,7 @@ object LocalAPI {
         if (currentDungeon != null) {
             // Skip Rustborn Kingdom - it's a split dungeon, not a chain
             if (currentDungeon == DungeonData.RUSTBORN_KINGDOM) {
-                NaturesGiftModule.resetCooldown()
+                ArmorCooldownsModule.reset()
                 Melinoe.logger.info("LocalAPI: Dimension changed in Rustborn Kingdom (split dungeon), skipping chain event")
                 return
             }

@@ -2,6 +2,7 @@ package me.melinoe.features.impl.visual
 
 import me.melinoe.features.Category
 import me.melinoe.features.Module
+import me.melinoe.features.impl.combat.ArmorCooldownsModule
 import me.melinoe.clickgui.settings.impl.HUDSetting
 import me.melinoe.clickgui.settings.impl.SelectorSetting
 import net.minecraft.core.component.DataComponents
@@ -44,38 +45,57 @@ object ArmorHUDModule : Module(
                 stack.set(DataComponents.ITEM_MODEL, model)
                 return stack
             }
-            
+
             armorItems.add(createCustomItem(Identifier.fromNamespaceAndPath("telos", "material/armour/heavy/helmet/ut-mandorla")))
-            armorItems.add(createCustomItem(Identifier.fromNamespaceAndPath("telos", "material/armour/magical/chestplate/ex-spiritbloom")))
+            armorItems.add(createCustomItem(Identifier.fromNamespaceAndPath("telos", "material/armour/magical/chestplate/ut-spiritbloom")))
             armorItems.add(createCustomItem(Identifier.fromNamespaceAndPath("telos", "material/armour/light/leggings/ut-onyx")))
             armorItems.add(createCustomItem(Identifier.fromNamespaceAndPath("telos", "material/armour/heavy/boots/ut-timelost")))
         } else {
-            armorItems.add(player.getItemBySlot(EquipmentSlot.HEAD))
-            armorItems.add(player.getItemBySlot(EquipmentSlot.CHEST))
-            armorItems.add(player.getItemBySlot(EquipmentSlot.LEGS))
-            armorItems.add(player.getItemBySlot(EquipmentSlot.FEET))
+            // Each worn slot, followed by any swapped-off pieces of that slot still on cooldown
+            for (slot in listOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)) {
+                armorItems.add(player.getItemBySlot(slot))
+                if (ArmorCooldownsModule.enabled) {
+                    armorItems.addAll(ArmorCooldownsModule.extraPieces(slot))
+                }
+            }
         }
-        
+
+        val iconSize = 16
+        val barGap = 1
+        val barH = ArmorCooldownsModule.BAR_HEIGHT
+        val barsOn = example || (ArmorCooldownsModule.enabled && ArmorCooldownsModule.showBars.value)
+        // Extra vertical room reserved per icon for the cooldown bar
+        val cellExtra = if (barsOn) barGap + barH else 0
+        // Sample values for HUD editor
+        val examplePreview = listOf(0f, 0.35f, 0.7f, 1f)
+
         var currentX = 0
         var currentY = 0
-        val spacing = 16
-        
-        for (stack in armorItems) {
+        val rowAdvance = if (isHorizontal) iconSize else iconSize + cellExtra
+
+        for ((index, stack) in armorItems.withIndex()) {
             if (!stack.isEmpty) {
                 item(stack, currentX, currentY)
+
+                val barY = currentY + iconSize + barGap
+                if (example) {
+                    ArmorCooldownsModule.renderArmorBar(this, currentX, barY, iconSize, examplePreview[index % examplePreview.size])
+                } else if (barsOn && ArmorCooldownsModule.hasAbility(stack)) {
+                    ArmorCooldownsModule.renderArmorBar(this, currentX, barY, iconSize, ArmorCooldownsModule.progressFor(stack))
+                }
             }
-            
+
             if (isHorizontal) {
-                currentX += spacing
+                currentX += iconSize
             } else {
-                currentY += spacing
+                currentY += rowAdvance
             }
         }
-        
+
         // Calculate final dimensions of the widget
-        val width = if (isHorizontal) armorItems.size * spacing else spacing
-        val height = if (isHorizontal) spacing else armorItems.size * spacing
-        
+        val width = if (isHorizontal) armorItems.size * iconSize else iconSize
+        val height = if (isHorizontal) iconSize + cellExtra else armorItems.size * rowAdvance
+
         width to height
     }
 }
