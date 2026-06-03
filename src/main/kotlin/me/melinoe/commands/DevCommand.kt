@@ -45,7 +45,7 @@ val devCommand = Commodore("melinoedev", "mdev") {
             <#AAAAAA>Dev Command Help:
             <#555555><bold>›</bold> <#FFD700>/mdev itemid <#555555>- <#AAAAAA>Shows item ID and model data of held item
             <#555555><bold>›</bold> <#FFD700>/mdev simulate \<dungeon> <#555555>- <#AAAAAA>Simulates a dungeon completion message
-            <#555555>  Available dungeons: <#AAAAAA>${DungeonData.entries.joinToString("<#555555>, <#AAAAAA>") { it.name.lowercase() }}
+            <#555555>  Available dungeons: <#AAAAAA>${DungeonData.all.joinToString("<#555555>, <#AAAAAA>") { it.name.lowercase() }}
             <#555555><bold>›</bold> <#FFD700>/mdev testbag \<type> <#555555>- <#AAAAAA>Simulates a bag drop and increments stats
             <#555555>  Available types: <#AAAAAA>bloodshot, unholy, voidbound, royal, companion, event
             <#555555><bold>›</bold> <#FFD700>/mdev testboss \<boss> <#555555>- <#AAAAAA>Simulates a boss defeat and increments counters
@@ -326,7 +326,7 @@ val devCommand = Commodore("melinoedev", "mdev") {
     
     literal("simulate").executable {
         param("dungeon") {
-            suggests { DungeonData.entries.map { it.name.lowercase() } }
+            suggests { DungeonData.all.map { it.name.lowercase() } }
         }
         
         runs { dungeonName: String ->
@@ -335,7 +335,7 @@ val devCommand = Commodore("melinoedev", "mdev") {
                 return@runs
             }
             
-            val dungeon = DungeonData.entries.find {
+            val dungeon = DungeonData.all.find {
                 it.name.equals(dungeonName, ignoreCase = true)
             }
             
@@ -351,7 +351,7 @@ val devCommand = Commodore("melinoedev", "mdev") {
             }
             
             // Check if this is a split dungeon (Rustborn Kingdom or Celestial's Province)
-            val isSplitDungeon = dungeon.equalsOneOf(DungeonData.RUSTBORN_KINGDOM, DungeonData.CELESTIALS_PROVINCE)
+            val isSplitDungeon = dungeon.name == "RUSTBORN_KINGDOM" || dungeon.name == "CELESTIALS_PROVINCE"
             
             if (isSplitDungeon) {
                 // Simulate split dungeon with multiple bosses
@@ -426,7 +426,7 @@ private fun simulateRegularDungeon(dungeon: DungeonData, player: LocalPlayer) {
     sendCenteredComponent(headerComponent)
     
     // Show pity counter if applicable (centered)
-    val pityLine = buildPityCounterLine(dungeon, dungeon.finalBoss)
+    val pityLine = dungeon.finalBoss?.let { buildPityCounterLine(dungeon, it) } ?: ""
     if (pityLine.isNotEmpty()) {
         Message.centeredRaw(pityLine)
     }
@@ -454,14 +454,14 @@ private fun simulateRegularDungeon(dungeon: DungeonData, player: LocalPlayer) {
  * Simulates a split dungeon completion (Rustborn Kingdom or Celestial's Province)
  */
 private fun simulateSplitDungeon(dungeon: DungeonData, player: LocalPlayer) {
-    val bosses = when (dungeon) {
-        DungeonData.RUSTBORN_KINGDOM -> {
+    val bosses = when (dungeon.name) {
+        "RUSTBORN_KINGDOM" -> {
             // Rustborn Kingdom: Valerion, Nebula, Ophanim (final)
-            listOf(BossData.VALERION, BossData.NEBULA, BossData.OPHANIM)
+            listOfNotNull(BossData.byKey("VALERION"), BossData.byKey("NEBULA"), BossData.byKey("OPHANIM"))
         }
-        DungeonData.CELESTIALS_PROVINCE -> {
+        "CELESTIALS_PROVINCE" -> {
             // Celestial's Province: Asmodeus, Seraphim (final)
-            listOf(BossData.ASMODEUS, BossData.SERAPHIM)
+            listOfNotNull(BossData.byKey("ASMODEUS"), BossData.byKey("SERAPHIM"))
         }
         else -> {
             Message.error("Not a split dungeon: ${dungeon.areaName}")

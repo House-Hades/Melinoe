@@ -3,6 +3,8 @@ package me.melinoe
 import me.melinoe.commands.*
 import me.melinoe.events.EventDispatcher
 import me.melinoe.events.core.EventBus
+import me.melinoe.network.TelosDataFetcher
+import me.melinoe.utils.data.TelosData
 import me.melinoe.features.ModuleManager
 import me.melinoe.utils.IrisCompat
 import me.melinoe.utils.LocalAPI
@@ -54,6 +56,10 @@ object Melinoe : ClientModInitializer {
     override fun onInitializeClient() {
         // Initialize tracking data integration FIRST (before EventBus subscriptions)
         DataConfig.initialize()
+
+        // Load Telos data (items/bosses/dungeons/portals), then update it from Git
+        TelosData.init()
+        TelosDataFetcher.fetchAll()
 
         ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
             arrayOf(

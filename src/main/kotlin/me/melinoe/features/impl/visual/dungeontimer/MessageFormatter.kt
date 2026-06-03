@@ -28,7 +28,7 @@ object MessageFormatter {
         val bossColor = GradientTextBuilder.getBrightColor(dungeon.dungeonType).toHexTag()
         val timeColor = GradientTextBuilder.getDarkColor(dungeon.dungeonType).toHexTag()
         
-        val bossName = dungeon.finalBoss.label
+        val bossName = dungeon.finalBoss?.label ?: dungeon.areaName
         val timeStr = PersonalBestManager.formatTimeWithDecimals(time)
         val pbString = getPBComparisonString(dungeon.areaName, time, oldPB, isNewPB)
         

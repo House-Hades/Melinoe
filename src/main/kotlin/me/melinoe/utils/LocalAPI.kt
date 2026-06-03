@@ -461,7 +461,7 @@ object LocalAPI {
         
         if (currentDungeon != null) {
             // Skip Rustborn Kingdom - it's a split dungeon, not a chain
-            if (currentDungeon == DungeonData.RUSTBORN_KINGDOM) {
+            if (currentDungeon.name == "RUSTBORN_KINGDOM") {
                 ArmorCooldownsModule.reset()
                 Melinoe.logger.info("LocalAPI: Dimension changed in Rustborn Kingdom (split dungeon), skipping chain event")
                 return

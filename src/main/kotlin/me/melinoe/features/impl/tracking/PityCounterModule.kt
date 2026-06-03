@@ -100,7 +100,12 @@ object PityCounterModule : Module(
     private var renderDataList = mutableListOf<CachedRenderItem>()
     
     // Pre-mapped collections
-    private val shadowlandsBosses = listOf(BossData.DEFENDER, BossData.REAPER, BossData.WARDEN, BossData.HERALD)
+    private val shadowlandsBosses by lazy {
+        listOfNotNull(
+            BossData.byKey("DEFENDER"), BossData.byKey("REAPER"),
+            BossData.byKey("WARDEN"), BossData.byKey("HERALD")
+        )
+    }
     private val realmBossMapping by lazy {
         me.melinoe.features.impl.tracking.bosstracker.BossData.entries
             .filter { it.name !in listOf("RAPHAEL", "DEFENDER", "REAPER", "WARDEN", "HERALD") }
@@ -130,7 +135,7 @@ object PityCounterModule : Module(
      */
     private fun updateCache() {
         val font = mc.font
-        Item.entries.forEach { item ->
+        Item.all.forEach { item ->
             val count = TypeSafeDataAccess.get(TrackingKey.PityCounter(item.name)) ?: 0
             cachedPityCounters[item.name] = count
             
@@ -218,9 +223,9 @@ object PityCounterModule : Module(
         val pz = player.z
         
         if (cachedArea == "Shadowlands") {
-            if (pz < -360) currentBossData = BossData.HERALD
-            else if (pz > 500) currentBossData = BossData.REAPER
-            else if (px < -400) currentBossData = BossData.WARDEN
+            if (pz < -360) currentBossData = BossData.byKey("HERALD")
+            else if (pz > 500) currentBossData = BossData.byKey("REAPER")
+            else if (px < -400) currentBossData = BossData.byKey("WARDEN")
             else {
                 var minDistance = Double.MAX_VALUE
                 for (boss in shadowlandsBosses) {
@@ -274,11 +279,11 @@ object PityCounterModule : Module(
             val pityCountStr: String
             val valueWidth: Int
             if (example) {
-                val exCount = when (item) {
-                    Item.BLUNDERBOW -> 42
-                    Item.LOST_TREASURE_SCRIPTURE -> 87
-                    Item.SLIME_ARCHER -> 15
-                    Item.GOLDEN_STALLION -> 103
+                val exCount = when (item.name) {
+                    "BLUNDERBOW" -> 42
+                    "LOST_TREASURE_SCRIPTURE" -> 87
+                    "SLIME_ARCHER" -> 15
+                    "GOLDEN_STALLION" -> 103
                     else -> 50
                 }
                 pityCountStr = exCount.toString()
@@ -337,11 +342,14 @@ object PityCounterModule : Module(
         
         // Determine active items for this frame
         val currentItems = if (example) {
-            listOf(Item.BLUNDERBOW, Item.LOST_TREASURE_SCRIPTURE, Item.SLIME_ARCHER, Item.GOLDEN_STALLION)
+            listOfNotNull(
+                Item.byKey("BLUNDERBOW"), Item.byKey("LOST_TREASURE_SCRIPTURE"),
+                Item.byKey("SLIME_ARCHER"), Item.byKey("GOLDEN_STALLION")
+            )
         } else if (cachedArea == "Rustborn Kingdom") {
-            (BossData.VALERION.items + BossData.NEBULA.items + BossData.OPHANIM.items).toList()
+            BossData.itemsOf("VALERION", "NEBULA", "OPHANIM")
         } else if (cachedArea == "Celestial's Province") {
-            (BossData.ASMODEUS.items + BossData.SERAPHIM.items).toList()
+            BossData.itemsOf("ASMODEUS", "SERAPHIM")
         } else {
             cachedItemsToDisplay
         }

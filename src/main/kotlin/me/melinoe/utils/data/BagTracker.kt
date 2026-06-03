@@ -285,7 +285,7 @@ object BagTracker {
         
         // Find the longest matching item display name after " got "
         var droppedItem: Item? = null
-        for (item in Item.values()) {
+        for (item in Item.all) {
             val itemDisplayName = item.displayName
             val itemStartIndex = gotIndex + 5 // " got ".length
             
@@ -363,7 +363,7 @@ object BagTracker {
      */
     private fun resolveContextualItem(texturePath: String): Item? {
         // Find default item by texture path
-        val defaultItem = Item.entries.find { it.texturePath == texturePath } ?: return null
+        val defaultItem = Item.all.find { it.texturePath == texturePath } ?: return null
         
         try {
             val currentArea = LocalAPI.getCurrentCharacterArea()
@@ -371,25 +371,10 @@ object BagTracker {
             // Build list of contextual items based on current area
             val contextItems = mutableListOf<Item>()
             when (currentArea) {
-                "Dawn of Creation" -> {
-                    // True Ophan area
-                    BossData.TRUE_OPHAN.items.forEach { contextItems.add(it) }
-                }
-                "Seraph's Domain" -> {
-                    // True Seraph area
-                    BossData.TRUE_SERAPH.items.forEach { contextItems.add(it) }
-                }
-                "Celestial's Province" -> {
-                    // Asmodeus + Seraphim
-                    BossData.ASMODEUS.items.forEach { contextItems.add(it) }
-                    BossData.SERAPHIM.items.forEach { contextItems.add(it) }
-                }
-                "Rustborn Kingdom" -> {
-                    // Valerion + Nebula + Ophanim
-                    BossData.VALERION.items.forEach { contextItems.add(it) }
-                    BossData.NEBULA.items.forEach { contextItems.add(it) }
-                    BossData.OPHANIM.items.forEach { contextItems.add(it) }
-                }
+                "Dawn of Creation" -> contextItems.addAll(BossData.itemsOf("TRUE_OPHAN"))
+                "Seraph's Domain" -> contextItems.addAll(BossData.itemsOf("TRUE_SERAPH"))
+                "Celestial's Province" -> contextItems.addAll(BossData.itemsOf("ASMODEUS", "SERAPHIM"))
+                "Rustborn Kingdom" -> contextItems.addAll(BossData.itemsOf("VALERION", "NEBULA", "OPHANIM"))
             }
             
             // Check if any contextual item matches the texture path
@@ -416,25 +401,10 @@ object BagTracker {
             // Build list of contextual items based on current area
             val contextItems = mutableListOf<Item>()
             when (currentArea) {
-                "Dawn of Creation" -> {
-                    // True Ophan area
-                    BossData.TRUE_OPHAN.items.forEach { contextItems.add(it) }
-                }
-                "Seraph's Domain" -> {
-                    // True Seraph area
-                    BossData.TRUE_SERAPH.items.forEach { contextItems.add(it) }
-                }
-                "Celestial's Province" -> {
-                    // Asmodeus + Seraphim
-                    BossData.ASMODEUS.items.forEach { contextItems.add(it) }
-                    BossData.SERAPHIM.items.forEach { contextItems.add(it) }
-                }
-                "Rustborn Kingdom" -> {
-                    // Valerion + Nebula + Ophanim
-                    BossData.VALERION.items.forEach { contextItems.add(it) }
-                    BossData.NEBULA.items.forEach { contextItems.add(it) }
-                    BossData.OPHANIM.items.forEach { contextItems.add(it) }
-                }
+                "Dawn of Creation" -> contextItems.addAll(BossData.itemsOf("TRUE_OPHAN"))
+                "Seraph's Domain" -> contextItems.addAll(BossData.itemsOf("TRUE_SERAPH"))
+                "Celestial's Province" -> contextItems.addAll(BossData.itemsOf("ASMODEUS", "SERAPHIM"))
+                "Rustborn Kingdom" -> contextItems.addAll(BossData.itemsOf("VALERION", "NEBULA", "OPHANIM"))
             }
             
             // Check if any contextual item matches the display name

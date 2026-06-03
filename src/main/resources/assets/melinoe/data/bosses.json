@@ -1,0 +1,773 @@
+{
+  "bosses": [
+    {
+      "name": "ANUBIS",
+      "label": "Anubis",
+      "spawnPosition": {
+        "x": 458,
+        "y": 214,
+        "z": -467
+      },
+      "bossType": "WORLD",
+      "items": [
+        "ANUBIS_STAFF",
+        "JEWEL_OF_THE_NILE"
+      ]
+    },
+    {
+      "name": "ASTAROTH",
+      "label": "Astaroth",
+      "spawnPosition": {
+        "x": 250,
+        "y": 228,
+        "z": 60
+      },
+      "bossType": "WORLD",
+      "items": [
+        "ORB_OF_CONFLICT",
+        "KUNAI_OF_CONFLICT"
+      ]
+    },
+    {
+      "name": "CHUNGUS",
+      "label": "Chungus",
+      "spawnPosition": {
+        "x": 61,
+        "y": 266,
+        "z": -490
+      },
+      "bossType": "WORLD",
+      "items": [
+        "CARROT_ON_A_STICK",
+        "SPRING_SEASONED_SCRIPTURE"
+      ]
+    },
+    {
+      "name": "FREDDY",
+      "label": "Freddy",
+      "spawnPosition": {
+        "x": -136,
+        "y": 214,
+        "z": 653
+      },
+      "bossType": "WORLD",
+      "items": [
+        "EXOSKELETON_HOOD",
+        "FREDDYS_MICROPHONE"
+      ]
+    },
+    {
+      "name": "GLUMI",
+      "label": "Glumi",
+      "spawnPosition": {
+        "x": 317,
+        "y": 200,
+        "z": 558
+      },
+      "bossType": "WORLD",
+      "items": [
+        "CRYSTAL_POISON",
+        "CRYSTAL_KUNAI"
+      ]
+    },
+    {
+      "name": "ILLARIUS",
+      "label": "Illarius",
+      "spawnPosition": {
+        "x": 479,
+        "y": 211,
+        "z": -44
+      },
+      "bossType": "WORLD",
+      "items": [
+        "BOW_OF_THE_FOREST",
+        "CURSED_BRIGADINE"
+      ]
+    },
+    {
+      "name": "LOTIL",
+      "label": "Lotil",
+      "spawnPosition": {
+        "x": -138,
+        "y": 223,
+        "z": 17
+      },
+      "bossType": "WORLD",
+      "items": [
+        "SHIELD_OF_OGMUR",
+        "CLOAK_OF_THE_WARLORD"
+      ]
+    },
+    {
+      "name": "OOZUL",
+      "label": "Oozul",
+      "spawnPosition": {
+        "x": -424,
+        "y": 205,
+        "z": 91
+      },
+      "bossType": "WORLD",
+      "items": [
+        "DIMENSIONAL_STAR",
+        "DIRK_OF_CHRONOS"
+      ]
+    },
+    {
+      "name": "TIDOL",
+      "label": "Tidol",
+      "spawnPosition": {
+        "x": -543,
+        "y": 199,
+        "z": 364
+      },
+      "bossType": "WORLD",
+      "items": [
+        "EMBLEM_OF_THE_JUGGERNAUT",
+        "GREAVES_OF_THE_JUGGERNAUT"
+      ]
+    },
+    {
+      "name": "VALUS",
+      "label": "Valus",
+      "spawnPosition": {
+        "x": 35,
+        "y": 220,
+        "z": 307
+      },
+      "bossType": "WORLD",
+      "items": [
+        "CLOAK_OF_BLOODY_SURPRISES",
+        "SPOOKY_SANDALS"
+      ]
+    },
+    {
+      "name": "HOLLOWBANE",
+      "label": "Hollowbane",
+      "spawnPosition": {
+        "x": 233,
+        "y": 200,
+        "z": 703
+      },
+      "bossType": "WORLD",
+      "items": []
+    },
+    {
+      "name": "CLAUS",
+      "label": "Claus",
+      "spawnPosition": {
+        "x": 10,
+        "y": 222,
+        "z": -122
+      },
+      "bossType": "WORLD",
+      "items": []
+    },
+    {
+      "name": "WARDEN",
+      "label": "Warden",
+      "spawnPosition": {
+        "x": -125,
+        "y": -46,
+        "z": -122
+      },
+      "bossType": "WORLD",
+      "items": [
+        "WARDENS_FACEGUARD",
+        "WARDENS_GARMENT",
+        "DAWNBRINGER"
+      ]
+    },
+    {
+      "name": "HERALD",
+      "label": "Herald",
+      "spawnPosition": {
+        "x": 148,
+        "y": -47,
+        "z": -176
+      },
+      "bossType": "WORLD",
+      "items": [
+        "HERALDIC_HEELGUARDS",
+        "LUMINOUS_FLAME",
+        "HERALDS_ESSENCE"
+      ]
+    },
+    {
+      "name": "REAPER",
+      "label": "Reaper",
+      "spawnPosition": {
+        "x": 22,
+        "y": -47,
+        "z": 323
+      },
+      "bossType": "WORLD",
+      "items": [
+        "SOULLESS_SHOES",
+        "CHALICE_OF_ROT",
+        "REAPERS_VEST"
+      ]
+    },
+    {
+      "name": "DEFENDER",
+      "label": "Defender",
+      "spawnPosition": {
+        "x": 65,
+        "y": -51,
+        "z": 64
+      },
+      "bossType": "WORLD",
+      "items": [
+        "SHROUDED_SHIELD",
+        "PHANTASMIC_GREAVES",
+        "AFTERBURNER"
+      ]
+    },
+    {
+      "name": "EDDIE",
+      "label": "Eddie",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "BLUNDERBOW",
+        "LOST_TREASURE_SCRIPTURE",
+        "SLIME_ARCHER",
+        "GOLDEN_STALLION"
+      ]
+    },
+    {
+      "name": "ZHUM",
+      "label": "Zhum",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "ASTEROID_STAFF",
+        "AYAHUASCA_FLASK",
+        "WARTORN_SANDALS",
+        "THORNWOOD_DRUID",
+        "TIMBERBEAST"
+      ]
+    },
+    {
+      "name": "DRAYRUK",
+      "label": "Drayruk",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "TITANIUM_CLEAVER",
+        "DRAYRUKS_BATTLE_GREAVES",
+        "ARROWSTORM_TRAP",
+        "SHAMANOID",
+        "GOBBLEHOP"
+      ]
+    },
+    {
+      "name": "MIRAJ",
+      "label": "Miraj",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "SCEPTRE_OF_THORNS",
+        "SANDSTONE_EMBLEM",
+        "LOST_CLERIC",
+        "GRUMBLEGLOB"
+      ]
+    },
+    {
+      "name": "KHUFU",
+      "label": "Khufu",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "KHUFUS_SKULL",
+        "VEIL_OF_SHADOWS",
+        "HOOD_OF_STEALTH",
+        "KHUFY",
+        "SHADOW_SCORPID"
+      ]
+    },
+    {
+      "name": "CHOJI",
+      "label": "Choji",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "KENDO_STICK",
+        "CHOJIS_TUNIC",
+        "YINYANG",
+        "ZENPANDA"
+      ]
+    },
+    {
+      "name": "FLORA",
+      "label": "Flora",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "FLORA_BOOTS",
+        "CROSS_GRASS_DAGGER",
+        "OVERGROWN_ORB",
+        "UNDEAD_ENT",
+        "THORNSCALE"
+      ]
+    },
+    {
+      "name": "MALFAS",
+      "label": "Malfas",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "DEMONIC_BLADE",
+        "DEMONIC_DAGGER",
+        "MAGMA_INFUSED_SCRIPTURE",
+        "BLAZEY",
+        "MAGMA_RUNNER"
+      ]
+    },
+    {
+      "name": "HEPTAVIUS",
+      "label": "Heptavius",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "DOOM_KATANA",
+        "DOOM_BOW",
+        "HAT_OF_LOST_SOULS",
+        "DARK_KNIGHT",
+        "NECROFOX"
+      ]
+    },
+    {
+      "name": "ARCTIC_COLOSSUS",
+      "label": "Arctic Colossus",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "FROZEN_STAR",
+        "FROSTSPARK_SKULL",
+        "FROZEN_JEWEL",
+        "ICE_PENGUIN",
+        "FROSTFANG"
+      ]
+    },
+    {
+      "name": "FROSTGAZE",
+      "label": "Frostgaze",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "DWARVEN_KUNAI",
+        "DWARVEN_EMBLEM",
+        "DWARVEN_CLOAK",
+        "MINI_DWARF",
+        "GLACIAL_RUNNER"
+      ]
+    },
+    {
+      "name": "MAGNUS",
+      "label": "Magnus",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "LIGHTNING_BOW",
+        "LIGHTNING_CHAPS",
+        "LIGHTNING_SABATONS",
+        "GOLDEN_MARTIAL",
+        "MIDAS_CONSTRUCT"
+      ]
+    },
+    {
+      "name": "PYRO",
+      "label": "Pyro",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "ORB_OF_TORMENT",
+        "BOMB_OF_TORMENT",
+        "CHESTPLATE_OF_TORMENT",
+        "PRYOC",
+        "HYDROSCORCH"
+      ]
+    },
+    {
+      "name": "THALOR",
+      "label": "Thalor",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "SHIELD_OF_GLACIAL_REFLECTION",
+        "FROST_LEGGINGS",
+        "GLACIAL_BOMB",
+        "THAILY",
+        "WINTERBEAST"
+      ]
+    },
+    {
+      "name": "ASHENCLAW",
+      "label": "Ashenclaw",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "EMBERHEART_STAFF",
+        "VENOMFANG_SERUM",
+        "LIZARDSKIN_SPELLCOAT",
+        "BLADE",
+        "FIRECLAW"
+      ]
+    },
+    {
+      "name": "CORVACK",
+      "label": "Corvack",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "CORVUS_SCEPTRE",
+        "CORVUS_TRAP",
+        "CORVACKS_MASK",
+        "DARK_ALCHEMIST",
+        "SHADOWCLAW"
+      ]
+    },
+    {
+      "name": "OMNIPOTENT",
+      "label": "Omnipotent",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "SCEPTRE_OF_GLOOM",
+        "OMNIPOTENT_ROBE",
+        "OMNIPOTENT_LEGGINGS",
+        "BLACKHOLE_SINGULARITY",
+        "MINI_ARCHMAGE",
+        "ETHEREALMARE",
+        "MAGE_RUNE"
+      ]
+    },
+    {
+      "name": "PRISMARA",
+      "label": "Prismara",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "CRYSTAL_TRAP",
+        "CRYSTAL_SHIELD",
+        "CRYSTAL_BOOTS",
+        "AMETHYST_WORMPIERCER",
+        "MINOBI",
+        "MYCOHAWK",
+        "CRYSTAL_RUNE"
+      ]
+    },
+    {
+      "name": "THALASSAR",
+      "label": "Thalassar",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "SPIRIT_DAGGER",
+        "ETHEREAL_LONGBOW",
+        "SPECTRAL_ARMOUR",
+        "OCEANIC_TORRENT",
+        "MINI_ILLUSIONIST",
+        "SPECTRAL_STEED",
+        "SPECTRAL_TIDES_RUNE"
+      ]
+    },
+    {
+      "name": "GOLDEN_FREDDY",
+      "label": "Golden Freddy",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "ENDOSKELETON_SCEPTRE",
+        "CARL_TRAP",
+        "MECHANICAL_FUR_SANDALS",
+        "BARD",
+        "MECHAMAJESTIC",
+        "FAZZBEAR_RUNE"
+      ]
+    },
+    {
+      "name": "CHRONOS",
+      "label": "Chronos",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "CHRONOS_SABATONS",
+        "CHRONOS_HEART",
+        "CHRONOS_LEGGINGS",
+        "ROBE_OF_CHRONOS",
+        "NIGHT_RISER",
+        "PHANTOMMARE",
+        "TIME_RUNE"
+      ]
+    },
+    {
+      "name": "KURVAROS",
+      "label": "Kurvaros",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "MECHANICAL_CUTLASS",
+        "BLACKHOLE_SANDALS",
+        "VOLTAIC_BOMB",
+        "CLOAK_OF_IONISED_DARKNESS",
+        "BEAST_MASTER",
+        "NECROWYRM",
+        "GEARS_RUNE"
+      ]
+    },
+    {
+      "name": "SILEX",
+      "label": "Silex",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "SOULREND_RAVAGER",
+        "STAFF_OF_UNHOLY_SACRIFICE",
+        "CULTIST_HOOD",
+        "SOULS_OF_THE_CULT",
+        "LIL_MONK",
+        "DUSK_MANTICULTIST",
+        "CULT_RUNE"
+      ]
+    },
+    {
+      "name": "LOA",
+      "label": "Loa",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "BLOSSOM_BLADE",
+        "DILAPIDATED_SKULL",
+        "GREATWOOD_GREAVES",
+        "BOOK_OF_LIFE",
+        "ELDER_ENT",
+        "WOODLAND_MANTIBANE",
+        "NATURE_RUNE"
+      ]
+    },
+    {
+      "name": "SOLARFLARE",
+      "label": "Solarflare",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "AERIAL_STAFF",
+        "ORB_OF_PURITY",
+        "PHOENIX_PLATE",
+        "RESURGENCE",
+        "DRAGON_WARRIOR",
+        "SUNFLARE",
+        "SOL_RUNE"
+      ]
+    },
+    {
+      "name": "DARK_CHAMPION",
+      "label": "Dark Champion",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "DARK_GUARDIAN_SWORD",
+        "SLOW_TOUCH_ORB",
+        "CORRUPTED_CHAPS"
+      ]
+    },
+    {
+      "name": "AETHERIS",
+      "label": "Aetheris",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "LIGHTS_PULL",
+        "DAGGER_OF_DISSONANCE",
+        "HEAVENS_AUGMENTATION",
+        "SUNS_BLESSING",
+        "RADLE",
+        "GLOWSCALE",
+        "GLASS_SKY_RUNE"
+      ]
+    },
+    {
+      "name": "MALTHAR",
+      "label": "Malthar",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "CINDER_REACH",
+        "CINDER_SKULL",
+        "SCORCHSCALE_LEGGINGS",
+        "TARTALINK",
+        "EMBERAPTOR",
+        "PENTACURSE_RUNE"
+      ]
+    },
+    {
+      "name": "RAPHAEL",
+      "label": "Raphael",
+      "spawnPosition": {
+        "x": -15,
+        "y": 243,
+        "z": 88
+      },
+      "bossType": "DUNGEON",
+      "items": [
+        "CALAMITY",
+        "RETRIBUTION",
+        "RAPTURE",
+        "MARTYR",
+        "REIKON",
+        "MALICE",
+        "WRATHGUARD",
+        "BLOODSTRIDERS",
+        "RUEFORGE",
+        "SOURCESTONE",
+        "EXALTLING",
+        "CELESTIAL_SERPENT",
+        "FALLEN_RUNE"
+      ]
+    },
+    {
+      "name": "VOIDED_OMNIPOTENT",
+      "label": "Voided Omnipotent",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "EVENT_HORIZON",
+        "OBLIVIONS_REACH",
+        "SHADOW_SILK",
+        "FRACTURED_NIHILITY",
+        "SHADOW_CHIRP",
+        "DREADSPIRE_DRAKE",
+        "ETERNAL_MAW_RUNE"
+      ]
+    },
+    {
+      "name": "VALERION",
+      "label": "Valerion",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "VALERIONS_PONIARD",
+        "VALERIONS_BANE",
+        "CUSTODIANS_VISOR"
+      ]
+    },
+    {
+      "name": "NEBULA",
+      "label": "Nebula",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "NEBULAS_BATTLEAXE",
+        "DUSK_WEAVER",
+        "ARCHONS_GLARE"
+      ]
+    },
+    {
+      "name": "OPHANIM",
+      "label": "Ophanim",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "FINAL_DESTINATION",
+        "ORACLES_END",
+        "CROWN_OF_ETHEREAL_RADIANCE",
+        "LUMINE",
+        "ASTRALFLARE",
+        "OBSERVER_RUNE"
+      ]
+    },
+    {
+      "name": "TRUE_OPHAN",
+      "label": "True Ophan",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "VALERIONS_PONIARD",
+        "VALERIONS_BANE",
+        "CUSTODIANS_VISOR",
+        "NEBULAS_BATTLEAXE",
+        "DUSK_WEAVER",
+        "ARCHONS_GLARE",
+        "FINAL_DESTINATION",
+        "ORACLES_END",
+        "CROWN_OF_ETHEREAL_RADIANCE",
+        "PENDANT_OF_SIN",
+        "LUMINE",
+        "ASTRALFLARE",
+        "OBSERVER_RUNE"
+      ]
+    },
+    {
+      "name": "SYLVARIS",
+      "label": "Sylvaris",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "SCRIPTURE_OF_THE_TOTEM_MASTER",
+        "NATURES_GIFT",
+        "SPIRITBLOOM_GOWN",
+        "MOSSLIGHT",
+        "VINEGLEAM",
+        "DREAD_RUNE"
+      ]
+    },
+    {
+      "name": "ASMODEUS",
+      "label": "Asmodeus",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "VISAGE_OF_THE_NIGHT",
+        "BAPHOMETS_BOMB",
+        "BLOOD_OF_THE_HERETICS"
+      ]
+    },
+    {
+      "name": "SERAPHIM",
+      "label": "Seraphim",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "FEATHERS_OF_THE_SERAPH",
+        "SERAPHIC_SHIV",
+        "EMPYREAN_EPITOME",
+        "THANATOS",
+        "SERAPHIX",
+        "SERAPH_RUNE"
+      ]
+    },
+    {
+      "name": "TRUE_SERAPH",
+      "label": "True Seraph",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "VISAGE_OF_THE_NIGHT",
+        "BAPHOMETS_BOMB",
+        "BLOOD_OF_THE_HERETICS",
+        "FEATHERS_OF_THE_SERAPH",
+        "SERAPHIC_SHIV",
+        "EMPYREAN_EPITOME",
+        "HOLY_CROSS",
+        "THANATOS",
+        "SERAPHIX",
+        "SERAPH_RUNE"
+      ]
+    },
+    {
+      "name": "UNREST",
+      "label": "Unrest",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "SONIC_DOOM",
+        "ECHOLURKATOR",
+        "SPINESTONE",
+        "LEGION",
+        "ECHORAPTOR",
+        "ECHOES_RUNE"
+      ]
+    }
+  ]
+}
