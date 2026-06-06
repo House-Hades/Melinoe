@@ -65,6 +65,7 @@ object Melinoe : ClientModInitializer {
             arrayOf(
                 mainCommand,
                 devCommand,
+                profileCommand,
                 acCommand,
                 gcCommand,
                 grcCommand

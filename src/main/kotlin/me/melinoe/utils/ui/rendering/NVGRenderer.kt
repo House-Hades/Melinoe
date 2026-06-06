@@ -507,6 +507,108 @@ object NVGRenderer {
         nvgFill(vg)
     }
     
+    private val nvgResourceTextures = HashMap<String, Int>()
+    
+    /**
+     * Loads a resource-pack texture into a cached NVG image and returns its id, or -1 if it
+     * isn't available. The "textures/" prefix is added if missing; the path must include the
+     * file extension (e.g. "telos:material/.../ut-onyx.png").
+     */
+    fun resourceTexture(path: String): Int {
+        nvgResourceTextures[path]?.let { return it }
+        
+        val id = try {
+            val location = Identifier.parse(path)
+            val textureLocation = if (location.path.startsWith("textures/")) location else location.withPrefix("textures/")
+            
+            val resourceOpt = mc.resourceManager.getResource(textureLocation)
+            val resource = if (resourceOpt.isPresent) resourceOpt.get() else mc.resourceManager.getResource(location).orElse(null)
+            
+            if (resource == null) {
+                -1
+            } else {
+                resource.open().use { stream ->
+                    val bytes = stream.readBytes()
+                    val buffer = memAlloc(bytes.size)
+                    try {
+                        buffer.put(bytes)
+                        buffer.flip()
+                        
+                        val w = IntArray(1)
+                        val h = IntArray(1)
+                        val channels = IntArray(1)
+                        val imgBuffer = stbi_load_from_memory(buffer, w, h, channels, 4)
+                        
+                        if (imgBuffer != null) {
+                            // NEAREST filtering keeps these (small, pixel-art) textures crisp when
+                            // upscaled instead of blurring them like the default linear filter.
+                            val texId = nvgCreateImageRGBA(vg, w[0], h[0], NVG_IMAGE_NEAREST, imgBuffer)
+                            org.lwjgl.stb.STBImage.stbi_image_free(imgBuffer)
+                            texId
+                        } else {
+                            -1
+                        }
+                    } finally {
+                        memFree(buffer)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Melinoe.logger.error("Failed to load resource texture: $path", e)
+            -1
+        }
+        
+        nvgResourceTextures[path] = id
+        return id
+    }
+    
+    /** Draws a resource texture into the rect. Returns false if it couldn't load, so callers can fall back. */
+    fun texturedRect(path: String, x: Float, y: Float, w: Float, h: Float, radius: Float = 0f): Boolean {
+        val id = resourceTexture(path)
+        if (id == -1) return false
+        
+        nvgImagePattern(vg, x, y, w, h, 0f, id, 1f, nvgPaint)
+        nvgBeginPath(vg)
+        if (radius > 0f) nvgRoundedRect(vg, x, y, w, h + .5f, radius) else nvgRect(vg, x, y, w, h + .5f)
+        nvgFillPaint(vg, nvgPaint)
+        nvgFill(vg)
+        return true
+    }
+    
+    private val imageSizeW = IntArray(1)
+    private val imageSizeH = IntArray(1)
+    
+    /**
+     * Draws a sub-region of a resource texture into the destination rect, for sprite sheets.
+     * The region is given in normalized coordinates: [u0],[v0] (top-left) to [u1],[v1]
+     * (bottom-right), each 0..1. Returns false if the texture couldn't load.
+     */
+    fun texturedSubRect(path: String, dx: Float, dy: Float, dw: Float, dh: Float, u0: Float, v0: Float, u1: Float, v1: Float): Boolean {
+        val id = resourceTexture(path)
+        if (id == -1) return false
+        
+        nvgImageSize(vg, id, imageSizeW, imageSizeH)
+        val imgW = imageSizeW[0].toFloat()
+        val imgH = imageSizeH[0].toFloat()
+        if (imgW <= 0f || imgH <= 0f) return false
+        
+        val srcW = (u1 - u0) * imgW
+        val srcH = (v1 - v0) * imgH
+        if (srcW <= 0f || srcH <= 0f) return false
+        
+        // Map the full image so the requested sub-region lands exactly in the destination rect.
+        val scaleX = dw / srcW
+        val scaleY = dh / srcH
+        val ox = dx - (u0 * imgW) * scaleX
+        val oy = dy - (v0 * imgH) * scaleY
+        nvgImagePattern(vg, ox, oy, imgW * scaleX, imgH * scaleY, 0f, id, 1f, nvgPaint)
+        nvgBeginPath(vg)
+        nvgRect(vg, dx, dy, dw, dh)
+        nvgFillPaint(vg, nvgPaint)
+        nvgFill(vg)
+        return true
+    }
+    
     fun createImage(resourcePath: String): Image {
         val image = images.keys.find { it.identifier == resourcePath } ?: Image(resourcePath)
         if (image.isSVG) images.getOrPut(image) { NVGImage(0, loadSVG(image)) }.count++
