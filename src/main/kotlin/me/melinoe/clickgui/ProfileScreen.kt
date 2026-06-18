@@ -20,14 +20,18 @@ import me.melinoe.utils.ui.rendering.NVGPIPRenderer
 import me.melinoe.utils.ui.rendering.NVGRenderer
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
+import org.lwjgl.glfw.GLFW
 import net.minecraft.network.chat.Component
 import kotlin.math.abs
 import kotlin.math.ceil
+import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sign
+import kotlin.math.sin
 import kotlin.math.sqrt
 import me.melinoe.utils.ui.mouseX as rawMouseX
 import me.melinoe.utils.ui.mouseY as rawMouseY
@@ -39,6 +43,10 @@ import me.melinoe.utils.ui.mouseY as rawMouseY
  * five tabs. The Overview tab shows stat cards, a details list, the
  * season pass paginator and a sticker preview. The 3D model is submitted through the vanilla GUI
  * pass (see [ProfileModelRenderer]); everything else is drawn with NanoVG.
+ *
+ * All transitions go through the MOTION SYSTEM section: ease-out entrances with per-item stagger,
+ * exponential glides for hover/scroll/tab-pill, and everything snapping to its end state under
+ * the reduce-motion setting.
  */
 class ProfileScreen private constructor(private val username: String) : Screen(Component.literal("Profile")) {
     
@@ -49,25 +57,38 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         }
         
         // ==================== PALETTE (0xAARRGGBB) ====================
-        private val BACKDROP = 0xC80A0A0C.toInt()
-        private val CARD = 0xFF141418.toInt()
-        private val PANEL = 0xFF1C1C22.toInt()
-        private val PANEL_HI = 0xFF24242C.toInt()
-        private val STROKE = 0xFF2C2C34.toInt()
+        // "Mint dream" theme built on the Melinoe brand gradient (#B8FFE1 -> #7CFFB2 -> #2E8F78):
+        // deep teal-tinted surfaces with soft mint glows, intentionally distinct from the ClickGUI.
+        private val BACKDROP = 0xD21C1C1E.toInt()
+        private val CARD = 0xFF1C1C1E.toInt()
+        private val PANEL = 0xFF13211A.toInt()
+        private val PANEL_HI = 0xFF1B2F24.toInt()
+        private val STROKE = 0xFF26433A.toInt()
         private val ACCENT = 0xFF7CFFB2.toInt()
+        private val ACCENT_SOFT = 0xFFB8FFE1.toInt()
         private val ACCENT_DIM = 0xFF2E8F78.toInt()
-        private val TEXT = 0xFFFFFFFF.toInt()
-        private val SUBTEXT = 0xFFB6B6C0.toInt()
-        private val MUTE = 0xFF6E6E78.toInt()
+        private val TEXT = 0xFFF0FFF7.toInt()
+        private val SUBTEXT = 0xFFA8C9B9.toInt()
+        private val MUTE = 0xFF8FB0A2.toInt()  // lifted for WCAG AA on dark panels (~7:1)
         private val GOLD = 0xFFFFD700.toInt()
         private val SEASONAL = 0xFFFF7CCB.toInt()
-        private val ERROR = 0xFFFF5555.toInt()
+        private val IRONMAN = 0xFFB3590E.toInt()  // hardcore/ironman ruleset tag
+        private val ERROR = 0xFFFF6B7A.toInt()
+        private val INK = 0xFF06140C.toInt()      // dark text on bright accent fills
+        private val WELL = 0xFF0A130E.toInt()     // sunken slots and empty tiles
+        private val LOCK = 0xA608120C.toInt()     // locked-tile dim overlay
+        private val ROW_LINE = 0xFF1A2C22.toInt() // hairline under detail rows
         
         private const val PAD = 16f
         private const val TILE = 30f
         // Larger tiles for the companions page so they fill more of the panel.
         private const val COMP_TILE = 46f
         private const val COMP_GAP = 8f
+        
+        // Motion tokens: one shared rhythm for every transition in this screen.
+        private const val ENTER_DUR = 0.22f  // content entrance duration (seconds)
+        private const val STAGGER = 0.035f   // per-item delay in staggered grids/lists
+        private const val SMOOTH = 14f       // exponential approach speed for hover/scroll/pill glides
     }
     
     private enum class Tab(val label: String) {
@@ -145,6 +166,10 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
     private var spLeftRect: FloatArray? = null
     private var spRightRect: FloatArray? = null
     
+    // Retry button hitboxes (set while an error state is on screen).
+    private var retryRect: FloatArray? = null
+    private var detailRetryRect: FloatArray? = null
+    
     // Panel + sidebar geometry, recomputed each frame.
     private var panelX = 0f
     private var panelY = 0f
@@ -164,23 +189,256 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
     
     private val font get() = NVGRenderer.defaultFont
     
+    // ==================== FLOURISHES ====================
+    
+    private val openedAt = System.currentTimeMillis()
+    
+    /** Seconds since the screen opened; drives all ambient animation. */
+    private fun time(): Float = (System.currentTimeMillis() - openedAt) / 1000f
+    
+    /** When on, ambient motion holds still (decoration stays, movement stops) for readability. */
+    private val reduceMotion get() = ClickGUIModule.reduceMotion
+    
+    // ==================== MOTION SYSTEM ====================
+    // Unified transitions: ease-out entrances (~220ms), exponential glides for hover/scroll/pill.
+    // Everything snaps to its end state when reduce-motion is on.
+    
+    private var dt = 0.016f
+    private var lastFrameMs = System.currentTimeMillis()
+    private var alphaNow = 1f
+    
+    // Transition timestamps (seconds on the time() clock; -10 = "long settled").
+    private var tabSwitchedAt = 0f
+    private var tabDir = 0
+    private var detailTabSwitchedAt = -10f
+    private var detailTabDir = 0
+    private var detailOpenedAt = -10f
+    private var seasonFlipAt = -10f
+    private var seasonDir = 0
+    private var profileShown = false
+    private var scrollActiveAt = -10f
+    private var lastTooltipText: String? = null
+    private var tooltipAt = -10f
+    
+    // Scroll targets; the visible scroll values ease toward these each frame.
+    private val scrollTarget = FloatArray(Tab.entries.size)
+    private val detailScrollTarget = FloatArray(DetailTab.entries.size)
+    
+    private fun easeOutCubic(t: Float): Float {
+        val c = 1f - t.coerceIn(0f, 1f)
+        return 1f - c * c * c
+    }
+    
+    /** Eased 0..1 entrance progress for an element [delay]s into a transition that began [since]s ago. */
+    private fun enter(since: Float, delay: Float = 0f, dur: Float = ENTER_DUR): Float =
+        if (reduceMotion) 1f else easeOutCubic((since - delay) / dur)
+    
+    private val hoverFracs = HashMap<String, Float>()
+    
+    /** Frame-smoothed hover fraction for [key]; eases toward the hovered state (~150ms feel). */
+    private fun hoverFrac(key: String, hovered: Boolean): Float {
+        val target = if (hovered) 1f else 0f
+        if (reduceMotion) { hoverFracs[key] = target; return target }
+        val cur = hoverFracs.getOrDefault(key, 0f)
+        var next = cur + (target - cur) * min(1f, dt * SMOOTH)
+        if (abs(next - target) < 0.01f) next = target
+        hoverFracs[key] = next
+        return next
+    }
+    
+    /** Animated geometry of an active-tab pill that glides between tabs (shared-element continuity). */
+    private class Pill { var x = 0f; var w = 0f; var set = false }
+    private val tabPill = Pill()
+    private val detailPill = Pill()
+    
+    private fun tickPill(p: Pill, tx: Float, tw: Float) {
+        if (!p.set || reduceMotion) { p.x = tx; p.w = tw; p.set = true; return }
+        val k = min(1f, dt * SMOOTH)
+        p.x += (tx - p.x) * k
+        p.w += (tw - p.w) * k
+    }
+    
+    /** Multiplies the current global alpha by [a]; returns the previous value for [popAlpha]. */
+    private fun pushAlpha(a: Float): Float {
+        val prev = alphaNow
+        alphaNow = prev * a.coerceIn(0f, 1f)
+        NVGRenderer.globalAlpha(alphaNow)
+        return prev
+    }
+    
+    private fun popAlpha(prev: Float) {
+        alphaNow = prev
+        NVGRenderer.globalAlpha(prev)
+    }
+    
+    /** Eases scroll position [i] of [cur] toward its target, clamped to the scrollable range. */
+    private fun smoothScroll(cur: FloatArray, target: FloatArray, i: Int, fullHeight: Float) {
+        val maxScroll = max(0f, fullHeight - contentH)
+        target[i] = target[i].coerceIn(0f, maxScroll)
+        if (reduceMotion) { cur[i] = target[i]; return }
+        val d = target[i] - cur[i]
+        if (abs(d) < 0.4f) { cur[i] = target[i]; return }
+        cur[i] += d * min(1f, dt * SMOOTH)
+        scrollActiveAt = time()
+    }
+    
+    /** Scrollbar thumb that brightens while scrolling and settles back when idle. */
+    private fun drawScrollThumb(used: Float, cur: Float) {
+        if (used <= contentH) return
+        val thumbH = max(24f, contentH * (contentH / used))
+        val thumbY = contentY + (contentH - thumbH) * (cur / (used - contentH))
+        val idle = ((time() - scrollActiveAt - 0.6f) / 0.4f).coerceIn(0f, 1f)
+        NVGRenderer.rect(panelX + panelW - 6f, thumbY, 3f, thumbH, withAlpha(ACCENT_DIM, 1f - 0.65f * idle), 1.5f)
+    }
+    
+    private fun switchTab(t: Tab) {
+        if (t == tab) return
+        tabDir = if (t.ordinal > tab.ordinal) 1 else -1
+        tab = t
+        tabSwitchedAt = time()
+    }
+    
+    private fun switchDetailTab(t: DetailTab) {
+        if (t == detailTab) return
+        detailTabDir = if (t.ordinal > detailTab.ordinal) 1 else -1
+        detailTab = t
+        detailTabSwitchedAt = time()
+    }
+    
+    private fun flipSeason(dir: Int) {
+        seasonPage = (seasonPage + dir + SeasonPassData.PAGES) % SeasonPassData.PAGES
+        seasonDir = dir
+        seasonFlipAt = time()
+    }
+    
+    private fun withAlpha(color: Int, alpha: Float): Int =
+        (color and 0x00FFFFFF) or ((alpha.coerceIn(0f, 1f) * 255f).toInt() shl 24)
+    
+    /** Soft halo around a rounded rect, layered outwards with falling alpha. */
+    private fun glow(x: Float, y: Float, w: Float, h: Float, color: Int, radius: Float, strength: Float = 1f) {
+        for (i in 1..3) {
+            NVGRenderer.hollowRect(x - i, y - i, w + i * 2f, h + i * 2f, 1.5f, withAlpha(color, 0.12f * strength * (4 - i) / 3f), radius + i)
+        }
+    }
+    
+    /** Horizontal three-stop brand gradient fill (#B8FFE1 -> #7CFFB2 -> #2E8F78). */
+    private fun brandGradient(x: Float, y: Float, w: Float, h: Float, radius: Float, alpha: Float = 1f) {
+        val half = w / 2f
+        NVGRenderer.gradientRect(x, y, half + radius, h, withAlpha(ACCENT_SOFT, alpha), withAlpha(ACCENT, alpha), Gradient.LeftToRight, radius)
+        NVGRenderer.gradientRect(x + half - radius, y, half + radius, h, withAlpha(ACCENT, alpha), withAlpha(ACCENT_DIM, alpha), Gradient.LeftToRight, radius)
+    }
+    
+    /** A four-point twinkle; [phase] keeps neighbouring sparkles out of sync. */
+    private fun sparkle(cx: Float, cy: Float, size: Float, color: Int, phase: Float, baseAlpha: Float = 1f) {
+        val tw = if (reduceMotion) 0.7f else sin(time() * 2.1f + phase) * 0.5f + 0.5f
+        if (tw < 0.06f) return
+        val s = size * (0.55f + 0.45f * tw)
+        val a = withAlpha(color, baseAlpha * (0.2f + 0.8f * tw))
+        val th = s * 0.26f
+        NVGRenderer.push()
+        NVGRenderer.translate(cx, cy)
+        NVGRenderer.rotate(if (reduceMotion) 0.7853982f else time() * 0.5f + phase)
+        NVGRenderer.rect(-s / 2f, -th / 2f, s, th, a, th / 2f)
+        NVGRenderer.rect(-th / 2f, -s / 2f, th, s, a, th / 2f)
+        NVGRenderer.pop()
+        NVGRenderer.circle(cx, cy, s * 0.14f, withAlpha(ACCENT_SOFT, baseAlpha * tw))
+    }
+    
+    /** Small rotated-square bullet used before section headers. */
+    private fun diamond(cx: Float, cy: Float, size: Float, color: Int) {
+        NVGRenderer.push()
+        NVGRenderer.translate(cx, cy)
+        NVGRenderer.rotate(0.7853982f)
+        NVGRenderer.rect(-size / 2f, -size / 2f, size, size, color, size * 0.25f)
+        NVGRenderer.pop()
+    }
+    
+    /** Tiny padlock centred at ([cx],[cy]); [s] is the overall lock height. */
+    private fun drawLock(cx: Float, cy: Float, s: Float, color: Int) {
+        val bodyW = s * 0.82f
+        val bodyH = s * 0.54f
+        val bodyTop = cy - bodyH / 2f + s * 0.14f
+        val shackleW = bodyW * 0.62f
+        val shackleH = s * 0.5f
+        // Shackle: a rounded pill whose lower half is covered by the body, leaving an inverted U.
+        NVGRenderer.hollowRect(cx - shackleW / 2f, bodyTop - shackleH * 0.66f, shackleW, shackleH, s * 0.12f, color, shackleW / 2f)
+        NVGRenderer.rect(cx - bodyW / 2f, bodyTop, bodyW, bodyH, color, s * 0.14f)
+        NVGRenderer.circle(cx, bodyTop + bodyH * 0.46f, s * 0.08f, withAlpha(INK, 0.9f))
+    }
+    
+    /** Persistent "locked" badge: dark backing disc + padlock, centred on a tile. */
+    private fun drawLockBadge(x: Float, y: Float, size: Float) {
+        val cx = x + size / 2f
+        val cy = y + size / 2f
+        val s = (size * 0.4f).coerceIn(11f, 20f)
+        NVGRenderer.circle(cx, cy, s * 0.64f, withAlpha(INK, 0.7f))
+        drawLock(cx, cy, s * 0.62f, ACCENT_SOFT)
+    }
+    
+    /** Rounded pill progress bar with brand-gradient fill and a travelling shimmer. */
+    private fun shimmerBar(x: Float, y: Float, w: Float, h: Float, frac: Float) {
+        NVGRenderer.rect(x, y, w, h, WELL, h / 2f)
+        NVGRenderer.hollowRect(x, y, w, h, 1f, withAlpha(STROKE, 0.85f), h / 2f)
+        if (frac <= 0f) return
+        // The fill sweeps up to its real value shortly after the tab lands.
+        val reveal = enter(time() - tabSwitchedAt, 0.08f, 0.5f)
+        if (reveal <= 0f) return
+        val fw = (w * (frac * reveal).coerceIn(0f, 1f)).coerceAtLeast(h)
+        brandGradient(x, y, fw, h, h / 2f)
+        glow(x, y, fw, h, ACCENT, h / 2f, 0.7f)
+        // Shimmer band sweeping the filled portion (kept fully inside, so no clipping needed).
+        val band = (fw * 0.30f).coerceIn(h, fw)
+        val travel = fw - band
+        val phase = (time() * 0.5f) % 1.8f
+        if (!reduceMotion && travel > 2f && phase <= 1f) {
+            val tx = x + travel * phase
+            val white = 0xFFFFFFFF.toInt()
+            NVGRenderer.gradientRect(tx, y, band / 2f, h, withAlpha(white, 0f), withAlpha(white, 0.30f), Gradient.LeftToRight, h / 2f)
+            NVGRenderer.gradientRect(tx + band / 2f, y, band / 2f, h, withAlpha(white, 0.30f), withAlpha(white, 0f), Gradient.LeftToRight, h / 2f)
+        }
+    }
+    
+    
     override fun init() {
         openAnim.start()
-        if (!fetchStarted) {
-            fetchStarted = true
-            ProfileFetcher.fetch(username).whenComplete { result, error ->
-                if (error != null) {
-                    val cause = error.cause ?: error
-                    errorMsg = if (cause is ProfileException) cause.message else "Failed to fetch profile: ${cause.message}"
-                    Melinoe.logger.error("[ProfileScreen] fetch failed for $username", cause)
-                } else {
-                    buildDerived(result)
-                    profile = result
-                    fetchCharacters(result)
-                }
+        startFetch()
+        super.init()
+    }
+    
+    /** Kicks off the profile fetch once; safe to call repeatedly (no-op while a fetch is live). */
+    private fun startFetch() {
+        if (fetchStarted) return
+        fetchStarted = true
+        ProfileFetcher.fetch(username).whenComplete { result, error ->
+            if (error != null) {
+                val cause = error.cause ?: error
+                errorMsg = if (cause is ProfileException) cause.message else "Failed to fetch profile: ${cause.message}"
+                Melinoe.logger.error("[ProfileScreen] fetch failed for $username", cause)
+            } else {
+                buildDerived(result)
+                profile = result
+                fetchCharacters(result)
             }
         }
-        super.init()
+    }
+    
+    /** Clears the failed-fetch state and tries the profile request again. */
+    private fun retryFetch() {
+        errorMsg = null
+        profile = null
+        profileShown = false
+        characterList = null
+        equippedCharacterId = null
+        fetchStarted = false
+        startFetch()
+    }
+    
+    /** Re-requests the currently-open character after a detail fetch failure (bypasses the cache). */
+    private fun retryDetail() {
+        val id = viewingCharacterId ?: return
+        detailError = null
+        characterDetailCache.remove(id)
+        openCharacter(id)
     }
     
     private fun fetchCharacters(p: TelosProfile) {
@@ -205,6 +463,10 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         detailError = null
         detailTab = DetailTab.OVERVIEW
         detailScroll.fill(0f)
+        detailScrollTarget.fill(0f)
+        detailOpenedAt = time()
+        detailTabSwitchedAt = -10f
+        detailPill.set = false
         
         val cached = characterDetailCache[id]
         if (cached != null) {
@@ -265,7 +527,7 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
             val filled = slots.count { it != null }
             if (filled > 0) {
                 count += filled
-                val label = (if (page.seasonal) "Seasonal" else "Normal") + " — Page ${page.page + 1}"
+                val label = (if (page.seasonal) "Seasonal" else "Normal") + "  •  Page ${page.page + 1}"
                 groups.add(label to slots)
             }
         }
@@ -342,6 +604,10 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
     // ==================== RENDER ====================
     
     override fun extractRenderState(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, deltaTicks: Float) {
+        val now = System.currentTimeMillis()
+        dt = ((now - lastFrameMs) / 1000f).coerceIn(0f, 0.1f)
+        lastFrameMs = now
+        
         val scale = ClickGUIModule.getStandardGuiScale()
         scaleNow = scale
         sx = rawMouseX / scale
@@ -355,15 +621,33 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         
         NVGPIPRenderer.draw(context, 0, 0, context.guiWidth(), context.guiHeight()) {
             NVGRenderer.scale(scale, scale)
-            NVGRenderer.rect(0f, 0f, vW, vH, BACKDROP)
+            // The dim backdrop fades up with the panel rather than landing fully dark on frame one.
+            NVGRenderer.rect(0f, 0f, vW, vH, withAlpha(BACKDROP, 0.82f * anim))
+            drawAmbient(vW, vH)
             
-            if (openAnim.isAnimating()) NVGRenderer.globalAlpha(anim)
+            val opening = openAnim.isAnimating()
+            alphaNow = if (opening) anim else 1f
+            if (opening) {
+                NVGRenderer.globalAlpha(anim)
+                // Settle in from 97% scale around the panel centre for a soft ease-out landing.
+                val pcx = panelX + panelW / 2f
+                val pcy = panelY + panelH / 2f
+                val s = 0.97f + 0.03f * anim
+                NVGRenderer.push()
+                NVGRenderer.translate(pcx, pcy)
+                NVGRenderer.scale(s, s)
+                NVGRenderer.translate(-pcx, -pcy)
+            }
             
             tooltip = null
             drawProfile()
+            if (tooltip == null) lastTooltipText = null
             tooltip?.let { drawTooltip(it.first, it.second) }
             
-            if (openAnim.isAnimating()) NVGRenderer.globalAlpha(1f)
+            if (opening) {
+                NVGRenderer.pop()
+                NVGRenderer.globalAlpha(1f)
+            }
         }
         
         // Player model is submitted through the vanilla GUI pass, on top of the NVG sidebar panel.
@@ -397,15 +681,34 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         ProfileModelRenderer.render(context, avatar, x0, y0, x1, y1, sizeScale, mouseX, mouseY)
     }
     
+    /** Scattered twinkles drifting across the backdrop. */
+    private fun drawAmbient(vW: Float, vH: Float) {
+        for (i in 0 until 14) {
+            val px = (((sin(i * 12.9898f) * 43758.547f) % 1f + 1f) % 1f) * vW
+            val py = (((sin(i * 78.233f) * 12543.123f) % 1f + 1f) % 1f) * vH
+            sparkle(px, py, 7f + (i % 3) * 3f, if (i % 4 == 0) ACCENT_SOFT else ACCENT, i * 1.7f, 0.5f)
+        }
+    }
+    
     private fun drawProfile() {
-        NVGRenderer.dropShadow(panelX, panelY, panelW, panelH, 26f, 2f, 16f)
-        NVGRenderer.rect(panelX, panelY, panelW, panelH, CARD, 16f)
-        NVGRenderer.hollowRect(panelX, panelY, panelW, panelH, 1f, STROKE, 16f)
+        NVGRenderer.dropShadow(panelX, panelY, panelW, panelH, 30f, 3f, 20f)
+        NVGRenderer.rect(panelX, panelY, panelW, panelH, CARD, 20f)
+        glow(panelX, panelY, panelW, panelH, ACCENT, 20f, 0.9f)
+        NVGRenderer.hollowRect(panelX, panelY, panelW, panelH, 1f, STROKE, 20f)
+        // Brand gradient hairline along the top edge, with a soft mint sheen falling away below it.
+        brandGradient(panelX + 24f, panelY, panelW - 48f, 2f, 1f, 0.9f)
+        NVGRenderer.gradientRect(panelX, panelY, panelW, 110f, withAlpha(ACCENT, 0.045f), withAlpha(ACCENT, 0f), Gradient.TopToBottom, 20f)
         
         val p = profile
+        // First frame with data: run the content entrance so loading -> profile crossfades in.
+        if (p != null && !profileShown) {
+            profileShown = true
+            tabSwitchedAt = time()
+            tabDir = 0
+        }
         when {
-            errorMsg != null -> drawCentered(errorMsg!!, ERROR)
-            p == null -> drawCentered("Fetching $username${dots()}", SUBTEXT)
+            errorMsg != null -> retryRect = drawRetry(panelX + panelW / 2f, panelY + panelH / 2f, errorMsg!!)
+            p == null -> drawLoading()
             else -> {
                 drawSidebar(p)
                 if (viewingCharacterId != null) {
@@ -418,9 +721,46 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         }
     }
     
-    private fun drawCentered(text: String, color: Int) {
+    /** Centred error message with a Retry pill below it; returns the pill's hitbox. */
+    private fun drawRetry(cx: Float, cy: Float, msg: String): FloatArray {
+        val mw = NVGRenderer.textWidth(msg, 13f, font)
+        NVGRenderer.text(msg, cx - mw / 2f, cy - 22f, 13f, ERROR, font)
+        
+        val label = "Retry"
+        val ph = 26f
+        val pw = NVGRenderer.textWidth(label, 12f, font) + 28f
+        val px = cx - pw / 2f
+        val py = cy + 4f
+        val r = ph / 2f
+        val f = hoverFrac("retry", hover(px, py, pw, ph))
+        NVGRenderer.rect(px, py, pw, ph, PANEL_HI, r)
+        NVGRenderer.hollowRect(px, py, pw, ph, 1f, STROKE, r)
+        if (f > 0.02f) {
+            brandGradient(px, py, pw, ph, r, f)
+            glow(px, py, pw, ph, ACCENT, r, 0.8f * f)
+        }
+        NVGRenderer.text(label, cx - NVGRenderer.textWidth(label, 12f, font) / 2f, py + (ph - 12f) / 2f, 12f, blend(INK, SUBTEXT, f), font)
+        
+        val hint = "Press R to try again"
+        NVGRenderer.text(hint, cx - NVGRenderer.textWidth(hint, 9.5f, font) / 2f, py + ph + 8f, 9.5f, MUTE, font)
+        return floatArrayOf(px, py, pw, ph)
+    }
+    
+    /** Loading state: orbiting mint motes above the status text, twinkles either side. */
+    private fun drawLoading() {
+        val cx = panelX + panelW / 2f
+        val cy = panelY + panelH / 2f
+        val t = time()
+        for (i in 0 until 3) {
+            val ang = (if (reduceMotion) 0f else t * 3.2f) + i * 2.0944f
+            val pulse = if (reduceMotion) 1f else 0.6f + 0.4f * sin(ang + 1.5f)
+            NVGRenderer.circle(cx + cos(ang) * 18f, cy - 26f + sin(ang) * 8f, 3.2f * pulse, withAlpha(if (i == 0) ACCENT_SOFT else ACCENT, 0.85f))
+        }
+        val text = "Fetching $username's profile${dots()}"
         val w = NVGRenderer.textWidth(text, 13f, font)
-        NVGRenderer.text(text, panelX + (panelW - w) / 2f, panelY + panelH / 2f - 6f, 13f, color, font)
+        NVGRenderer.text(text, cx - w / 2f, cy - 6f, 13f, SUBTEXT, font)
+        sparkle(cx - w / 2f - 14f, cy, 8f, ACCENT, 0.4f)
+        sparkle(cx + w / 2f + 14f, cy, 8f, ACCENT, 2.6f)
     }
     
     private fun drawSidebar(p: TelosProfile) {
@@ -428,37 +768,76 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         val name = p.username ?: username
         val colRight = panelX + sidebarW
         
-        // Name plate.
+        // Name capsule with twinkles flanking the name.
         val nameY = panelY + PAD
-        NVGRenderer.rect(sbX, nameY, modelBoxW, 44f, PANEL, 10f)
-        val nameSize = fitText(name, modelBoxW - 16f, 18f, 12f)
-        val nameW = NVGRenderer.textWidth(name, nameSize, font)
-        NVGRenderer.text(name, sbX + (modelBoxW - nameW) / 2f, nameY + (44f - nameSize) / 2f, nameSize, ACCENT, font)
+        NVGRenderer.rect(sbX, nameY, modelBoxW, 44f, PANEL, 22f)
+        NVGRenderer.hollowRect(sbX, nameY, modelBoxW, 44f, 1f, STROKE, 22f)
+        glow(sbX, nameY, modelBoxW, 44f, ACCENT, 22f, 0.5f)
+        val nameSize = fitText(name, modelBoxW - 56f, 18f, 12f)
+        val shownName = ellipsize(name, modelBoxW - 56f, nameSize)
+        val nameW = NVGRenderer.textWidth(shownName, nameSize, font)
+        NVGRenderer.textShadow(shownName, sbX + (modelBoxW - nameW) / 2f, nameY + (44f - nameSize) / 2f, nameSize, ACCENT, font)
+        sparkle(sbX + (modelBoxW - nameW) / 2f - 14f, nameY + 22f, 9f, ACCENT_SOFT, 0.9f)
+        sparkle(sbX + (modelBoxW + nameW) / 2f + 14f, nameY + 22f, 9f, ACCENT_SOFT, 3.4f)
         
-        // Model backdrop (the 3D model draws on top in the GUI pass).
-        NVGRenderer.gradientRect(modelBoxX, modelBoxY, modelBoxW, modelBoxH, PANEL_HI, PANEL, Gradient.TopToBottom, 10f)
-        NVGRenderer.hollowRect(modelBoxX, modelBoxY, modelBoxW, modelBoxH, 1f, STROKE, 10f)
+        // Model stage: tinted backdrop, glowing floor and rising motes (the 3D model draws on top).
+        NVGRenderer.gradientRect(modelBoxX, modelBoxY, modelBoxW, modelBoxH, PANEL_HI, PANEL, Gradient.TopToBottom, 14f)
+        NVGRenderer.hollowRect(modelBoxX, modelBoxY, modelBoxW, modelBoxH, 1f, STROKE, 14f)
+        NVGRenderer.push()
+        NVGRenderer.translate(modelBoxX + modelBoxW / 2f, modelBoxY + modelBoxH * 0.86f)
+        NVGRenderer.scale(1f, 0.32f)
+        NVGRenderer.circle(0f, 0f, modelBoxW * 0.40f, withAlpha(ACCENT, 0.10f))
+        NVGRenderer.circle(0f, 0f, modelBoxW * 0.26f, withAlpha(ACCENT, 0.14f))
+        NVGRenderer.pop()
+        drawStageMotes()
         
         // Sidebar / main divider.
         NVGRenderer.line(colRight, panelY + PAD, colRight, panelY + panelH - PAD, 1f, STROKE)
+    }
+    
+    /** Slow mint motes drifting up through the model stage. */
+    private fun drawStageMotes() {
+        if (reduceMotion) return
+        val t = time()
+        for (i in 0 until 7) {
+            val seed = i * 1.618f
+            val cycle = 7f + (i % 3) * 2.5f
+            val prog = ((t / cycle + seed) % 1f + 1f) % 1f
+            val mx = modelBoxX + 10f + ((sin(seed * 57.29f) * 0.5f + 0.5f) % 1f) * (modelBoxW - 20f) + sin(t * 0.8f + seed) * 6f
+            val my = modelBoxY + modelBoxH - 12f - prog * (modelBoxH - 24f)
+            val fade = (1f - prog) * min(1f, prog * 6f)
+            if (i % 2 == 0) sparkle(mx, my, 6f, ACCENT, seed * 2f, fade * 0.8f)
+            else NVGRenderer.circle(mx, my, 1.6f, withAlpha(ACCENT_SOFT, fade * 0.7f))
+        }
     }
     
     private fun drawTabs() {
         val n = Tab.entries.size
         val gap = 6f
         val tw = (contentW - gap * (n - 1)) / n
+        val r = tabBarH / 2f
+        
+        // Inactive plates first (hover eases in), then the gliding active pill, then labels on top.
         Tab.entries.forEachIndexed { i, t ->
             val tabX = contentX + (tw + gap) * i
-            val active = t == tab
-            val hovered = hover(tabX, tabBarY, tw, tabBarH)
             tabRects[i] = floatArrayOf(tabX, tabBarY, tw, tabBarH)
-            
-            val bg = if (active) PANEL_HI else if (hovered) PANEL else CARD
-            NVGRenderer.rect(tabX, tabBarY, tw, tabBarH, bg, 8f)
-            if (active) NVGRenderer.hollowRect(tabX, tabBarY, tw, tabBarH, 1f, ACCENT_DIM, 8f)
-            
-            val color = if (active) ACCENT else if (hovered) TEXT else SUBTEXT
-            val size = fitText(t.label, tw - 8f, 11.5f, 8.5f)
+            if (t == tab) return@forEachIndexed
+            val f = hoverFrac("tab$i", hover(tabX, tabBarY, tw, tabBarH))
+            NVGRenderer.rect(tabX, tabBarY, tw, tabBarH, blend(PANEL_HI, PANEL, f), r)
+            NVGRenderer.hollowRect(tabX, tabBarY, tw, tabBarH, 1f, blend(ACCENT_DIM, STROKE, f), r)
+        }
+        
+        tickPill(tabPill, contentX + (tw + gap) * tab.ordinal, tw)
+        brandGradient(tabPill.x, tabBarY, tabPill.w, tabBarH, r)
+        glow(tabPill.x, tabBarY, tabPill.w, tabBarH, ACCENT, r)
+        
+        Tab.entries.forEachIndexed { i, t ->
+            val tabX = contentX + (tw + gap) * i
+            // The label darkens by however much of its tab the pill currently covers.
+            val overlap = (min(tabX + tw, tabPill.x + tabPill.w) - max(tabX, tabPill.x)).coerceIn(0f, tw) / tw
+            val base = if (hover(tabX, tabBarY, tw, tabBarH)) ACCENT_SOFT else SUBTEXT
+            val color = blend(INK, base, overlap)
+            val size = fitText(t.label, tw - 12f, 11.5f, 8.5f)
             val lx = tabX + (tw - NVGRenderer.textWidth(t.label, size, font)) / 2f
             NVGRenderer.text(t.label, lx, tabBarY + (tabBarH - size) / 2f, size, color, font)
         }
@@ -467,11 +846,17 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
     private fun drawContent(p: TelosProfile) {
         bodyTop = contentY
         bodyBottom = contentY + contentH
-        curScroll = scroll[tab.ordinal]
+        val ti = tab.ordinal
+        smoothScroll(scroll, scrollTarget, ti, contentHeight[ti])
+        curScroll = scroll[ti]
+        
+        // New tab content fades in and slides from the direction it was approached.
+        val e = enter(time() - tabSwitchedAt)
+        val prevA = pushAlpha(e)
         
         NVGRenderer.pushScissor(contentX, contentY, contentW, contentH)
         NVGRenderer.push()
-        NVGRenderer.translate(0f, -curScroll)
+        NVGRenderer.translate((1f - e) * 18f * tabDir, -curScroll)
         
         val used = when (tab) {
             Tab.OVERVIEW -> drawOverview(contentX, contentY, contentW, p)
@@ -483,15 +868,13 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         
         NVGRenderer.pop()
         NVGRenderer.popScissor()
+        popAlpha(prevA)
         
-        contentHeight[tab.ordinal] = used
-        scroll[tab.ordinal] = scroll[tab.ordinal].coerceIn(0f, max(0f, used - contentH))
+        contentHeight[ti] = used
+        scrollTarget[ti] = scrollTarget[ti].coerceIn(0f, max(0f, used - contentH))
+        scroll[ti] = scroll[ti].coerceIn(0f, max(0f, used - contentH))
         
-        if (used > contentH) {
-            val thumbH = max(24f, contentH * (contentH / used))
-            val thumbY = contentY + (contentH - thumbH) * (scroll[tab.ordinal] / (used - contentH))
-            NVGRenderer.rect(panelX + panelW - 6f, thumbY, 3f, thumbH, STROKE, 1.5f)
-        }
+        drawScrollThumb(used, scroll[ti])
     }
     
     // ==================== OVERVIEW ====================
@@ -500,27 +883,39 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         var cy = by
         
         // Stat cards (3 per row, 2 rows), formatted once in buildDerived.
+        // Each card enters with a small stagger and rise; hover eases in and lifts the card.
         val cols = 3
         val gap = 8f
         val cardW = (bw - gap * (cols - 1)) / cols
         val cardH = 50f
+        val sinceTab = time() - tabSwitchedAt
         overviewCards.forEachIndexed { i, (label, value, color) ->
             val cx = bx + (i % cols) * (cardW + gap)
-            val ry = cy + (i / cols) * (cardH + gap)
-            NVGRenderer.rect(cx, ry, cardW, cardH, PANEL, 8f)
-            NVGRenderer.text(label.uppercase(), cx + 10f, ry + 8f, 8f, MUTE, font)
-            NVGRenderer.text(value, cx + 10f, ry + 22f, 15f, color, font)
+            val ryBase = cy + (i / cols) * (cardH + gap)
+            val ce = enter(sinceTab, i * STAGGER, 0.18f)
+            val hf = hoverFrac("ov$i", visibleHover(cx, ryBase, cardW, cardH))
+            val ry = ryBase + (1f - ce) * 8f - hf * 1.5f
+            val prev = pushAlpha(ce)
+            NVGRenderer.rect(cx, ry, cardW, cardH, blend(PANEL_HI, PANEL, hf), 12f)
+            NVGRenderer.hollowRect(cx, ry, cardW, cardH, 1f, blend(ACCENT_DIM, STROKE, hf), 12f)
+            if (hf > 0.02f) glow(cx, ry, cardW, cardH, ACCENT, 12f, 0.6f * hf)
+            // Hairline along the card top, tinted in the stat's own color.
+            NVGRenderer.gradientRect(cx + 12f, ry, cardW * 0.45f, 2f, withAlpha(color, 0.9f), withAlpha(color, 0f), Gradient.LeftToRight, 1f)
+            diamond(cx + 13f, ry + 12f, 5f, withAlpha(color, 0.9f))
+            NVGRenderer.text(label.uppercase(), cx + 21f, ry + 7f, 9f, MUTE, font)
+            NVGRenderer.text(value, cx + 12f, ry + 22f, 15f, color, font)
+            popAlpha(prev)
         }
         cy += 2 * (cardH + gap) + 8f
         
         // Other details.
-        NVGRenderer.text("Other details", bx + 2f, cy, 11f, MUTE, font)
+        diamond(bx + 5f, cy + 5f, 6f, ACCENT_DIM)
+        NVGRenderer.text("Other details", bx + 14f, cy, 11f, SUBTEXT, font)
         cy += 18f
-        val passLabel = p.seasonPass?.let { (if (it.premium) "Premium" else "Free") + "  •  ${compact(it.experience)} XP" } ?: "—"
+        val passLabel = p.seasonPass?.let { (if (it.premium) "Premium" else "Free") + "  •  ${compact(it.experience)} XP" } ?: "None"
         val passColor = if (p.seasonPass?.premium == true) GOLD else SUBTEXT
         cy = detailRow(bx, cy, bw, "Last Seen", relativeTime(p.lastPlayed), TEXT)
         cy = detailRow(bx, cy, bw, "Season Pass", passLabel, passColor)
-        cy = detailRow(bx, cy, bw, "Rewards", "${p.rewards?.size ?: 0} unlocked", TEXT)
         cy = detailRow(bx, cy, bw, "Companions", "$unlockedPetCount pets  •  $unlockedMountCount mounts", TEXT)
         cy = detailRow(bx, cy, bw, "Stash", "$stashCount items stored", TEXT)
         cy = detailRow(bx, cy, bw, "Character Slots", "${p.characterSlots}", TEXT)
@@ -541,7 +936,7 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         val h = 22f
         NVGRenderer.text(label, bx + 2f, y + 5f, 11f, SUBTEXT, font)
         NVGRenderer.text(value, bx + bw - 2f - NVGRenderer.textWidth(value, 11f, font), y + 5f, 11f, valueColor, font)
-        NVGRenderer.line(bx + 2f, y + h - 0.5f, bx + bw - 2f, y + h - 0.5f, 0.5f, 0xFF202028.toInt())
+        NVGRenderer.line(bx + 2f, y + h - 0.5f, bx + bw - 2f, y + h - 0.5f, 0.5f, ROW_LINE)
         return y + h
     }
     
@@ -557,8 +952,8 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
     }
     
     private fun drawSeasonPass(x: Float, y: Float, w: Float, h: Float, p: TelosProfile) {
-        NVGRenderer.rect(x, y, w, h, PANEL, 10f)
-        NVGRenderer.hollowRect(x, y, w, h, 1f, STROKE, 10f)
+        NVGRenderer.rect(x, y, w, h, PANEL, 12f)
+        NVGRenderer.hollowRect(x, y, w, h, 1f, STROKE, 12f)
         
         val xp = p.seasonPass?.experience ?: 0L
         val premium = p.seasonPass?.premium ?: false
@@ -571,26 +966,31 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         val gridTop = y + 26f
         val page = SeasonPassData.page(seasonPage)
         
+        // The grid slides in from the flip direction and fades up on page change.
+        val fe = enter(time() - seasonFlipAt, 0f, 0.20f)
+        val flipOff = (1f - fe) * 14f * seasonDir
+        val prevA = pushAlpha(0.25f + 0.75f * fe)
         for (i in 0 until SeasonPassData.PER_PAGE) {
             val col = i % 5
             val row = i / 5
-            val tx = x + 12f + col * (tile + 8f)
+            val tx = x + 12f + col * (tile + 8f) + flipOff
             val ty = gridTop + row * (tile + 8f)
             val reward = page.getOrNull(i)
             if (reward == null) {
-                NVGRenderer.rect(tx, ty, tile, tile, 0xFF15151A.toInt(), 6f)
+                NVGRenderer.rect(tx, ty, tile, tile, WELL, 6f)
                 continue
             }
             drawSeasonTile(reward, tx, ty, tile, xp, premium)
         }
+        popAlpha(prevA)
         
         // Paginator: arrows + page/xp/premium info.
         val arrowY = gridTop + 2 * (tile + 8f) + 4f
         val arrowSize = 22f
         val leftX = x + 12f
         val rightX = x + w - 12f - arrowSize
-        drawArrow(leftX, arrowY, arrowSize, false, hover(leftX, arrowY - curScroll, arrowSize, arrowSize))
-        drawArrow(rightX, arrowY, arrowSize, true, hover(rightX, arrowY - curScroll, arrowSize, arrowSize))
+        drawArrow(leftX, arrowY, arrowSize, false, hoverFrac("spl", hover(leftX, arrowY - curScroll, arrowSize, arrowSize)))
+        drawArrow(rightX, arrowY, arrowSize, true, hoverFrac("spr", hover(rightX, arrowY - curScroll, arrowSize, arrowSize)))
         spLeftRect = floatArrayOf(leftX, arrowY - curScroll, arrowSize, arrowSize)
         spRightRect = floatArrayOf(rightX, arrowY - curScroll, arrowSize, arrowSize)
         
@@ -604,7 +1004,7 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         val accent = if (reward.premium) GOLD else ACCENT
         val border = if (unlocked) blend(accent, STROKE, 0.7f) else STROKE
         
-        NVGRenderer.rect(tx, ty, tile, tile, blend(accent, 0xFF15151A.toInt(), if (unlocked) 0.18f else 0.06f), 6f)
+        NVGRenderer.rect(tx, ty, tile, tile, blend(accent, WELL, if (unlocked) 0.18f else 0.06f), 6f)
         NVGRenderer.hollowRect(tx, ty, tile, tile, 1f, border, 6f)
         
         val pad = 4f
@@ -614,27 +1014,40 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
             NVGRenderer.text(initial, tx + (tile - NVGRenderer.textWidth(initial, s, font)) / 2f, ty + tile * 0.16f, s, accent, font)
         }
         
-        if (!unlocked) NVGRenderer.rect(tx, ty, tile, tile, 0x99101014.toInt(), 6f)
+        if (!unlocked) {
+            NVGRenderer.rect(tx, ty, tile, tile, LOCK, 6f)
+            drawLockBadge(tx, ty, tile)
+        }
         
-        if (visibleHover(tx, ty, tile, tile)) {
-            NVGRenderer.hollowRect(tx, ty, tile, tile, 1.5f, accent, 6f)
-            val req = "${reward.displayName}  •  Tier ${reward.tier}  •  ${if (unlocked) "Unlocked" else "${compact(reward.xpRequired)} XP"}"
-            tooltip = req to accent
+        val hovered = visibleHover(tx, ty, tile, tile)
+        val hf = hoverFrac("sp${reward.tier}${reward.premium}", hovered)
+        if (hf > 0.02f) {
+            NVGRenderer.hollowRect(tx, ty, tile, tile, 1.5f, withAlpha(accent, hf), 6f)
+            glow(tx, ty, tile, tile, accent, 6f, 0.8f * hf)
+        }
+        if (hovered) {
+            tooltip = "${reward.displayName}  •  Tier ${reward.tier}  •  ${if (unlocked) "Unlocked" else "${compact(reward.xpRequired)} XP"}" to accent
         }
     }
     
-    private fun drawArrow(x: Float, y: Float, size: Float, right: Boolean, hovered: Boolean) {
-        val color = if (hovered) ACCENT else SUBTEXT
-        NVGRenderer.rect(x, y, size, size, if (hovered) PANEL_HI else PANEL, 6f)
+    /** Paginator arrow whose brand-gradient hover state eases in with fraction [f]. */
+    private fun drawArrow(x: Float, y: Float, size: Float, right: Boolean, f: Float) {
+        val r = size / 2f
+        NVGRenderer.rect(x, y, size, size, PANEL_HI, r)
+        NVGRenderer.hollowRect(x, y, size, size, 1f, STROKE, r)
+        if (f > 0.02f) {
+            brandGradient(x, y, size, size, r, f)
+            glow(x, y, size, size, ACCENT, r, 0.8f * f)
+        }
         val glyph = if (right) "›" else "‹"
         val gs = 16f
-        NVGRenderer.text(glyph, x + (size - NVGRenderer.textWidth(glyph, gs, font)) / 2f, y + (size - gs) / 2f - 1f, gs, color, font)
+        NVGRenderer.text(glyph, x + (size - NVGRenderer.textWidth(glyph, gs, font)) / 2f, y + (size - gs) / 2f - 1f, gs, blend(INK, SUBTEXT, f), font)
     }
     
     /** Bottom-right panel: the player's currently equipped sticker (name + large texture). */
     private fun drawStickerPreview(x: Float, y: Float, w: Float, h: Float, p: TelosProfile) {
-        NVGRenderer.rect(x, y, w, h, PANEL, 10f)
-        NVGRenderer.hollowRect(x, y, w, h, 1f, STROKE, 10f)
+        NVGRenderer.rect(x, y, w, h, PANEL, 12f)
+        NVGRenderer.hollowRect(x, y, w, h, 1f, STROKE, 12f)
         
         val raw = p.sticker
         if (raw.isNullOrBlank()) {
@@ -648,17 +1061,18 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         
         // Name + underline.
         val nameSize = fitText(name, w - 20f, 13f, 9f)
-        val nameW = NVGRenderer.textWidth(name, nameSize, font)
+        val shownName = ellipsize(name, w - 20f, nameSize)
+        val nameW = NVGRenderer.textWidth(shownName, nameSize, font)
         val nameX = x + (w - nameW) / 2f
-        NVGRenderer.text(name, nameX, y + 12f, nameSize, TEXT, font)
-        NVGRenderer.line(nameX, y + 12f + nameSize + 2f, nameX + nameW, y + 12f + nameSize + 2f, 1f, ACCENT_DIM)
+        NVGRenderer.text(shownName, nameX, y + 12f, nameSize, TEXT, font)
+        brandGradient(nameX, y + 12f + nameSize + 3f, nameW, 1.5f, 0.75f)
         
         // Large sticker texture.
         val imgSize = min(w - 36f, h - 56f).coerceAtLeast(24f)
         val imgX = x + (w - imgSize) / 2f
         val imgY = y + 38f
         if (!NVGRenderer.texturedRect("telos:material/sticker/${id}.png", imgX, imgY, imgSize, imgSize)) {
-            NVGRenderer.rect(imgX, imgY, imgSize, imgSize, 0xFF15151A.toInt(), 8f)
+            NVGRenderer.rect(imgX, imgY, imgSize, imgSize, WELL, 6f)
             val initial = name.firstOrNull()?.uppercase() ?: "?"
             NVGRenderer.text(initial, imgX + (imgSize - NVGRenderer.textWidth(initial, imgSize * 0.5f, font)) / 2f, imgY + imgSize * 0.22f, imgSize * 0.5f, MUTE, font)
         }
@@ -682,14 +1096,14 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         
         // Header: total soul points across all classes out of the cap.
         val totalSp = classesSorted.sumOf { it.soulPoints }
-        NVGRenderer.text("Total Soul Points", bx + 2f, cy, 11f, SUBTEXT, font)
+        diamond(bx + 5f, cy + 5f, 6f, ACCENT_DIM)
+        NVGRenderer.text("Total Soul Points", bx + 14f, cy, 11f, SUBTEXT, font)
         val totalLabel = "${commas(totalSp)} / ${commas(maxSoulPointsTotal)}"
         NVGRenderer.text(totalLabel, bx + bw - 2f - NVGRenderer.textWidth(totalLabel, 11f, font), cy, 11f, ACCENT, font)
         cy += 18f
-        val barH = 8f
-        NVGRenderer.rect(bx + 2f, cy, bw - 4f, barH, PANEL_HI, 4f)
+        val barH = 9f
         val totalFrac = (totalSp.toDouble() / maxSoulPointsTotal).coerceIn(0.0, 1.0).toFloat()
-        if (totalFrac > 0f) NVGRenderer.gradientRect(bx + 2f, cy, (bw - 4f) * totalFrac, barH, ACCENT, ACCENT_DIM, Gradient.LeftToRight, 4f)
+        shimmerBar(bx + 2f, cy, bw - 4f, barH, totalFrac)
         cy += barH + 14f
         
         // Grid of class cards - 3x2 when there's width for it, otherwise 2x3.
@@ -702,18 +1116,22 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         val avail = (by + contentH) - gridTop - gap * (rows - 1)
         val cardH = (avail / rows).coerceAtLeast(212f)
         
+        val sinceTab = time() - tabSwitchedAt
         classOrder.forEachIndexed { i, type ->
             val cx = bx + (i % cols) * (cardW + gap)
-            val ry = gridTop + (i / cols) * (cardH + gap)
+            val ce = enter(sinceTab, i * STAGGER, 0.18f)
+            val ry = gridTop + (i / cols) * (cardH + gap) + (1f - ce) * 8f
+            val prev = pushAlpha(ce)
             drawClassCard(cx, ry, cardW, cardH, type, byType[type])
+            popAlpha(prev)
         }
         
         return (gridTop + rows * cardH + (rows - 1) * gap) - by
     }
     
     private fun drawClassCard(x: Float, y: Float, w: Float, h: Float, type: String, c: PlayerClass?) {
-        NVGRenderer.rect(x, y, w, h, PANEL, 10f)
-        NVGRenderer.hollowRect(x, y, w, h, 1f, STROKE, 10f)
+        NVGRenderer.rect(x, y, w, h, PANEL, 12f)
+        NVGRenderer.hollowRect(x, y, w, h, 1f, STROKE, 12f)
         
         val pad = 12f
         val name = title(type)
@@ -728,8 +1146,9 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         val badge = "Transcendence ${c.transcendenceLevel}/10"
         val badgeW = NVGRenderer.textWidth(badge, 9f, font) + 12f
         val maxed = c.transcendenceLevel >= 10
-        NVGRenderer.rect(x + w - pad - badgeW, y + 10f, badgeW, 15f, if (maxed) GOLD else ACCENT_DIM, 7f)
-        NVGRenderer.text(badge, x + w - pad - badgeW + 6f, y + 12.5f, 9f, 0xFF0A0A0C.toInt(), font)
+        if (maxed) NVGRenderer.rect(x + w - pad - badgeW, y + 10f, badgeW, 15f, GOLD, 7.5f)
+        else brandGradient(x + w - pad - badgeW, y + 10f, badgeW, 15f, 7.5f)
+        NVGRenderer.text(badge, x + w - pad - badgeW + 6f, y + 12.5f, 9f, INK, font)
         
         // Class portrait (sprite frame chosen by soul points) fills the space above the stats.
         val bottomH = 100f
@@ -743,9 +1162,8 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         cy += 13f
         val barH = 6f
         val barW = w - pad * 2
-        NVGRenderer.rect(x + pad, cy, barW, barH, PANEL_HI, 3f)
         val frac = (c.soulPoints.toDouble() / maxSoulPointsPerClass).coerceIn(0.0, 1.0).toFloat()
-        if (frac > 0f) NVGRenderer.gradientRect(x + pad, cy, barW * frac, barH, ACCENT, ACCENT_DIM, Gradient.LeftToRight, 3f)
+        shimmerBar(x + pad, cy, barW, barH, frac)
         cy += barH + 4f
         val spText = "${commas(c.soulPoints)} / ${commas(maxSoulPointsPerClass)}"
         NVGRenderer.text(spText, x + pad, cy, 9f, SUBTEXT, font)
@@ -778,12 +1196,7 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
             soulPoints < maxSoulPointsPerClass -> 2
             else -> 3
         }
-        val w = h * 2f
-        NVGRenderer.texturedSubRect(
-            "melinoe:profile/${type.lowercase()}_profile.png",
-            centerX - w / 2f, topY, w, h,
-            frame / 4f, 0f, (frame + 1) / 4f, 1f
-        )
+        drawProfileSprite(type, frame, centerX, topY, h)
     }
     
     /** Draws a profile sprite [frame] (0-3), centred at [centerX], starting at [topY], height [h]. */
@@ -826,7 +1239,7 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
     
     private fun rulesetColor(label: String): Int = when (label) {
         "Seasonal" -> SEASONAL
-        "Ironman", "Group Ironman" -> 0xFFB3590E.toInt()
+        "Ironman", "Group Ironman" -> IRONMAN
         else -> SUBTEXT
     }
     
@@ -837,22 +1250,28 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         
         var cy = by
         val rowH = 60f
+        val sinceTab = time() - tabSwitchedAt
         charRects.clear()
-        chars.forEach { ch ->
-            drawCharacterRow(bx, cy, bw, rowH, ch)
+        chars.forEachIndexed { i, ch ->
+            val ce = enter(sinceTab, i * 0.03f, 0.18f)
+            val prev = pushAlpha(ce)
+            drawCharacterRow(bx, cy + (1f - ce) * 8f, bw, rowH, ch)
+            popAlpha(prev)
             charRects.add(floatArrayOf(bx, cy - curScroll, bw, rowH) to ch.id)
             cy += rowH + 8f
         }
         return cy - by
     }
     
-    private fun drawCharacterRow(bx: Float, y: Float, bw: Float, h: Float, ch: TelosCharacter) {
+    private fun drawCharacterRow(bx: Float, yBase: Float, bw: Float, h: Float, ch: TelosCharacter) {
         val equipped = ch.id == equippedCharacterId
-        val hovered = visibleHover(bx, y, bw, h)
+        val hf = hoverFrac("ch${ch.id}", visibleHover(bx, yBase, bw, h))
+        val y = yBase - hf * 1.5f
         
-        NVGRenderer.rect(bx, y, bw, h, if (hovered) PANEL_HI else PANEL, 8f)
-        val borderColor = if (equipped) GOLD else STROKE
-        NVGRenderer.hollowRect(bx, y, bw, h, if (equipped) 1.5f else 1f, borderColor, 8f)
+        NVGRenderer.rect(bx, y, bw, h, blend(PANEL_HI, PANEL, hf), 12f)
+        val borderColor = if (equipped) GOLD else blend(ACCENT_DIM, STROKE, hf)
+        NVGRenderer.hollowRect(bx, y, bw, h, if (equipped) 1.5f else 1f, borderColor, 12f)
+        if (hf > 0.02f) glow(bx, y, bw, h, if (equipped) GOLD else ACCENT, 12f, 0.6f * hf)
         
         // Portrait (frame chosen by level).
         val level = characterLevel(ch.fame)
@@ -872,7 +1291,7 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
             val tag = "EQUIPPED"
             val tw = NVGRenderer.textWidth(tag, 8f, font) + 12f
             NVGRenderer.rect(lx, y + 10f, tw, 14f, GOLD, 7f)
-            NVGRenderer.text(tag, lx + 6f, y + 12.5f, 8f, 0xFF0A0A0C.toInt(), font)
+            NVGRenderer.text(tag, lx + 6f, y + 12.5f, 8f, INK, font)
         }
         
         // Line 2: ruleset, fame, playtime.
@@ -902,36 +1321,56 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         val gap = 6f
         val arrowW = 30f
         val mainRight = contentX + contentW
+        val r = tabBarH / 2f
+        
+        // The whole detail view fades in over the list it replaced.
+        val eOpen = enter(time() - detailOpenedAt)
+        val prevOpen = pushAlpha(eOpen)
         
         // Back arrow.
         backRect = floatArrayOf(contentX, tabBarY, arrowW, tabBarH)
-        val backHover = hover(contentX, tabBarY, arrowW, tabBarH)
-        NVGRenderer.rect(contentX, tabBarY, arrowW, tabBarH, if (backHover) PANEL_HI else PANEL, 8f)
+        val bf = hoverFrac("back", hover(contentX, tabBarY, arrowW, tabBarH))
+        NVGRenderer.rect(contentX, tabBarY, arrowW, tabBarH, PANEL, r)
+        NVGRenderer.hollowRect(contentX, tabBarY, arrowW, tabBarH, 1f, STROKE, r)
+        if (bf > 0.02f) {
+            brandGradient(contentX, tabBarY, arrowW, tabBarH, r, bf)
+            glow(contentX, tabBarY, arrowW, tabBarH, ACCENT, r, 0.8f * bf)
+        }
         val glyph = "‹"
-        NVGRenderer.text(glyph, contentX + (arrowW - NVGRenderer.textWidth(glyph, 18f, font)) / 2f, tabBarY + (tabBarH - 18f) / 2f - 1f, 18f, if (backHover) ACCENT else SUBTEXT, font)
+        NVGRenderer.text(glyph, contentX + (arrowW - NVGRenderer.textWidth(glyph, 18f, font)) / 2f, tabBarY + (tabBarH - 18f) / 2f - 1f, 18f, blend(INK, SUBTEXT, bf), font)
         
-        // Sub-tabs fill the remaining width.
+        // Sub-tabs fill the remaining width; the active pill glides between them.
         val tabsX = contentX + arrowW + gap
         val n = DetailTab.entries.size
         val tw = (mainRight - tabsX - gap * (n - 1)) / n
         DetailTab.entries.forEachIndexed { i, t ->
             val tabX = tabsX + (tw + gap) * i
-            val active = t == detailTab
-            val hovered = hover(tabX, tabBarY, tw, tabBarH)
             detailTabRects[i] = floatArrayOf(tabX, tabBarY, tw, tabBarH)
-            NVGRenderer.rect(tabX, tabBarY, tw, tabBarH, if (active) PANEL_HI else if (hovered) PANEL else CARD, 8f)
-            if (active) NVGRenderer.hollowRect(tabX, tabBarY, tw, tabBarH, 1f, ACCENT_DIM, 8f)
-            val color = if (active) ACCENT else if (hovered) TEXT else SUBTEXT
+            if (t == detailTab) return@forEachIndexed
+            val f = hoverFrac("dtab$i", hover(tabX, tabBarY, tw, tabBarH))
+            NVGRenderer.rect(tabX, tabBarY, tw, tabBarH, blend(PANEL_HI, PANEL, f), r)
+            NVGRenderer.hollowRect(tabX, tabBarY, tw, tabBarH, 1f, blend(ACCENT_DIM, STROKE, f), r)
+        }
+        
+        tickPill(detailPill, tabsX + (tw + gap) * detailTab.ordinal, tw)
+        brandGradient(detailPill.x, tabBarY, detailPill.w, tabBarH, r)
+        glow(detailPill.x, tabBarY, detailPill.w, tabBarH, ACCENT, r)
+        
+        DetailTab.entries.forEachIndexed { i, t ->
+            val tabX = tabsX + (tw + gap) * i
+            val overlap = (min(tabX + tw, detailPill.x + detailPill.w) - max(tabX, detailPill.x)).coerceIn(0f, tw) / tw
+            val base = if (hover(tabX, tabBarY, tw, tabBarH)) ACCENT_SOFT else SUBTEXT
             val size = fitText(t.label, tw - 8f, 11.5f, 8.5f)
-            NVGRenderer.text(t.label, tabX + (tw - NVGRenderer.textWidth(t.label, size, font)) / 2f, tabBarY + (tabBarH - size) / 2f, size, color, font)
+            NVGRenderer.text(t.label, tabX + (tw - NVGRenderer.textWidth(t.label, size, font)) / 2f, tabBarY + (tabBarH - size) / 2f, size, blend(INK, base, overlap), font)
         }
         
         val d = characterDetail
         when {
             detailLoading -> drawCenteredInContent("Loading character${dots()}", SUBTEXT)
-            detailError != null -> drawCenteredInContent(detailError!!, ERROR)
+            detailError != null -> detailRetryRect = drawRetry(contentX + contentW / 2f, contentY + contentH / 2f, detailError!!)
             d != null -> drawDetailBody(d)
         }
+        popAlpha(prevOpen)
     }
     
     private fun drawCenteredInContent(text: String, color: Int) {
@@ -942,11 +1381,17 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
     private fun drawDetailBody(d: TelosCharacterDetail) {
         bodyTop = contentY
         bodyBottom = contentY + contentH
-        curScroll = detailScroll[detailTab.ordinal]
+        val ti = detailTab.ordinal
+        smoothScroll(detailScroll, detailScrollTarget, ti, detailContentHeight[ti])
+        curScroll = detailScroll[ti]
+        
+        // Sub-tab content slides from the direction it was approached.
+        val e = enter(time() - detailTabSwitchedAt)
+        val prevA = pushAlpha(e)
         
         NVGRenderer.pushScissor(contentX, contentY, contentW, contentH)
         NVGRenderer.push()
-        NVGRenderer.translate(0f, -curScroll)
+        NVGRenderer.translate((1f - e) * 16f * detailTabDir, -curScroll)
         
         val used = when (detailTab) {
             DetailTab.OVERVIEW -> drawDetailOverview(contentX, contentY, contentW, d)
@@ -956,14 +1401,13 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         
         NVGRenderer.pop()
         NVGRenderer.popScissor()
+        popAlpha(prevA)
         
-        detailContentHeight[detailTab.ordinal] = used
-        detailScroll[detailTab.ordinal] = detailScroll[detailTab.ordinal].coerceIn(0f, max(0f, used - contentH))
-        if (used > contentH) {
-            val thumbH = max(24f, contentH * (contentH / used))
-            val thumbY = contentY + (contentH - thumbH) * (detailScroll[detailTab.ordinal] / (used - contentH))
-            NVGRenderer.rect(panelX + panelW - 6f, thumbY, 3f, thumbH, STROKE, 1.5f)
-        }
+        detailContentHeight[ti] = used
+        detailScrollTarget[ti] = detailScrollTarget[ti].coerceIn(0f, max(0f, used - contentH))
+        detailScroll[ti] = detailScroll[ti].coerceIn(0f, max(0f, used - contentH))
+        
+        drawScrollThumb(used, detailScroll[ti])
     }
     
     private fun drawDetailOverview(bx: Float, by: Float, bw: Float, d: TelosCharacterDetail): Float {
@@ -972,7 +1416,8 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         fun slot(i: Int): TelosItems.Resolved? = inv.getOrNull(i)?.key?.let { TelosItems.resolve(it) }
         
         // Equipped gear.
-        NVGRenderer.text("EQUIPPED", bx + 2f, cy, 9f, MUTE, font)
+        diamond(bx + 5f, cy + 4f, 5f, ACCENT_DIM)
+        NVGRenderer.text("EQUIPPED", bx + 13f, cy, 9f, MUTE, font)
         cy += 15f
         val equipped = listOf(
             "Main" to slot(d.hotBarSlot), "Off" to slot(40),
@@ -983,7 +1428,7 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         equipped.forEachIndexed { i, (label, item) ->
             val ex = bx + i * (eqSize + eqGap)
             if (item != null) drawTile(item, ex, cy, eqSize) else drawEmptyTile(ex, cy, eqSize)
-            NVGRenderer.text(label, ex + (eqSize - NVGRenderer.textWidth(label, 8f, font)) / 2f, cy + eqSize + 3f, 8f, MUTE, font)
+            NVGRenderer.text(label, ex + (eqSize - NVGRenderer.textWidth(label, 9f, font)) / 2f, cy + eqSize + 3f, 9f, MUTE, font)
         }
         cy += eqSize + 18f
         
@@ -1014,7 +1459,8 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         cy = max(ly, ry) + 12f
         
         // Inventory grid (slots 0-35).
-        NVGRenderer.text("INVENTORY", bx + 2f, cy, 9f, MUTE, font)
+        diamond(bx + 5f, cy + 4f, 5f, ACCENT_DIM)
+        NVGRenderer.text("INVENTORY", bx + 13f, cy, 9f, MUTE, font)
         cy += 15f
         cy = drawSlotGrid(bx, cy, bw, (0 until 36).map { inv.getOrNull(it) })
         return cy - by
@@ -1080,14 +1526,16 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
     }
     
     private fun drawSkillNode(x: Float, y: Float, size: Float, taken: Boolean) {
-        NVGRenderer.rect(x, y, size, size, if (taken) blend(ACCENT, 0xFF15151A.toInt(), 0.25f) else PANEL, 8f)
-        NVGRenderer.hollowRect(x, y, size, size, if (taken) 2f else 1f, if (taken) ACCENT else STROKE, 8f)
+        NVGRenderer.rect(x, y, size, size, if (taken) blend(ACCENT, WELL, 0.25f) else PANEL, 12f)
+        NVGRenderer.hollowRect(x, y, size, size, if (taken) 2f else 1f, if (taken) ACCENT else STROKE, 12f)
+        if (taken) glow(x, y, size, size, ACCENT, 12f, if (reduceMotion) 0.85f else 0.7f + 0.3f * sin(time() * 2.5f))
     }
     
     private fun drawBackpack(bx: Float, by: Float, bw: Float, d: TelosCharacterDetail): Float {
         val bp = d.backpack ?: emptyList()
         val count = bp.count { it?.key != null }
-        NVGRenderer.text("BACKPACK — $count items", bx + 2f, by, 9f, MUTE, font)
+        diamond(bx + 5f, by + 4f, 5f, ACCENT_DIM)
+        NVGRenderer.text("BACKPACK  •  $count items", bx + 13f, by, 9f, MUTE, font)
         if (bp.isEmpty()) {
             NVGRenderer.text("Backpack is empty.", bx + 2f, by + 18f, 12f, MUTE, font)
             return 36f
@@ -1099,7 +1547,10 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
     
     private fun drawEmptyState(bx: Float, by: Float, bw: Float, title: String, subtitle: String): Float {
         val cy = by + contentH / 2f - 20f
-        NVGRenderer.text(title, bx + (bw - NVGRenderer.textWidth(title, 14f, font)) / 2f, cy, 14f, SUBTEXT, font)
+        val tw = NVGRenderer.textWidth(title, 14f, font)
+        sparkle(bx + (bw - tw) / 2f - 16f, cy + 7f, 9f, ACCENT, 1.2f)
+        sparkle(bx + (bw + tw) / 2f + 16f, cy + 7f, 9f, ACCENT, 3.9f)
+        NVGRenderer.text(title, bx + (bw - tw) / 2f, cy, 14f, SUBTEXT, font)
         NVGRenderer.text(subtitle, bx + (bw - NVGRenderer.textWidth(subtitle, 10.5f, font)) / 2f, cy + 22f, 10.5f, MUTE, font)
         return contentH
     }
@@ -1143,8 +1594,8 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
      * (label + icon) on the right, all inside the same bordered box.
      */
     private fun drawEquippedCard(x: Float, y: Float, w: Float, h: Float, title: String, eq: EquippedCompanion?, equippedId: String?, skinRaw: String?) {
-        NVGRenderer.rect(x, y, w, h, PANEL, 8f)
-        NVGRenderer.hollowRect(x, y, w, h, 1f, STROKE, 8f)
+        NVGRenderer.rect(x, y, w, h, PANEL, 12f)
+        NVGRenderer.hollowRect(x, y, w, h, 1f, STROKE, 12f)
         
         // Skin slot on the right.
         val slot = h - 18f
@@ -1165,14 +1616,14 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         
         // Left: companion icon + name + level.
         if (eq == null || equippedId == null) {
-            NVGRenderer.text(title.uppercase(), x + 12f, y + 10f, 8f, MUTE, font)
+            NVGRenderer.text(title.uppercase(), x + 12f, y + 10f, 9f, MUTE, font)
             NVGRenderer.text("None equipped", x + 12f, y + 28f, 11f, MUTE, font)
             return
         }
         val resolved = TelosItems.resolve(equippedId)
         drawIcon(resolved, x + 11f, y + (h - 36f) / 2f, 36f)
         val tx = x + 56f
-        NVGRenderer.text(title.uppercase(), tx, y + 11f, 8f, MUTE, font)
+        NVGRenderer.text(title.uppercase(), tx, y + 11f, 9f, MUTE, font)
         val name = companionName(equippedId)
         val nameColor = companionRarity(equippedId)?.color ?: resolved.rarityColor
         val nameMaxW = (labelX - 6f) - tx
@@ -1188,7 +1639,8 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         var cy = by
         val unlockedCount = list.count { isCompanionUnlocked(it.id) } - 7
         
-        NVGRenderer.text(title.uppercase(), bx + 2f, cy, 11f, TEXT, font)
+        diamond(bx + 5f, cy + 5f, 6f, ACCENT)
+        NVGRenderer.text(title.uppercase(), bx + 14f, cy, 11f, TEXT, font)
         val count = "$unlockedCount / ${list.size - 7}"
         NVGRenderer.text(count, bx + bw - 2f - NVGRenderer.textWidth(count, 11f, font), cy, 11f, MUTE, font)
         cy += 18f
@@ -1196,7 +1648,7 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         CompanionData.Rarity.entries.forEach { rarity ->
             val group = list.filter { it.rarity == rarity }
             if (group.isEmpty()) return@forEach
-            NVGRenderer.rect(bx + 2f, cy + 1f, 8f, 8f, rarity.color, 2f)
+            diamond(bx + 6f, cy + 5f, 7f, rarity.color)
             NVGRenderer.text(rarity.display, bx + 14f, cy, 9.5f, rarity.color, font)
             cy += 14f
             cy = drawCompanionRow(bx, cy, bw, group, equippedId) + 10f
@@ -1222,14 +1674,22 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         val rc = comp.rarity.color
         val unlocked = isCompanionUnlocked(comp.id)
         
-        NVGRenderer.rect(x, y, size, size, blend(rc, 0xFF15151A.toInt(), if (unlocked) 0.30f else 0.10f), 7f)
-        NVGRenderer.hollowRect(x, y, size, size, 1f, if (unlocked) rc else blend(rc, CARD, 0.4f), 7f)
+        NVGRenderer.rect(x, y, size, size, blend(rc, WELL, if (unlocked) 0.30f else 0.10f), 6f)
+        NVGRenderer.hollowRect(x, y, size, size, 1f, if (unlocked) rc else blend(rc, CARD, 0.4f), 6f)
         drawIcon(resolved, x + 4f, y + 4f, size - 8f)
-        if (!unlocked) NVGRenderer.rect(x, y, size, size, 0x99101014.toInt(), 7f)
-        if (equipped) NVGRenderer.hollowRect(x, y, size, size, 2f, GOLD, 7f)
+        if (!unlocked) {
+            NVGRenderer.rect(x, y, size, size, LOCK, 6f)
+            drawLockBadge(x, y, size)
+        }
+        if (equipped) NVGRenderer.hollowRect(x, y, size, size, 2f, GOLD, 6f)
         
-        if (visibleHover(x, y, size, size)) {
-            NVGRenderer.hollowRect(x, y, size, size, 2f, ACCENT, 7f)
+        val hovered = visibleHover(x, y, size, size)
+        val hf = hoverFrac("c${comp.id}", hovered)
+        if (hf > 0.02f) {
+            NVGRenderer.hollowRect(x, y, size, size, 2f, withAlpha(ACCENT, hf), 6f)
+            glow(x, y, size, size, ACCENT, 6f, 0.8f * hf)
+        }
+        if (hovered) {
             val state = if (equipped) "Equipped" else if (unlocked) "Unlocked" else "Locked"
             val rank = CompanionData.starterRank(comp.id)
             val name = companionName(comp.id) + if (rank != null) " (${rank}/${CompanionData.STARTER_COUNT - 1})" else ""
@@ -1291,17 +1751,22 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
     // ==================== TILES ====================
     
     private fun drawEmptyTile(x: Float, y: Float, size: Float) {
-        NVGRenderer.rect(x, y, size, size, 0xFF15151A.toInt(), 6f)
+        NVGRenderer.rect(x, y, size, size, WELL, 6f)
         NVGRenderer.hollowRect(x, y, size, size, 1f, STROKE, 6f)
     }
     
     private fun drawTile(item: TelosItems.Resolved, x: Float, y: Float, size: Float = TILE) {
-        NVGRenderer.rect(x, y, size, size, blend(item.rarityColor, 0xFF15151A.toInt(), 0.82f), 6f)
+        NVGRenderer.rect(x, y, size, size, blend(item.rarityColor, WELL, 0.82f), 6f)
         NVGRenderer.hollowRect(x, y, size, size, 1f, blend(item.rarityColor, CARD, 0.45f), 6f)
         drawIcon(item, x + 3f, y + 3f, size - 6f)
         
-        if (visibleHover(x, y, size, size)) {
-            NVGRenderer.hollowRect(x, y, size, size, 1.5f, ACCENT, 6f)
+        val hovered = visibleHover(x, y, size, size)
+        val hf = hoverFrac("t${x.toInt()},${y.toInt()}", hovered)
+        if (hf > 0.02f) {
+            NVGRenderer.hollowRect(x, y, size, size, 1.5f, withAlpha(ACCENT, hf), 6f)
+            glow(x, y, size, size, ACCENT, 6f, 0.8f * hf)
+        }
+        if (hovered) {
             val rarity = item.rarity?.name?.lowercase()?.replaceFirstChar { it.uppercaseChar() }
             tooltip = (if (rarity != null) "${item.displayName}  ($rarity)" else item.displayName) to item.rarityColor
         }
@@ -1315,18 +1780,27 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
     }
     
     private fun drawTooltip(text: String, color: Int) {
+        // Quick fade-and-rise when the tooltip first appears or its target changes.
+        if (text != lastTooltipText) {
+            lastTooltipText = text
+            tooltipAt = time()
+        }
+        val a = enter(time() - tooltipAt, 0f, 0.14f)
         val tw = NVGRenderer.textWidth(text, 11f, font)
         val w = tw + 16f
         val h = 22f
         var tx = sx + 12f
-        var ty = sy + 12f
+        var ty = sy + 12f + (1f - a) * 3f
         val vW = mc.window.screenWidth / scaleNow
         if (tx + w > vW) tx = sx - w - 12f
         if (ty + h > mc.window.screenHeight / scaleNow) ty = sy - h - 12f
-        NVGRenderer.dropShadow(tx, ty, w, h, 10f, 1f, 6f)
-        NVGRenderer.rect(tx, ty, w, h, PANEL_HI, 6f)
-        NVGRenderer.hollowRect(tx, ty, w, h, 1f, blend(color, STROKE, 0.5f), 6f)
+        val prev = pushAlpha(a)
+        NVGRenderer.dropShadow(tx, ty, w, h, 10f, 1f, 11f)
+        NVGRenderer.rect(tx, ty, w, h, PANEL_HI, 11f)
+        NVGRenderer.hollowRect(tx, ty, w, h, 1f, blend(color, STROKE, 0.6f), 11f)
+        glow(tx, ty, w, h, color, 11f, 0.6f)
         NVGRenderer.text(text, tx + 8f, ty + 5.5f, 11f, TEXT, font)
+        popAlpha(prev)
     }
     
     // ==================== INPUT ====================
@@ -1336,11 +1810,20 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         val mx = rawMouseX / scale
         val my = rawMouseY / scale
         
+        // Failed profile fetch: only the Retry pill is interactive.
+        if (errorMsg != null) {
+            retryRect?.let { if (inRect(mx, my, it)) { retryFetch(); return true } }
+            return super.mouseClicked(mouseButtonEvent, bl)
+        }
+        
         // Character detail view captures input on its own header.
         if (viewingCharacterId != null) {
+            if (detailError != null) {
+                detailRetryRect?.let { if (inRect(mx, my, it)) { retryDetail(); return true } }
+            }
             backRect?.let { if (inRect(mx, my, it)) { closeCharacter(); return true } }
             DetailTab.entries.forEachIndexed { i, t ->
-                detailTabRects[i]?.let { if (inRect(mx, my, it)) { detailTab = t; return true } }
+                detailTabRects[i]?.let { if (inRect(mx, my, it)) { switchDetailTab(t); return true } }
             }
             return super.mouseClicked(mouseButtonEvent, bl)
         }
@@ -1348,15 +1831,15 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         Tab.entries.forEachIndexed { i, t ->
             tabRects[i]?.let { r ->
                 if (inRect(mx, my, r)) {
-                    tab = t
+                    switchTab(t)
                     return true
                 }
             }
         }
         
         if (tab == Tab.OVERVIEW) {
-            spLeftRect?.let { if (inRect(mx, my, it)) { seasonPage = (seasonPage - 1 + SeasonPassData.PAGES) % SeasonPassData.PAGES; return true } }
-            spRightRect?.let { if (inRect(mx, my, it)) { seasonPage = (seasonPage + 1) % SeasonPassData.PAGES; return true } }
+            spLeftRect?.let { if (inRect(mx, my, it)) { flipSeason(-1); return true } }
+            spRightRect?.let { if (inRect(mx, my, it)) { flipSeason(1); return true } }
         }
         
         if (tab == Tab.CHARACTERS) {
@@ -1372,20 +1855,66 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
     }
     
     override fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {
+        // Wheel input moves a target; the visible scroll glides toward it each frame.
         if (viewingCharacterId != null) {
-            val maxScroll = max(0f, detailContentHeight[detailTab.ordinal] - contentH)
+            val ti = detailTab.ordinal
+            val maxScroll = max(0f, detailContentHeight[ti] - contentH)
             if (maxScroll > 0f) {
-                detailScroll[detailTab.ordinal] = (detailScroll[detailTab.ordinal] - verticalAmount.sign.toFloat() * 28f).coerceIn(0f, maxScroll)
+                detailScrollTarget[ti] = (detailScrollTarget[ti] - verticalAmount.sign.toFloat() * 56f).coerceIn(0f, maxScroll)
                 return true
             }
             return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
         }
-        val maxScroll = max(0f, contentHeight[tab.ordinal] - contentH)
+        val ti = tab.ordinal
+        val maxScroll = max(0f, contentHeight[ti] - contentH)
         if (maxScroll > 0f) {
-            scroll[tab.ordinal] = (scroll[tab.ordinal] - verticalAmount.sign.toFloat() * 28f).coerceIn(0f, maxScroll)
+            scrollTarget[ti] = (scrollTarget[ti] - verticalAmount.sign.toFloat() * 56f).coerceIn(0f, maxScroll)
             return true
         }
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
+    }
+    
+    override fun keyPressed(keyEvent: KeyEvent): Boolean {
+        val key = keyEvent.key
+        
+        // Retry whenever an error is showing.
+        if (errorMsg != null && (key == GLFW.GLFW_KEY_R || key == GLFW.GLFW_KEY_ENTER)) { retryFetch(); return true }
+        
+        if (viewingCharacterId != null) {
+            if (detailError != null && (key == GLFW.GLFW_KEY_R || key == GLFW.GLFW_KEY_ENTER)) { retryDetail(); return true }
+            when (key) {
+                GLFW.GLFW_KEY_BACKSPACE -> { closeCharacter(); return true }
+                GLFW.GLFW_KEY_LEFT -> { cycleDetailTab(-1); return true }
+                GLFW.GLFW_KEY_RIGHT -> { cycleDetailTab(1); return true }
+                in GLFW.GLFW_KEY_1..GLFW.GLFW_KEY_3 -> { switchDetailTab(DetailTab.entries[key - GLFW.GLFW_KEY_1]); return true }
+            }
+            return super.keyPressed(keyEvent)
+        }
+        
+        when (key) {
+            GLFW.GLFW_KEY_LEFT -> { cycleTab(-1); return true }
+            GLFW.GLFW_KEY_RIGHT -> { cycleTab(1); return true }
+            in GLFW.GLFW_KEY_1..GLFW.GLFW_KEY_5 -> { switchTab(Tab.entries[key - GLFW.GLFW_KEY_1]); return true }
+        }
+        // On Overview, Page Up/Down flip the season pass without clashing with tab cycling.
+        if (tab == Tab.OVERVIEW) when (key) {
+            GLFW.GLFW_KEY_PAGE_UP -> { flipSeason(-1); return true }
+            GLFW.GLFW_KEY_PAGE_DOWN -> { flipSeason(1); return true }
+        }
+        return super.keyPressed(keyEvent)
+    }
+    
+    /** Cycles with wrap-around; the slide direction follows the arrow that was pressed. */
+    private fun cycleTab(dir: Int) {
+        tab = Tab.entries[(tab.ordinal + dir + Tab.entries.size) % Tab.entries.size]
+        tabDir = dir
+        tabSwitchedAt = time()
+    }
+    
+    private fun cycleDetailTab(dir: Int) {
+        detailTab = DetailTab.entries[(detailTab.ordinal + dir + DetailTab.entries.size) % DetailTab.entries.size]
+        detailTabDir = dir
+        detailTabSwitchedAt = time()
     }
     
     override fun isPauseScreen(): Boolean = false
@@ -1412,6 +1941,14 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         var size = maxSize
         while (size > minSize && NVGRenderer.textWidth(text, size, font) > maxWidth) size -= 0.5f
         return size
+    }
+    
+    /** Truncates [text] with a trailing ellipsis so it fits [maxWidth] at [size]. */
+    private fun ellipsize(text: String, maxWidth: Float, size: Float): String {
+        if (NVGRenderer.textWidth(text, size, font) <= maxWidth) return text
+        var s = text
+        while (s.isNotEmpty() && NVGRenderer.textWidth("$s…", size, font) > maxWidth) s = s.dropLast(1)
+        return if (s.isEmpty()) "…" else "$s…"
     }
     
     private fun dots(): String = ".".repeat(((System.currentTimeMillis() / 400) % 4).toInt())

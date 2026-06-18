@@ -51,6 +51,8 @@ object ClickGUIModule : Module(
     }
     
     val devMode by BooleanSetting("Dev Mode", false, desc = "Enables developer commands and debug messages")
+
+    val reduceMotion by BooleanSetting("Reduce Profile Motion", false, desc = "Calms the ambient animation in the profile screen for a quieter, more readable view")
     
     val panelSetting by MapSetting("Panel Settings", mutableMapOf<String, PanelData>())
     data class PanelData(var x: Float = 10f, var y: Float = 10f, var extended: Boolean = true)
