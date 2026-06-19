@@ -74,14 +74,15 @@ object EmojiReplacer {
             }
         } else if (contents is TranslatableContents) {
             val args = contents.args
-            val replacedArgs = arrayOfNulls<Any>(args.size)
-            for (i in args.indices) {
-                replacedArgs[i] = when (val a = args[i]) {
+            
+            val replacedArgs = Array(args.size) { i ->
+                when (val a = args[i]) {
                     is Component -> replaceTree(a)
                     is String -> replaceInString(a)
-                    else -> a
+                    else -> a ?: ""
                 }
             }
+            
             result = Component.translatable(contents.key, *replacedArgs).withStyle(node.style)
         } else {
             result = node.copy()

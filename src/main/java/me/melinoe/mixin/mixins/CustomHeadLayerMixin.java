@@ -5,7 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
@@ -46,7 +46,7 @@ public abstract class CustomHeadLayerMixin<T extends LivingEntity, S extends Liv
             ItemStack stack = entity.getItemBySlot(EquipmentSlot.HEAD);
             if (stack.isEmpty()) return;
 
-            ResourceLocation modelID = stack.get(DataComponents.ITEM_MODEL);
+            Identifier modelID = stack.get(DataComponents.ITEM_MODEL);
 
             if (modelID != null && HIDDEN_MODELS.contains(modelID.getPath())) {
                 state.headItem.clear();

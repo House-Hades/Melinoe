@@ -9,7 +9,7 @@
   "client": [
     "mixins.KeyBindingMixin",
     "mixins.MouseHandlerMixin",
-    "mixins.LightTextureMixin",
+    "mixins.LightmapRenderStateExtractorMixin",
     "mixins.ClientPlayNetworkHandlerMixin",
     "mixins.AvatarRendererMixin",
     "mixins.BossHealthOverlayMixin",

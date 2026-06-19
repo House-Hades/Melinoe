@@ -1,0 +1,44 @@
+{
+  "starterCount": 7,
+  "companions": [
+    { "dungeon": "skull_cavern", "rarity": "USUAL" },
+    { "dungeon": "thornwood_wargrove", "rarity": "USUAL" },
+    { "dungeon": "goblin_lair", "rarity": "USUAL" },
+    { "dungeon": "sakura_shrine", "rarity": "USUAL" },
+    { "dungeon": "secluded_woodland", "rarity": "USUAL" },
+    { "dungeon": "desert_temple", "rarity": "USUAL" },
+    { "dungeon": "tomb_of_shadows", "rarity": "USUAL" },
+
+    { "dungeon": "abyss_of_demons", "rarity": "STRANGE" },
+    { "dungeon": "ice_cave", "rarity": "STRANGE" },
+    { "dungeon": "dwarven_frostkeep", "rarity": "STRANGE" },
+    { "dungeon": "undead_lair", "rarity": "STRANGE" },
+    { "dungeon": "treasure_cave", "rarity": "STRANGE" },
+    { "dungeon": "kobolds_den", "rarity": "STRANGE" },
+    { "dungeon": "purgatory", "rarity": "STRANGE" },
+    { "dungeon": "corvus_crypt", "rarity": "STRANGE" },
+    { "dungeon": "frozen_ruins", "rarity": "STRANGE" },
+
+    { "dungeon": "omnipotents_citadel", "rarity": "FABLED" },
+    { "dungeon": "fungal_cavern", "rarity": "FABLED" },
+    { "dungeon": "corsairs_conductorium", "rarity": "FABLED" },
+    { "dungeon": "chronos", "rarity": "FABLED" },
+    { "dungeon": "freddys_pizzeria", "rarity": "FABLED" },
+    { "dungeon": "anubis_lair", "rarity": "FABLED" },
+    { "dungeon": "tartarus", "rarity": "FABLED" },
+
+    { "dungeon": "cultists_hideout", "rarity": "EXOTIC" },
+    { "dungeon": "illarius_hideout", "rarity": "EXOTIC" },
+    { "dungeon": "aurora_sanctum", "rarity": "EXOTIC" },
+    { "dungeon": "aviary", "rarity": "EXOTIC" },
+    { "dungeon": "dreadwood_thicket", "rarity": "EXOTIC" },
+    { "dungeon": "shatters", "rarity": "EXOTIC" },
+    { "dungeon": "resounding_ruins", "rarity": "EXOTIC" },
+    { "dungeon": "onyx", "rarity": "EXOTIC" },
+    { "dungeon": "celestials_province", "rarity": "EXOTIC" },
+    { "dungeon": "tenebris", "rarity": "EXOTIC" },
+    { "dungeon": "neo_eden", "rarity": "EXOTIC" },
+
+    { "dungeon": "starter", "rarity": "LEGACY" }
+  ]
+}

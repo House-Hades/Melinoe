@@ -5,7 +5,7 @@ import me.melinoe.events.*
 import me.melinoe.events.core.EventBus
 import me.melinoe.events.core.on
 import me.melinoe.events.core.onReceive
-import me.melinoe.features.impl.combat.NaturesGiftModule
+import me.melinoe.features.impl.combat.ArmorCooldownsModule
 import me.melinoe.utils.data.DungeonData
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 import kotlin.math.max
@@ -61,7 +61,7 @@ object LocalAPI {
         on<WorldLoadEvent> {
             val mc = Melinoe.mc
             val level = mc.level ?: return@on
-            currentCharacterDimension = level.dimension().location().path
+            currentCharacterDimension = level.dimension().identifier().path
             currentCharacterWorld = "" // Invalidate to prevent sending incorrect data
         }
         
@@ -71,7 +71,7 @@ object LocalAPI {
             val mc = Melinoe.mc
             val level = mc.level
             if (level != null) {
-                val newDimension = level.dimension().location().path
+                val newDimension = level.dimension().identifier().path
                 if (newDimension != currentCharacterDimension) {
                     val previousDimension = currentCharacterDimension
                     currentCharacterDimension = newDimension
@@ -116,7 +116,7 @@ object LocalAPI {
 
         // Parse character type from format: "(MASTERY)(GAMEMODE) (LEVEL) (CLASS)"
         // Gives specific colors for group ironmans - utilized for the DiscordRPC Module
-        currentCharacterType = when (charInfo[0].substring(2).hashCode()) {
+        currentCharacterType = when (charInfo[0].drop(2).hashCode()) {
             880 -> "normal"
             881 -> "hardcore_ironman"
             1771714 -> "black"
@@ -461,8 +461,8 @@ object LocalAPI {
         
         if (currentDungeon != null) {
             // Skip Rustborn Kingdom - it's a split dungeon, not a chain
-            if (currentDungeon == DungeonData.RUSTBORN_KINGDOM) {
-                NaturesGiftModule.resetCooldown()
+            if (currentDungeon.name == "RUSTBORN_KINGDOM") {
+                ArmorCooldownsModule.reset()
                 Melinoe.logger.info("LocalAPI: Dimension changed in Rustborn Kingdom (split dungeon), skipping chain event")
                 return
             }

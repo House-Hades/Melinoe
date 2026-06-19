@@ -6,6 +6,7 @@ import me.melinoe.utils.ServerUtils
 import me.melinoe.utils.render.WaypointCache
 import me.melinoe.utils.render.WaypointData
 import me.melinoe.utils.render.WaypointRenderer
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext
 import net.minecraft.client.Camera
 import net.minecraft.world.phys.Vec3
 
@@ -23,14 +24,14 @@ object RendererWaypoints {
     /**
      * Render waypoints for all tracked bosses
      */
-    fun render(context: net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext) {
+    fun render(context: LevelRenderContext) {
         if (!ServerUtils.isOnTelos()) return
         if (!showWaypoints) return
         
         val player = mc.player ?: return
         val camera = mc.gameRenderer.mainCamera ?: return
-        val cameraPos = camera.position
-        val cameraDirection = Vec3.directionFromRotation(camera.xRot, camera.yRot)
+        val cameraPos = camera.position()
+        val cameraDirection = Vec3.directionFromRotation(camera.xRot(), camera.yRot())
         
         // Fetch current area safely to determine shadowlands logic filtering
         val inShadowlands = try {
@@ -130,8 +131,8 @@ object RendererWaypoints {
      * Check if a position is within the camera's view frustum
      */
     private fun isInFrustum(pos: Vec3, camera: Camera): Boolean {
-        val cameraPos = camera.position
-        val lookVec = camera.lookVector
+        val cameraPos = camera.position()
+        val lookVec = camera.forwardVector()
         
         val toWaypoint = Vec3(
             pos.x - cameraPos.x,
@@ -139,7 +140,7 @@ object RendererWaypoints {
             pos.z - cameraPos.z
         ).normalize()
         
-        val dot = lookVec.x * toWaypoint.x + lookVec.y * toWaypoint.y + lookVec.z * toWaypoint.z
+        val dot = lookVec.x() * toWaypoint.x + lookVec.y() * toWaypoint.y + lookVec.z() * toWaypoint.z
         
         return dot > Constants.FRUSTUM_DOT_THRESHOLD
     }

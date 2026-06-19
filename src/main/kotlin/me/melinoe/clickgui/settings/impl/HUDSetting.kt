@@ -17,7 +17,7 @@ import me.melinoe.utils.ui.HoverHandler
 import me.melinoe.utils.ui.animations.LinearAnimation
 import me.melinoe.utils.ui.isAreaHovered
 import me.melinoe.utils.ui.rendering.NVGRenderer
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.input.MouseButtonEvent
 
 class HUDSetting(
@@ -37,7 +37,7 @@ class HUDSetting(
         default: Boolean = !toggleable,
         description: String,
         module: Module,
-        draw: GuiGraphics.(Boolean) -> Pair<Int, Int>
+        draw: GuiGraphicsExtractor.(Boolean) -> Pair<Int, Int>
     ) : this(name, HudElement(x, y, scale, default, draw), toggleable, description, module)
 
     override val default: HudElement = hud

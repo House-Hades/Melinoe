@@ -26,7 +26,7 @@ import net.minecraft.network.chat.contents.PlainTextContents
 import net.minecraft.network.chat.contents.TranslatableContents
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.decoration.ArmorStand
-import net.minecraft.world.entity.monster.Evoker
+import net.minecraft.world.entity.monster.illager.Evoker
 import org.lwjgl.glfw.GLFW
 import java.util.Locale
 import java.util.concurrent.TimeUnit
@@ -484,8 +484,8 @@ object KeybindsModule : Module(
                 if (closestPortal != null) {
                     val (_, rawName, value) = closestPortal
                     
-                    // runCatching prevents a game crash if the enum doesn't exist
-                    val cleanName = runCatching { PortalData.valueOf(rawName).label }.getOrNull()
+                    // null if the portal isn't known
+                    val cleanName = PortalData.byKey(rawName)?.label
                     
                     if (cleanName != null) {
                         targetName = cleanName

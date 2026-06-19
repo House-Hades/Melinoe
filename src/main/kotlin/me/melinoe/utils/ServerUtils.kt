@@ -7,9 +7,9 @@ import me.melinoe.network.ModWebSocket
 import me.melinoe.network.RealmFetcher
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
-import net.minecraft.Util
 import net.minecraft.network.protocol.game.ClientboundSetTimePacket
 import net.minecraft.network.protocol.ping.ClientboundPongResponsePacket
+import net.minecraft.util.Util
 import kotlin.math.min
 
 /**

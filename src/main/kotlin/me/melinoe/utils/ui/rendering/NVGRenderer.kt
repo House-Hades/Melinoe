@@ -6,12 +6,13 @@ import me.melinoe.utils.Color.Companion.alpha
 import me.melinoe.utils.Color.Companion.blue
 import me.melinoe.utils.Color.Companion.green
 import me.melinoe.utils.Color.Companion.red
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import org.lwjgl.nanovg.NVGColor
 import org.lwjgl.nanovg.NVGPaint
 import org.lwjgl.nanovg.NanoSVG.*
 import org.lwjgl.nanovg.NanoVG.*
 import org.lwjgl.nanovg.NanoVGGL3.*
+import org.lwjgl.opengl.GL33C
 import org.lwjgl.stb.STBImage.stbi_load_from_memory
 import org.lwjgl.system.MemoryUtil.memAlloc
 import org.lwjgl.system.MemoryUtil.memFree
@@ -21,20 +22,20 @@ import kotlin.math.min
 import kotlin.math.round
 
 object NVGRenderer {
-
+    
     private val nvgPaint = NVGPaint.malloc()
     private val nvgColor = NVGColor.malloc()
     private val nvgColor2: NVGColor = NVGColor.malloc()
-
+    
     val defaultFont: Font by lazy {
         try {
-            Font("Default", mc.resourceManager.getResource(ResourceLocation.parse("melinoe:font.ttf")).get().open())
+            Font("Default", mc.resourceManager.getResource(Identifier.parse("melinoe:font.ttf")).get().open())
         } catch (e: Exception) {
             Melinoe.logger.error("Failed to load font: melinoe:font.ttf", e)
             Font("Default", java.io.ByteArrayInputStream(ByteArray(0)))
         }
     }
-
+    
     object EmojiData {
         data class Asset(val path: String, val col: Int, val totalCols: Int)
         val emojiMap = mutableMapOf<Char, Asset>()
@@ -79,20 +80,20 @@ object NVGRenderer {
     
     private val fontMap = HashMap<Font, NVGFont>()
     private val fontBounds = FloatArray(4)
-
+    
     private val images = HashMap<Image, NVGImage>()
-
+    
     private val nvgEmojis = mutableMapOf<String, Int>()
     
     private var scissor: Scissor? = null
     private var drawing: Boolean = false
     private var vg = -1L
-
+    
     init {
         vg = nvgCreate(NVG_ANTIALIAS or NVG_STENCIL_STROKES)
         require(vg != -1L) { "Failed to initialize NanoVG" }
     }
-
+    
     fun devicePixelRatio(): Float {
         return try {
             val window = mc.window
@@ -103,47 +104,47 @@ object NVGRenderer {
             1f
         }
     }
-
+    
     fun beginFrame(width: Float, height: Float) {
         if (drawing) throw IllegalStateException("[NVGRenderer] Already drawing, but called beginFrame")
-
+        
         val dpr = devicePixelRatio()
-
+        
         nvgBeginFrame(vg, width / dpr, height / dpr, dpr)
         nvgTextAlign(vg, NVG_ALIGN_LEFT or NVG_ALIGN_TOP)
         drawing = true
     }
-
+    
     fun endFrame() {
         if (!drawing) throw IllegalStateException("[NVGRenderer] Not drawing, but called endFrame")
         nvgEndFrame(vg)
-
+        
         drawing = false
     }
-
+    
     fun push() = nvgSave(vg)
-
+    
     fun pop() = nvgRestore(vg)
-
+    
     fun scale(x: Float, y: Float) = nvgScale(vg, x, y)
-
+    
     fun translate(x: Float, y: Float) = nvgTranslate(vg, x, y)
-
+    
     fun rotate(amount: Float) = nvgRotate(vg, amount)
-
+    
     fun globalAlpha(amount: Float) = nvgGlobalAlpha(vg, amount.coerceIn(0f, 1f))
-
+    
     fun pushScissor(x: Float, y: Float, w: Float, h: Float) {
         scissor = Scissor(scissor, x, y, w + x, h + y)
         scissor?.applyScissor()
     }
-
+    
     fun popScissor() {
         nvgResetScissor(vg)
         scissor = scissor?.previous
         scissor?.applyScissor()
     }
-
+    
     fun line(x1: Float, y1: Float, x2: Float, y2: Float, thickness: Float, color: Int) {
         nvgBeginPath(vg)
         nvgMoveTo(vg, x1, y1)
@@ -153,10 +154,10 @@ object NVGRenderer {
         nvgStrokeColor(vg, nvgColor)
         nvgStroke(vg)
     }
-
+    
     fun drawHalfRoundedRect(x: Float, y: Float, w: Float, h: Float, color: Int, radius: Float, roundTop: Boolean) {
         nvgBeginPath(vg)
-
+        
         if (roundTop) {
             nvgMoveTo(vg, x, y + h)
             nvgLineTo(vg, x + w, y + h)
@@ -174,13 +175,13 @@ object NVGRenderer {
             nvgArcTo(vg, x, y + h, x, y + h - radius, radius)
             nvgLineTo(vg, x, y)
         }
-
+        
         nvgClosePath(vg)
         color(color)
         nvgFillColor(vg, nvgColor)
         nvgFill(vg)
     }
-
+    
     fun rect(x: Float, y: Float, w: Float, h: Float, color: Int, radius: Float) {
         nvgBeginPath(vg)
         nvgRoundedRect(vg, x, y, w, h + .5f, radius)
@@ -188,7 +189,7 @@ object NVGRenderer {
         nvgFillColor(vg, nvgColor)
         nvgFill(vg)
     }
-
+    
     fun rect(x: Float, y: Float, w: Float, h: Float, color: Int) {
         nvgBeginPath(vg)
         nvgRect(vg, x, y, w, h + .5f)
@@ -196,7 +197,7 @@ object NVGRenderer {
         nvgFillColor(vg, nvgColor)
         nvgFill(vg)
     }
-
+    
     fun hollowRect(x: Float, y: Float, w: Float, h: Float, thickness: Float, color: Int, radius: Float) {
         nvgBeginPath(vg)
         nvgRoundedRect(vg, x, y, w, h, radius)
@@ -206,7 +207,7 @@ object NVGRenderer {
         nvgStrokeColor(vg, nvgColor)
         nvgStroke(vg)
     }
-
+    
     fun gradientRect(
         x: Float,
         y: Float,
@@ -223,11 +224,11 @@ object NVGRenderer {
         nvgFillPaint(vg, nvgPaint)
         nvgFill(vg)
     }
-
+    
     fun dropShadow(x: Float, y: Float, width: Float, height: Float, blur: Float, spread: Float, radius: Float) {
         nvgRGBA(0, 0, 0, 125, nvgColor)
         nvgRGBA(0, 0, 0, 0, nvgColor2)
-
+        
         nvgBoxGradient(
             vg,
             x - spread,
@@ -254,7 +255,7 @@ object NVGRenderer {
         nvgFillPaint(vg, nvgPaint)
         nvgFill(vg)
     }
-
+    
     fun circle(x: Float, y: Float, radius: Float, color: Int) {
         nvgBeginPath(vg)
         nvgCircle(vg, x, y, radius)
@@ -262,7 +263,7 @@ object NVGRenderer {
         nvgFillColor(vg, nvgColor)
         nvgFill(vg)
     }
-
+    
     fun text(text: String, x: Float, y: Float, size: Float, color: Int, font: Font) {
         var currentX = x
         val currentText = StringBuilder()
@@ -341,7 +342,7 @@ object NVGRenderer {
             nvgText(vg, round(currentX), round(y), str)
         }
     }
-
+    
     fun textWidth(text: String, size: Float, font: Font): Float {
         var width = 0f
         val currentText = StringBuilder()
@@ -374,9 +375,8 @@ object NVGRenderer {
      */
     private fun getEmojiTextureId(path: String): Int {
         return nvgEmojis.getOrPut(path) {
-            val location = ResourceLocation.parse(path)
+            val location = Identifier.parse(path)
             
-            // Replicate Minecraft BitmapProvider appending rules just in case
             val textureLocation = if (location.path.startsWith("textures/")) location else location.withPrefix("textures/")
             
             val resourceOpt = mc.resourceManager.getResource(textureLocation)
@@ -429,7 +429,7 @@ object NVGRenderer {
         nvgFillPaint(vg, nvgPaint)
         nvgFill(vg)
     }
-
+    
     fun drawWrappedString(
         text: String,
         x: Float,
@@ -447,7 +447,7 @@ object NVGRenderer {
         nvgFillColor(vg, nvgColor)
         nvgTextBox(vg, x, y, w, text)
     }
-
+    
     fun wrappedTextBounds(
         text: String,
         w: Float,
@@ -462,30 +462,35 @@ object NVGRenderer {
         nvgTextBoxBounds(vg, 0f, 0f, w, text, bounds)
         return bounds // [minX, minY, maxX, maxY]
     }
-
-    fun createNVGImage(textureId: Int, textureWidth: Int, textureHeight: Int): Int =
-        nvglCreateImageFromHandle(vg, textureId, textureWidth, textureHeight, NVG_IMAGE_NEAREST or NVG_IMAGE_NODELETE)
-
+    
+    // Includes the GL33C texture filter bindings needed to render SVGs/Images properly
+    fun createNVGImage(textureId: Int, textureWidth: Int, textureHeight: Int): Int {
+        GL33C.glBindTexture(GL33C.GL_TEXTURE_2D, textureId)
+        GL33C.glTexParameteri(GL33C.GL_TEXTURE_2D, GL33C.GL_TEXTURE_MIN_FILTER, GL33C.GL_NEAREST)
+        GL33C.glTexParameteri(GL33C.GL_TEXTURE_2D, GL33C.GL_TEXTURE_MAG_FILTER, GL33C.GL_NEAREST)
+        return nvglCreateImageFromHandle(vg, textureId, textureWidth, textureHeight, NVG_IMAGE_NEAREST or NVG_IMAGE_NODELETE)
+    }
+    
     fun image(image: Int, textureWidth: Int, textureHeight: Int, subX: Int, subY: Int, subW: Int, subH: Int, x: Float, y: Float, w: Float, h: Float, radius: Float) {
         if (image == -1) return
-
+        
         val sx = subX.toFloat() / textureWidth
         val sy = subY.toFloat() / textureHeight
         val sw = subW.toFloat() / textureWidth
         val sh = subH.toFloat() / textureHeight
-
+        
         val iw = w / sw
         val ih = h / sh
         val ix = x - iw * sx
         val iy = y - ih * sy
-
+        
         nvgImagePattern(vg, ix, iy, iw, ih, 0f, image, 1f, nvgPaint)
         nvgBeginPath(vg)
         nvgRoundedRect(vg, x, y, w, h + .5f, radius)
         nvgFillPaint(vg, nvgPaint)
         nvgFill(vg)
     }
-
+    
     fun image(image: Image, x: Float, y: Float, w: Float, h: Float, radius: Float) {
         nvgImagePattern(vg, x, y, w, h, 0f, getImage(image), 1f, nvgPaint)
         nvgBeginPath(vg)
@@ -493,7 +498,7 @@ object NVGRenderer {
         nvgFillPaint(vg, nvgPaint)
         nvgFill(vg)
     }
-
+    
     fun image(image: Image, x: Float, y: Float, w: Float, h: Float) {
         nvgImagePattern(vg, x, y, w, h, 0f, getImage(image), 1f, nvgPaint)
         nvgBeginPath(vg)
@@ -501,14 +506,116 @@ object NVGRenderer {
         nvgFillPaint(vg, nvgPaint)
         nvgFill(vg)
     }
-
+    
+    private val nvgResourceTextures = HashMap<String, Int>()
+    
+    /**
+     * Loads a resource-pack texture into a cached NVG image and returns its id, or -1 if it
+     * isn't available. The "textures/" prefix is added if missing; the path must include the
+     * file extension (e.g. "telos:material/.../ut-onyx.png").
+     */
+    fun resourceTexture(path: String): Int {
+        nvgResourceTextures[path]?.let { return it }
+        
+        val id = try {
+            val location = Identifier.parse(path)
+            val textureLocation = if (location.path.startsWith("textures/")) location else location.withPrefix("textures/")
+            
+            val resourceOpt = mc.resourceManager.getResource(textureLocation)
+            val resource = if (resourceOpt.isPresent) resourceOpt.get() else mc.resourceManager.getResource(location).orElse(null)
+            
+            if (resource == null) {
+                -1
+            } else {
+                resource.open().use { stream ->
+                    val bytes = stream.readBytes()
+                    val buffer = memAlloc(bytes.size)
+                    try {
+                        buffer.put(bytes)
+                        buffer.flip()
+                        
+                        val w = IntArray(1)
+                        val h = IntArray(1)
+                        val channels = IntArray(1)
+                        val imgBuffer = stbi_load_from_memory(buffer, w, h, channels, 4)
+                        
+                        if (imgBuffer != null) {
+                            // NEAREST filtering keeps these (small, pixel-art) textures crisp when
+                            // upscaled instead of blurring them like the default linear filter.
+                            val texId = nvgCreateImageRGBA(vg, w[0], h[0], NVG_IMAGE_NEAREST, imgBuffer)
+                            org.lwjgl.stb.STBImage.stbi_image_free(imgBuffer)
+                            texId
+                        } else {
+                            -1
+                        }
+                    } finally {
+                        memFree(buffer)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Melinoe.logger.error("Failed to load resource texture: $path", e)
+            -1
+        }
+        
+        nvgResourceTextures[path] = id
+        return id
+    }
+    
+    /** Draws a resource texture into the rect. Returns false if it couldn't load, so callers can fall back. */
+    fun texturedRect(path: String, x: Float, y: Float, w: Float, h: Float, radius: Float = 0f): Boolean {
+        val id = resourceTexture(path)
+        if (id == -1) return false
+        
+        nvgImagePattern(vg, x, y, w, h, 0f, id, 1f, nvgPaint)
+        nvgBeginPath(vg)
+        if (radius > 0f) nvgRoundedRect(vg, x, y, w, h + .5f, radius) else nvgRect(vg, x, y, w, h + .5f)
+        nvgFillPaint(vg, nvgPaint)
+        nvgFill(vg)
+        return true
+    }
+    
+    private val imageSizeW = IntArray(1)
+    private val imageSizeH = IntArray(1)
+    
+    /**
+     * Draws a sub-region of a resource texture into the destination rect, for sprite sheets.
+     * The region is given in normalized coordinates: [u0],[v0] (top-left) to [u1],[v1]
+     * (bottom-right), each 0..1. Returns false if the texture couldn't load.
+     */
+    fun texturedSubRect(path: String, dx: Float, dy: Float, dw: Float, dh: Float, u0: Float, v0: Float, u1: Float, v1: Float): Boolean {
+        val id = resourceTexture(path)
+        if (id == -1) return false
+        
+        nvgImageSize(vg, id, imageSizeW, imageSizeH)
+        val imgW = imageSizeW[0].toFloat()
+        val imgH = imageSizeH[0].toFloat()
+        if (imgW <= 0f || imgH <= 0f) return false
+        
+        val srcW = (u1 - u0) * imgW
+        val srcH = (v1 - v0) * imgH
+        if (srcW <= 0f || srcH <= 0f) return false
+        
+        // Map the full image so the requested sub-region lands exactly in the destination rect.
+        val scaleX = dw / srcW
+        val scaleY = dh / srcH
+        val ox = dx - (u0 * imgW) * scaleX
+        val oy = dy - (v0 * imgH) * scaleY
+        nvgImagePattern(vg, ox, oy, imgW * scaleX, imgH * scaleY, 0f, id, 1f, nvgPaint)
+        nvgBeginPath(vg)
+        nvgRect(vg, dx, dy, dw, dh)
+        nvgFillPaint(vg, nvgPaint)
+        nvgFill(vg)
+        return true
+    }
+    
     fun createImage(resourcePath: String): Image {
         val image = images.keys.find { it.identifier == resourcePath } ?: Image(resourcePath)
         if (image.isSVG) images.getOrPut(image) { NVGImage(0, loadSVG(image)) }.count++
         else images.getOrPut(image) { NVGImage(0, loadImage(image)) }.count++
         return image
     }
-
+    
     // lowers reference count by 1, if it reaches 0 it gets deleted from mem
     fun deleteImage(image: Image) {
         val nvgImage = images[image] ?: return
@@ -518,11 +625,11 @@ object NVGRenderer {
             images.remove(image)
         }
     }
-
+    
     private fun getImage(image: Image): Int {
         return images[image]?.nvg ?: throw IllegalStateException("Image (${image.identifier}) doesn't exist")
     }
-
+    
     private fun loadImage(image: Image): Int {
         val w = IntArray(1)
         val h = IntArray(1)
@@ -536,15 +643,15 @@ object NVGRenderer {
         ) ?: throw NullPointerException("Failed to load image: ${image.identifier}")
         return nvgCreateImageRGBA(vg, w[0], h[0], 0, buffer)
     }
-
+    
     private fun loadSVG(image: Image): Int {
         val vec = image.stream.use { it.bufferedReader().readText() }
         val svg = nsvgParse(vec, "px", 96f) ?: throw IllegalStateException("Failed to parse ${image.identifier}")
-
+        
         val width = svg.width().toInt()
         val height = svg.height().toInt()
         val buffer = memAlloc(width * height * 4)
-
+        
         try {
             val rasterizer = nsvgCreateRasterizer()
             nsvgRasterize(rasterizer, svg, 0f, 0f, 1f, buffer, width, height, width * 4)
@@ -556,16 +663,16 @@ object NVGRenderer {
             memFree(buffer)
         }
     }
-
+    
     private fun color(color: Int) {
         nvgRGBA(color.red.toByte(), color.green.toByte(), color.blue.toByte(), color.alpha.toByte(), nvgColor)
     }
-
+    
     private fun color(color1: Int, color2: Int) {
         nvgRGBA(color1.red.toByte(), color1.green.toByte(), color1.blue.toByte(), color1.alpha.toByte(), nvgColor)
         nvgRGBA(color2.red.toByte(), color2.green.toByte(), color2.blue.toByte(), color2.alpha.toByte(), nvgColor2)
     }
-
+    
     private fun gradient(color1: Int, color2: Int, x: Float, y: Float, w: Float, h: Float, direction: Gradient) {
         color(color1, color2)
         when (direction) {
@@ -573,14 +680,14 @@ object NVGRenderer {
             Gradient.TopToBottom -> nvgLinearGradient(vg, x, y, x, y + h, nvgColor, nvgColor2, nvgPaint)
         }
     }
-
+    
     private fun getFontID(font: Font): Int {
         return fontMap.getOrPut(font) {
             val buffer = font.buffer()
             NVGFont(nvgCreateFontMem(vg, font.name, buffer, false), buffer)
         }.id
     }
-
+    
     private class Scissor(val previous: Scissor?, val x: Float, val y: Float, val maxX: Float, val maxY: Float) {
         fun applyScissor() {
             if (previous == null) nvgScissor(vg, x, y, maxX - x, maxY - y)
@@ -593,7 +700,7 @@ object NVGRenderer {
             }
         }
     }
-
+    
     private data class NVGImage(var count: Int, val nvg: Int)
     private data class NVGFont(val id: Int, val buffer: ByteBuffer)
 }

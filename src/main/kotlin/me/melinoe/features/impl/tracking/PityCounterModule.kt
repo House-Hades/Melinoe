@@ -24,7 +24,7 @@ import me.melinoe.utils.data.persistence.TypeSafeDataAccess
 import net.minecraft.ChatFormatting
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 
@@ -100,7 +100,12 @@ object PityCounterModule : Module(
     private var renderDataList = mutableListOf<CachedRenderItem>()
     
     // Pre-mapped collections
-    private val shadowlandsBosses = listOf(BossData.DEFENDER, BossData.REAPER, BossData.WARDEN, BossData.HERALD)
+    private val shadowlandsBosses by lazy {
+        listOfNotNull(
+            BossData.byKey("DEFENDER"), BossData.byKey("REAPER"),
+            BossData.byKey("WARDEN"), BossData.byKey("HERALD")
+        )
+    }
     private val realmBossMapping by lazy {
         me.melinoe.features.impl.tracking.bosstracker.BossData.entries
             .filter { it.name !in listOf("RAPHAEL", "DEFENDER", "REAPER", "WARDEN", "HERALD") }
@@ -110,13 +115,14 @@ object PityCounterModule : Module(
     }
     
     init {
+        
         // Register callback for instant updates when pity changes
         DataConfig.registerUpdateCallback {
             updateCache()
         }
         
         // Initial cache load
-        updateCache()
+//        updateCache()
         
         on<DungeonEntryEvent> { handleDungeonEntry(dungeon) } // Listen for dungeon entry
         on<DungeonChangeEvent> { handleDungeonEntry(newDungeon) } // Listen for dungeon changes
@@ -129,7 +135,7 @@ object PityCounterModule : Module(
      */
     private fun updateCache() {
         val font = mc.font
-        Item.entries.forEach { item ->
+        Item.all.forEach { item ->
             val count = TypeSafeDataAccess.get(TrackingKey.PityCounter(item.name)) ?: 0
             cachedPityCounters[item.name] = count
             
@@ -151,7 +157,7 @@ object PityCounterModule : Module(
     private fun getItemStack(item: Item): ItemStack {
         return cachedItemStacks.getOrPut(item) {
             val itemStack = ItemStack(Items.CARROT_ON_A_STICK)
-            itemStack.set(DataComponents.ITEM_MODEL, ResourceLocation.parse(item.texturePath))
+            itemStack.set(DataComponents.ITEM_MODEL, Identifier.parse(item.texturePath))
             itemStack
         }
     }
@@ -217,9 +223,9 @@ object PityCounterModule : Module(
         val pz = player.z
         
         if (cachedArea == "Shadowlands") {
-            if (pz < -360) currentBossData = BossData.HERALD
-            else if (pz > 500) currentBossData = BossData.REAPER
-            else if (px < -400) currentBossData = BossData.WARDEN
+            if (pz < -360) currentBossData = BossData.byKey("HERALD")
+            else if (pz > 500) currentBossData = BossData.byKey("REAPER")
+            else if (px < -400) currentBossData = BossData.byKey("WARDEN")
             else {
                 var minDistance = Double.MAX_VALUE
                 for (boss in shadowlandsBosses) {
@@ -273,11 +279,11 @@ object PityCounterModule : Module(
             val pityCountStr: String
             val valueWidth: Int
             if (example) {
-                val exCount = when (item) {
-                    Item.BLUNDERBOW -> 42
-                    Item.LOST_TREASURE_SCRIPTURE -> 87
-                    Item.SLIME_ARCHER -> 15
-                    Item.GOLDEN_STALLION -> 103
+                val exCount = when (item.name) {
+                    "BLUNDERBOW" -> 42
+                    "LOST_TREASURE_SCRIPTURE" -> 87
+                    "SLIME_ARCHER" -> 15
+                    "GOLDEN_STALLION" -> 103
                     else -> 50
                 }
                 pityCountStr = exCount.toString()
@@ -336,11 +342,14 @@ object PityCounterModule : Module(
         
         // Determine active items for this frame
         val currentItems = if (example) {
-            listOf(Item.BLUNDERBOW, Item.LOST_TREASURE_SCRIPTURE, Item.SLIME_ARCHER, Item.GOLDEN_STALLION)
+            listOfNotNull(
+                Item.byKey("BLUNDERBOW"), Item.byKey("LOST_TREASURE_SCRIPTURE"),
+                Item.byKey("SLIME_ARCHER"), Item.byKey("GOLDEN_STALLION")
+            )
         } else if (cachedArea == "Rustborn Kingdom") {
-            (BossData.VALERION.items + BossData.NEBULA.items + BossData.OPHANIM.items).toList()
+            BossData.itemsOf("VALERION", "NEBULA", "OPHANIM")
         } else if (cachedArea == "Celestial's Province") {
-            (BossData.ASMODEUS.items + BossData.SERAPHIM.items).toList()
+            BossData.itemsOf("ASMODEUS", "SERAPHIM")
         } else {
             cachedItemsToDisplay
         }
@@ -433,7 +442,7 @@ object PityCounterModule : Module(
         fill(boxWidth - 2, 2 + strHeightHalf, boxWidth - 1, boxHeight - 2, borderColor)
         
         // Draw title
-        drawString(font, cachedTitleComponent!!, 8, 2, borderColor, false)
+        text(font, cachedTitleComponent!!, 8, 2, borderColor, false)
         
         // Draw items
         var yOffset = font.lineHeight + 4
@@ -450,7 +459,7 @@ object PityCounterModule : Module(
             val itemY = yOffset + (font.lineHeight / 2f) - (targetItemSize / 2f)
             pose().translate(xOffset.toFloat(), itemY)
             pose().scale(scaleFactor, scaleFactor)
-            renderItem(itemStack, 0, 0)
+            item(itemStack, 0, 0)
             pose().popMatrix()
             
             xOffset += itemPadding
@@ -463,8 +472,8 @@ object PityCounterModule : Module(
                 drawX = textureEnd + (spaceAvailable - renderData.nameWidth) / 2
             }
             
-            drawString(font, renderData.displayName, drawX, yOffset, renderData.rarityColor, false)
-            drawString(font, renderData.pityValueStr, valueX, yOffset, valueColor.rgba, false)
+            text(font, renderData.displayName, drawX, yOffset, renderData.rarityColor, false)
+            text(font, renderData.pityValueStr, valueX, yOffset, valueColor.rgba, false)
             
             yOffset += lineSpacing
         }

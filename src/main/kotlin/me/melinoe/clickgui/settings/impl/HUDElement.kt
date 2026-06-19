@@ -4,14 +4,14 @@ import me.melinoe.Melinoe
 import me.melinoe.utils.Colors
 import me.melinoe.utils.ui.isAreaHovered
 import me.melinoe.utils.render.hollowFill
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 
 open class HudElement(
     var x: Int,
     var y: Int,
     var scale: Float,
     var enabled: Boolean = true,
-    val render: GuiGraphics.(Boolean) -> Pair<Int, Int> = { _ -> 0 to 0 }
+    val render: GuiGraphicsExtractor.(Boolean) -> Pair<Int, Int> = { _ -> 0 to 0 }
 ) {
     var width: Int = 0
         private set
@@ -74,7 +74,7 @@ open class HudElement(
         }
     }
 
-    fun draw(context: GuiGraphics, example: Boolean) {
+    fun draw(context: GuiGraphicsExtractor, example: Boolean) {
         val drawX = screenX
         val drawY = screenY
         context.pose().pushMatrix()

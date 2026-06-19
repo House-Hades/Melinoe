@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    id("fabric-loom")
+    id("net.fabricmc.fabric-loom")
     kotlin("jvm")
     `maven-publish`
 }
@@ -20,15 +20,15 @@ repositories {
 
 dependencies {
     minecraft("com.mojang:minecraft:${property("minecraft_version")}")
-    mappings(loom.officialMojangMappings())
-    modImplementation("net.fabricmc:fabric-loader:${property("loader_version")}")
-    modImplementation("net.fabricmc:fabric-language-kotlin:${property("fabric_kotlin_version")}")
-    modImplementation("net.fabricmc.fabric-api:fabric-api:${property("fabric_api_version")}")
+    
+    implementation("net.fabricmc:fabric-loader:${property("loader_version")}")
+    implementation("net.fabricmc:fabric-language-kotlin:${property("fabric_kotlin_version")}")
+    implementation("net.fabricmc.fabric-api:fabric-api:${property("fabric_api_version")}")
+    
+    implementation("net.kyori:adventure-platform-fabric:6.9.0")
+    include("net.kyori:adventure-platform-fabric:6.9.0")
 
-    modImplementation("net.kyori:adventure-platform-fabric:6.7.0")
-    include("net.kyori:adventure-platform-fabric:6.7.0")
-
-    modRuntimeOnly("me.djtheredstoner:DevAuth-fabric:${property("devauth_version")}")
+    runtimeOnly("me.djtheredstoner:DevAuth-fabric:${property("devauth_version")}")
     
     implementation("dev.firstdark.discordrpc:discord-rpc:1.0.4")
     include("dev.firstdark.discordrpc:discord-rpc:1.0.4")
@@ -38,22 +38,23 @@ dependencies {
         include("com.github.stivais:Commodore:$it")
     }
 
-    modCompileOnly("com.terraformersmc:modmenu:${property("modmenu_version")}")
+    compileOnly("com.terraformersmc:modmenu:${property("modmenu_version")}")
 
     property("minecraft_lwjgl_version").let { lwjglVersion ->
-        modImplementation("org.lwjgl:lwjgl-nanovg:$lwjglVersion")
+        implementation("org.lwjgl:lwjgl-nanovg:$lwjglVersion")
         include("org.lwjgl:lwjgl-nanovg:$lwjglVersion")
 
         listOf("windows", "linux", "macos", "macos-arm64").forEach { os ->
-            modImplementation("org.lwjgl:lwjgl-nanovg:$lwjglVersion:natives-$os")
+            implementation("org.lwjgl:lwjgl-nanovg:$lwjglVersion:natives-$os")
             include("org.lwjgl:lwjgl-nanovg:$lwjglVersion:natives-$os")
         }
     }
-
-    modCompileOnly("maven.modrinth:iris:${property("iris")}")
+    
+    compileOnly("maven.modrinth:iris:${property("iris")}")
 }
 
 loom {
+    accessWidenerPath = rootProject.file("src/main/resources/melinoe.accesswidener")
     runConfigs.named("client") {
         isIdeConfigGenerated = true
         vmArgs.addAll(
@@ -93,14 +94,14 @@ tasks {
 
     compileKotlin {
         compilerOptions {
-            jvmTarget = JvmTarget.JVM_21
+            jvmTarget = JvmTarget.JVM_25
             freeCompilerArgs.add("-Xlambdas=class") //Commodore
         }
     }
 
     compileJava {
-        sourceCompatibility = "21"
-        targetCompatibility = "21"
+        sourceCompatibility = "25"
+        targetCompatibility = "25"
         options.encoding = "UTF-8"
         options.compilerArgs.addAll(listOf("-Xlint:deprecation", "-Xlint:unchecked"))
     }
@@ -108,7 +109,7 @@ tasks {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion.set(JavaLanguageVersion.of(25))
     }
     withSourcesJar()
 }

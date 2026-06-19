@@ -17,8 +17,8 @@ import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.DeltaTracker
-import net.minecraft.client.gui.GuiGraphics
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.resources.Identifier
 import java.io.File
 
 /**
@@ -45,7 +45,7 @@ object ModuleManager {
     val keybindSettingsCache: ArrayList<KeybindSetting> = arrayListOf()
     val hudSettingsCache: ArrayList<HUDSetting> = arrayListOf()
 
-    private val HUD_LAYER: ResourceLocation = ResourceLocation.fromNamespaceAndPath(Melinoe.MOD_ID, "melinoe_hud")
+    private val HUD_LAYER: Identifier = Identifier.fromNamespaceAndPath(Melinoe.MOD_ID, "melinoe_hud")
 
     /**
      * Registers modules to the [ModuleManager] and initializes them.
@@ -100,7 +100,7 @@ object ModuleManager {
         }
     }
 
-    fun render(context: GuiGraphics, tickCounter: DeltaTracker) {
+    fun render(context: GuiGraphicsExtractor, tickCounter: DeltaTracker) {
         val mc = Melinoe.mc
         if (mc.level == null || mc.player == null || mc.screen == me.melinoe.clickgui.HudManager || mc.options.hideGui) return
         
@@ -160,7 +160,7 @@ object ModuleManager {
             AutoClickerModule,
             WeaponRangeModule,
             AbilityRangeModule,
-            NaturesGiftModule,
+            ArmorCooldownsModule,
             WeaponCooldownModule,
             AbilityCooldownModule,
             AssassinStacksModule,

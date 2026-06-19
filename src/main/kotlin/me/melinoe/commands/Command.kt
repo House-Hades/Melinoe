@@ -1,11 +1,8 @@
 package me.melinoe.commands
 
 import com.mojang.brigadier.CommandDispatcher
-import com.mojang.brigadier.arguments.StringArgumentType
-import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import com.mojang.brigadier.context.CommandContext
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
+import net.fabricmc.fabric.api.client.command.v2.ClientCommands
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 
 /**
@@ -21,7 +18,7 @@ abstract class Command(
      * Register this command with the command dispatcher.
      */
     fun register(dispatcher: CommandDispatcher<FabricClientCommandSource>) {
-        val command = ClientCommandManager.literal(name)
+        val command = ClientCommands.literal(name)
             .executes { execute(it) }
             .build()
 
@@ -29,7 +26,7 @@ abstract class Command(
 
         // Register aliases
         aliases.forEach { alias ->
-            val aliasCommand = ClientCommandManager.literal(alias)
+            val aliasCommand = ClientCommands.literal(alias)
                 .executes { execute(it) }
                 .build()
             dispatcher.root.addChild(aliasCommand)

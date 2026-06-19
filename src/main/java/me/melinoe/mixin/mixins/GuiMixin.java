@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Gui.class)
 public class GuiMixin {
     
-    @Inject(method = "renderSelectedItemName", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "extractSelectedItemName", at = @At("HEAD"), cancellable = true)
     private void onRenderSelectedItemName(CallbackInfo ci) {
         if (HideHeldTooltipsModule.INSTANCE.getEnabled()) {
             ci.cancel();

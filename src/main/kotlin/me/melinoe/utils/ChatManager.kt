@@ -11,10 +11,12 @@ object ChatManager {
     private val cancelQueue = ConcurrentLinkedQueue<Component>()
 
     fun ChatPacketEvent.hideMessage() {
-        cancelQueue.add(component)
+        if (component !in cancelQueue) {
+            cancelQueue.add(component)
+        }
     }
 
     fun shouldCancelMessage(message: Component): Boolean {
-        return cancelQueue.remove(message)
+        return cancelQueue.removeAll { it == message }
     }
 }

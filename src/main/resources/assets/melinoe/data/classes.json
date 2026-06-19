@@ -1,0 +1,5 @@
+{
+  "maxSoulPointsPerClass": 3000000,
+  "maxSoulPointsTotal": 18000000,
+  "classOrder": ["KNIGHT", "ASSASSIN", "NECROMANCER", "SAMURAI", "HUNTRESS", "ARCANIST"]
+}

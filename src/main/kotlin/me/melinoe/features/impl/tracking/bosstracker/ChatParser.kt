@@ -18,7 +18,7 @@ object ChatParser {
         }
         
         val level = mc.level
-        val currentDimension = level?.dimension()?.location()?.path ?: ""
+        val currentDimension = level?.dimension()?.identifier()?.path ?: ""
         val inDungeon = currentDimension == Constants.DIMENSION_DUNGEON
         
         // Check for boss call messages: "[BossName] message"

@@ -47,20 +47,20 @@ object ClickGUIModule : Module(
     val roundedPanelBottom by BooleanSetting("Rounded Panel Bottoms", true, desc = "Whether to extend panels to make them rounded at the bottom.")
     
     private val action by ActionSetting("Open HUD Editor", desc = "Opens the HUD editor when clicked.") {
-        mc.execute { mc.setScreen(HudManager) }
+        mc.setScreen(HudManager)
     }
     
     val devMode by BooleanSetting("Dev Mode", false, desc = "Enables developer commands and debug messages")
 
+    val reduceMotion by BooleanSetting("Reduce Profile Motion", false, desc = "Calms the ambient animation in the profile screen for a quieter, more readable view")
+    
     val panelSetting by MapSetting("Panel Settings", mutableMapOf<String, PanelData>())
     data class PanelData(var x: Float = 10f, var y: Float = 10f, var extended: Boolean = true)
-
-    // Safety checks
+    
     private var clickGuiPressCount = 0
     private var clickGuiLastPress = 0L
     
     fun resetPositions() {
-        // Only position the visible categories in the correct order
         val visibleCategories = listOf(Category.COMBAT, Category.VISUAL, Category.TRACKING, Category.MISC)
         visibleCategories.forEachIndexed { index, category ->
             val setting = panelSetting.getOrPut(category.name) { PanelData() }
@@ -69,13 +69,13 @@ object ClickGUIModule : Module(
             setting.extended = true
         }
     }
-
+    
     fun getStandardGuiScale(): Float {
         val verticalScale = (mc.window.screenHeight.toFloat() / 1080f) / NVGRenderer.devicePixelRatio()
         val horizontalScale = (mc.window.screenWidth.toFloat() / 1920f) / NVGRenderer.devicePixelRatio()
         return round(max(verticalScale, horizontalScale).coerceIn(1f, 3f) * 10f) / 10f
     }
-
+    
     override fun onKeybind() {
         // Dungeon safety check
         if (LocalAPI.isInDungeon()) {
@@ -101,11 +101,9 @@ object ClickGUIModule : Module(
         
         toggle()
     }
-
+    
     override fun onEnable() {
-        mc.execute {
-            mc.setScreen(ClickGUI)
-        }
+        mc.setScreen(ClickGUI)
         super.onEnable()
         toggle()
     }
@@ -121,7 +119,7 @@ object ClickGUIModule : Module(
         .connectTimeout(Duration.ofSeconds(5))
         .followRedirects(HttpClient.Redirect.NORMAL)
         .build()
-
+    
     init {
         updateScope.launch {
             latestVersionNumber = checkNewerVersion(Melinoe.version.friendlyString)
@@ -133,7 +131,6 @@ object ClickGUIModule : Module(
             
             CoroutineScope(Dispatchers.Default).launch {
                 delay(2000)
-                
                 Minecraft.getInstance().execute {
                     notifyUpdate(latestVersionNumber!!)
                 }
@@ -148,8 +145,7 @@ object ClickGUIModule : Module(
         mc.execute {
             val currentVersion = Melinoe.version.friendlyString
             val message = buildUpdateMessage(currentVersion, version, RELEASE_LINK + version.removePrefix("v"))
-            
-            Melinoe.mc.gui?.chat?.addMessage(message)
+            Melinoe.mc.gui.chat.addClientSystemMessage(message)
             
             // Play alert sound
             alert("Melinoe Update Available", playSound = true)
@@ -174,7 +170,7 @@ object ClickGUIModule : Module(
         
         return Component.empty().append(miniMessageStr.toNative()) as MutableComponent
     }
-
+    
     private suspend fun checkNewerVersion(currentVersion: String): String? {
         return try {
             val release = fetchLatestRelease() ?: return null
@@ -190,7 +186,7 @@ object ClickGUIModule : Module(
             null
         }
     }
-
+    
     private suspend fun fetchLatestRelease(): Release? {
         return try {
             val request = HttpRequest.newBuilder()
@@ -214,7 +210,7 @@ object ClickGUIModule : Module(
             null
         }
     }
-
+    
     private fun isSecondNewer(currentVersion: String, previousVersion: String?): Boolean {
         if (currentVersion.isEmpty() || previousVersion.isNullOrEmpty()) return false
         
@@ -234,7 +230,7 @@ object ClickGUIModule : Module(
             else -> false
         }
     }
-
+    
     private data class Release(
         @SerializedName("tag_name")
         val tagName: String

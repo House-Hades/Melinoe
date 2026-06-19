@@ -40,5 +40,6 @@
       },
       "update_checker": true
     }
-  }
+  },
+  "accessWidener": "melinoe.accesswidener"
 }

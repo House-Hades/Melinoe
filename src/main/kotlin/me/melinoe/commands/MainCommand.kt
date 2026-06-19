@@ -67,14 +67,14 @@ val mainCommand = Commodore("melinoe", "m", "mel") {
         param("target") {
             suggests {
                 runCatching {
-                    DungeonData.entries.map { it.name.lowercase() } + BossData.entries.map { it.name.lowercase() }
+                    DungeonData.all.map { it.name.lowercase() } + BossData.all.map { it.name.lowercase() }
                 }.getOrDefault(emptyList())
             }
         }
         
         runs { target: String ->
-            val dungeon = runCatching { DungeonData.valueOf(target.uppercase()) }.getOrNull()
-            val boss = if (dungeon == null) runCatching { BossData.valueOf(target.uppercase()) }.getOrNull() else null
+            val dungeon = DungeonData.byKey(target.uppercase())
+            val boss = if (dungeon == null) BossData.byKey(target.uppercase()) else null
             
             if (dungeon == null && boss == null) {
                 return@runs
@@ -84,9 +84,9 @@ val mainCommand = Commodore("melinoe", "m", "mel") {
             var items = dungeon?.finalBoss?.items?.toList() ?: boss?.items?.toList() ?: emptyList()
             
             if (dungeon?.name == "RUSTBORN_KINGDOM") {
-                items = BossData.VALERION.items.toList() + BossData.NEBULA.items.toList() + BossData.OPHANIM.items.toList()
+                items = BossData.itemsOf("VALERION", "NEBULA", "OPHANIM")
             } else if (dungeon?.name == "CELESTIALS_PROVINCE") {
-                items = BossData.ASMODEUS.items.toList() + BossData.SERAPHIM.items.toList()
+                items = BossData.itemsOf("ASMODEUS", "SERAPHIM")
             }
             
             val message = buildString {

@@ -3,6 +3,8 @@ package me.melinoe
 import me.melinoe.commands.*
 import me.melinoe.events.EventDispatcher
 import me.melinoe.events.core.EventBus
+import me.melinoe.network.TelosDataFetcher
+import me.melinoe.utils.data.TelosData
 import me.melinoe.features.ModuleManager
 import me.melinoe.utils.IrisCompat
 import me.melinoe.utils.LocalAPI
@@ -15,7 +17,7 @@ import me.melinoe.utils.render.RenderBatchManager
 import me.melinoe.utils.ui.rendering.NVGPIPRenderer
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
-import net.fabricmc.fabric.api.client.rendering.v1.SpecialGuiElementRegistry
+import net.fabricmc.fabric.api.client.rendering.v1.PictureInPictureRendererRegistry
 import net.fabricmc.loader.api.FabricLoader
 import net.fabricmc.loader.api.Version
 import net.minecraft.client.Minecraft
@@ -55,10 +57,15 @@ object Melinoe : ClientModInitializer {
         // Initialize tracking data integration FIRST (before EventBus subscriptions)
         DataConfig.initialize()
 
+        // Load Telos data (items/bosses/dungeons/portals), then update it from Git
+        TelosData.init()
+        TelosDataFetcher.fetchAll()
+
         ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
             arrayOf(
                 mainCommand,
                 devCommand,
+                profileCommand,
                 acCommand,
                 gcCommand,
                 grcCommand
@@ -71,12 +78,12 @@ object Melinoe : ClientModInitializer {
             IrisCompat, ModuleManager
         ).forEach { EventBus.subscribe(it) }
 
-        SpecialGuiElementRegistry.register { context ->
-            NVGPIPRenderer(context.vertexConsumers())
+        PictureInPictureRendererRegistry.register { context ->
+            NVGPIPRenderer(context.bufferSource())
         }
 
-        SpecialGuiElementRegistry.register { context ->
-            ItemStateRenderer(context.vertexConsumers())
+        PictureInPictureRendererRegistry.register { context ->
+            ItemStateRenderer(context.bufferSource())
         }
 
         // Initialize LocalAPI AFTER subscribing to EventBus

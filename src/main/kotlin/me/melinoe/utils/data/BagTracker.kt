@@ -14,7 +14,7 @@ import me.melinoe.utils.data.persistence.TypeSafeDataAccess
 import me.melinoe.utils.noControlCodes
 import me.melinoe.utils.toNative
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
-import net.minecraft.client.GuiMessageTag
+import net.minecraft.client.multiplayer.chat.GuiMessageTag
 import net.minecraft.network.chat.Component
 import net.minecraft.world.entity.item.ItemEntity
 
@@ -285,7 +285,7 @@ object BagTracker {
         
         // Find the longest matching item display name after " got "
         var droppedItem: Item? = null
-        for (item in Item.values()) {
+        for (item in Item.all) {
             val itemDisplayName = item.displayName
             val itemStartIndex = gotIndex + 5 // " got ".length
             
@@ -352,7 +352,7 @@ object BagTracker {
             val finalMessage = Component.empty().append(originalComponent).append(buttonComponent)
             
             Melinoe.mc.execute {
-                Melinoe.mc.gui?.chat?.addMessage(finalMessage)
+                Melinoe.mc.gui.chat.addClientSystemMessage(finalMessage)
             }
         }
     }
@@ -363,7 +363,7 @@ object BagTracker {
      */
     private fun resolveContextualItem(texturePath: String): Item? {
         // Find default item by texture path
-        val defaultItem = Item.entries.find { it.texturePath == texturePath } ?: return null
+        val defaultItem = Item.all.find { it.texturePath == texturePath } ?: return null
         
         try {
             val currentArea = LocalAPI.getCurrentCharacterArea()
@@ -371,25 +371,10 @@ object BagTracker {
             // Build list of contextual items based on current area
             val contextItems = mutableListOf<Item>()
             when (currentArea) {
-                "Dawn of Creation" -> {
-                    // True Ophan area
-                    BossData.TRUE_OPHAN.items.forEach { contextItems.add(it) }
-                }
-                "Seraph's Domain" -> {
-                    // True Seraph area
-                    BossData.TRUE_SERAPH.items.forEach { contextItems.add(it) }
-                }
-                "Celestial's Province" -> {
-                    // Asmodeus + Seraphim
-                    BossData.ASMODEUS.items.forEach { contextItems.add(it) }
-                    BossData.SERAPHIM.items.forEach { contextItems.add(it) }
-                }
-                "Rustborn Kingdom" -> {
-                    // Valerion + Nebula + Ophanim
-                    BossData.VALERION.items.forEach { contextItems.add(it) }
-                    BossData.NEBULA.items.forEach { contextItems.add(it) }
-                    BossData.OPHANIM.items.forEach { contextItems.add(it) }
-                }
+                "Dawn of Creation" -> contextItems.addAll(BossData.itemsOf("TRUE_OPHAN"))
+                "Seraph's Domain" -> contextItems.addAll(BossData.itemsOf("TRUE_SERAPH"))
+                "Celestial's Province" -> contextItems.addAll(BossData.itemsOf("ASMODEUS", "SERAPHIM"))
+                "Rustborn Kingdom" -> contextItems.addAll(BossData.itemsOf("VALERION", "NEBULA", "OPHANIM"))
             }
             
             // Check if any contextual item matches the texture path
@@ -416,25 +401,10 @@ object BagTracker {
             // Build list of contextual items based on current area
             val contextItems = mutableListOf<Item>()
             when (currentArea) {
-                "Dawn of Creation" -> {
-                    // True Ophan area
-                    BossData.TRUE_OPHAN.items.forEach { contextItems.add(it) }
-                }
-                "Seraph's Domain" -> {
-                    // True Seraph area
-                    BossData.TRUE_SERAPH.items.forEach { contextItems.add(it) }
-                }
-                "Celestial's Province" -> {
-                    // Asmodeus + Seraphim
-                    BossData.ASMODEUS.items.forEach { contextItems.add(it) }
-                    BossData.SERAPHIM.items.forEach { contextItems.add(it) }
-                }
-                "Rustborn Kingdom" -> {
-                    // Valerion + Nebula + Ophanim
-                    BossData.VALERION.items.forEach { contextItems.add(it) }
-                    BossData.NEBULA.items.forEach { contextItems.add(it) }
-                    BossData.OPHANIM.items.forEach { contextItems.add(it) }
-                }
+                "Dawn of Creation" -> contextItems.addAll(BossData.itemsOf("TRUE_OPHAN"))
+                "Seraph's Domain" -> contextItems.addAll(BossData.itemsOf("TRUE_SERAPH"))
+                "Celestial's Province" -> contextItems.addAll(BossData.itemsOf("ASMODEUS", "SERAPHIM"))
+                "Rustborn Kingdom" -> contextItems.addAll(BossData.itemsOf("VALERION", "NEBULA", "OPHANIM"))
             }
             
             // Check if any contextual item matches the display name
@@ -532,7 +502,7 @@ object BagTracker {
             "${style.logName} Drop"
         )
         
-        mc.gui?.chat?.addMessage(message.toNative(), null, chatIndicator)
+        mc.gui.chat.addPlayerMessage(message.toNative(), null, chatIndicator)
         
         val logMessage = "Sent pity reset message: Dropped ${item.displayName} at $pityCount pity${if (lootboost > 0) " [+$lootboost% Loot Boost]" else ""}"
         Melinoe.logger.info(logMessage)

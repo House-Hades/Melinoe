@@ -3,7 +3,7 @@ package me.melinoe.mixin.mixins;
 import me.melinoe.events.BossBarUpdateEvent;
 import me.melinoe.events.core.EventBus;
 import me.melinoe.utils.BossBarUtils;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.BossHealthOverlay;
 import net.minecraft.client.gui.components.LerpingBossEvent;
 import org.spongepowered.asm.mixin.Final;
@@ -27,8 +27,8 @@ public abstract class BossHealthOverlayMixin {
     private final Map<UUID, Integer> previousNameHash = new HashMap<>();
     private int previousSize = 0;
 
-    @Inject(method = "render", at = @At("HEAD"))
-    private void onRender(GuiGraphics guiGraphics, CallbackInfo ci) {
+    @Inject(method = "extractRenderState", at = @At("HEAD"))
+    private void onRender(GuiGraphicsExtractor guiGraphics, CallbackInfo ci) {
         // Always update BossBarUtils (needed for immediate queries like F6 keybind)
         BossBarUtils.INSTANCE.updateBossBarMap(events);
         

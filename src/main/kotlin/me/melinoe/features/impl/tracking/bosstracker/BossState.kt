@@ -7,8 +7,8 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
 import net.minecraft.core.GlobalPos
 import net.minecraft.core.component.DataComponents
+import net.minecraft.resources.Identifier
 import net.minecraft.resources.ResourceKey
-import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.LodestoneTracker
@@ -274,7 +274,7 @@ object BossState {
             
             val dimensionKey = ResourceKey.create(
                 net.minecraft.core.registries.Registries.DIMENSION,
-                ResourceLocation.fromNamespaceAndPath("telos", "realm")
+                Identifier.fromNamespaceAndPath("telos", "realm")
             )
             
             val globalPos = GlobalPos(dimensionKey, spawnPosition)

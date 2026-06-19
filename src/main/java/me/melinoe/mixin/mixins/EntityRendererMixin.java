@@ -5,7 +5,6 @@ import me.melinoe.features.impl.visual.PlayerSizeModule;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
-import net.minecraft.client.renderer.state.CameraRenderState;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
@@ -33,10 +32,10 @@ public abstract class EntityRendererMixin {
     }
 
     @Inject(
-            method = "submit(Lnet/minecraft/client/renderer/entity/state/EntityRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/CameraRenderState;)V",
+            method = "submit",
             at = @At("HEAD")
     )
-    private void melinoe$scaleEntity(EntityRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState, CallbackInfo ci) {
+    private void melinoe$scaleEntity(EntityRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, net.minecraft.client.renderer.state.level.CameraRenderState camera, CallbackInfo ci) {
         Boolean isNametag = state.getData(PlayerSizeModule.getREALM_NAMETAG_KEY());
 
         if (Boolean.TRUE.equals(isNametag)) {
