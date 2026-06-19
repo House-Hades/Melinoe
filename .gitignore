@@ -3,3 +3,6 @@
 .gradle/
 build/
 run/
+.claude/
+.github/skills/
+.agents/
