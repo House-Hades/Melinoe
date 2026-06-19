@@ -3,6 +3,9 @@ package me.melinoe.network
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import me.melinoe.Melinoe
+import me.melinoe.utils.data.ItemDefinitions
+import me.melinoe.utils.data.TraitData
+import java.io.File
 import java.net.URI
 import java.net.URLEncoder
 import java.net.http.HttpClient
@@ -10,6 +13,8 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.nio.charset.StandardCharsets
 import java.time.Duration
+import java.time.Instant
+import java.time.ZoneOffset
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -19,6 +24,11 @@ object ProfileFetcher {
     
     private const val PLAYER_URL = "https://melinoe.magnetite.dev/api/telos/player/"
     private const val CHARACTER_URL = "https://melinoe.magnetite.dev/api/telos/character/"
+    private const val TRAITS_URL = "https://melinoe.magnetite.dev/api/telos/global/definitions/item-traits"
+    private const val ITEMS_URL = "https://melinoe.magnetite.dev/api/telos/global/definitions/items"
+
+    /** Where the cached definition payloads live (config/melinoe/data/definitions/). */
+    private val defsDir: File get() = File(File(Melinoe.configFile, "data"), "definitions")
     
     private val client: HttpClient by lazy {
         HttpClient.newBuilder()
@@ -97,6 +107,52 @@ object ProfileFetcher {
         }
     }
     
+    /**
+     * Loads the item and item-trait definitions once per session in the background. Each is read
+     * from its local cache while that cache is still fresh
+     */
+    fun loadDefinitions(): CompletableFuture<Void> = CompletableFuture.runAsync {
+        if (!TraitData.loaded) loadDefinition("item-traits.json", TRAITS_URL) { TraitData.load(it) }
+        if (!ItemDefinitions.loaded) loadDefinition("items.json", ITEMS_URL) { ItemDefinitions.load(it) }
+    }
+
+    /**
+     * Applies [apply] to a definition payload, preferring a fresh local cache and otherwise fetching
+     * from [url] and re-caching it.
+     */
+    private fun loadDefinition(fileName: String, url: String, apply: (String) -> Boolean) {
+        val file = File(defsDir, fileName)
+        try {
+            if (file.isFile && System.currentTimeMillis() < expiry(file.lastModified())) {
+                val cached = runCatching { file.readText() }.getOrNull()
+                if (cached != null && apply(cached)) {
+                    Melinoe.logger.info("[ProfileFetcher] Loaded $fileName from cache.")
+                    return
+                }
+            }
+            val authed = authedGet(url)
+            if (authed.statusCode() == 200) {
+                if (apply(authed.body())) {
+                    runCatching { defsDir.mkdirs(); file.writeText(authed.body()) }
+                        .onFailure { Melinoe.logger.warn("[ProfileFetcher] Failed to cache $fileName: ${it.message}") }
+                    Melinoe.logger.info("[ProfileFetcher] Fetched $fileName from API.")
+                }
+            } else {
+                Melinoe.logger.warn("[ProfileFetcher] $fileName returned HTTP ${authed.statusCode()}")
+            }
+        } catch (e: Exception) {
+            Melinoe.logger.warn("[ProfileFetcher] Failed to load $fileName: ${e.message}")
+        }
+    }
+
+    /** The instant a cache written at [fetchedAt] goes stale: the first 01:00 GMT strictly after it. */
+    private fun expiry(fetchedAt: Long): Long {
+        val fetched = Instant.ofEpochMilli(fetchedAt)
+        var oneAm = fetched.atZone(ZoneOffset.UTC).toLocalDate().atTime(1, 0).toInstant(ZoneOffset.UTC)
+        if (!oneAm.isAfter(fetched)) oneAm = oneAm.plus(Duration.ofDays(1))
+        return oneAm.toEpochMilli()
+    }
+
     /** GETs [url] with the cached token, refreshing once on a 401. */
     private fun authedGet(url: String): HttpResponse<String> {
         val response = httpGet(url, MojangAuth.getToken())
@@ -134,8 +190,8 @@ data class TelosProfile(
     val username: String? = null,
     val lastPlayed: Long = 0,
     val playTime: Long = 0,
-    val normalBalance: Long = 0,
-    val seasonalBalance: Long = 0,
+    val normalBalance: Double = 0.0,
+    val seasonalBalance: Double = 0.0,
     val sticker: String? = null,
     val companions: Companions? = null,
     val rewards: List<String>? = null,
@@ -168,7 +224,18 @@ data class StashPage(
 
 data class StashItem(
     val key: String? = null,
-    val uuid: String? = null
+    val uuid: String? = null,
+    val features: List<ItemFeature>? = null
+) {
+    /** The trait keys carried by this item (empty when it has no traits feature). */
+    fun traitKeys(): List<String> =
+        features?.firstOrNull { it.type == "traits" }?.traits ?: emptyList()
+}
+
+/** A feature attached to an item; only the "traits" type is consumed currently. */
+data class ItemFeature(
+    val type: String? = null,
+    val traits: List<String>? = null
 )
 
 data class PlayerClass(

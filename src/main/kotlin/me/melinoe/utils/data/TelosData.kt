@@ -18,7 +18,10 @@ object TelosData {
         ITEMS("assets/melinoe/data/items.json", "items.json"),
         BOSSES("assets/melinoe/data/bosses.json", "bosses.json"),
         DUNGEONS("assets/melinoe/data/dungeons.json", "dungeons.json"),
-        PORTALS("assets/melinoe/data/portals.json", "portals.json");
+        PORTALS("assets/melinoe/data/portals.json", "portals.json"),
+        COMPANIONS("assets/melinoe/data/companions.json", "companions.json"),
+        SEASON_PASS("assets/melinoe/data/season_pass.json", "season_pass.json"),
+        CLASSES("assets/melinoe/data/classes.json", "classes.json");
 
         val cacheFile: File get() = File(File(Melinoe.configFile, "data"), cacheFileName)
     }
@@ -68,6 +71,9 @@ object TelosData {
             Type.BOSSES -> parseBosses(json).also { if (it.isNotEmpty()) BossData.setAll(it) }.isNotEmpty()
             Type.DUNGEONS -> parseDungeons(json).also { if (it.isNotEmpty()) DungeonData.setAll(it) }.isNotEmpty()
             Type.PORTALS -> parsePortals(json).also { if (it.isNotEmpty()) PortalData.setAll(it) }.isNotEmpty()
+            Type.COMPANIONS -> CompanionData.load(json)
+            Type.SEASON_PASS -> SeasonPassData.load(json)
+            Type.CLASSES -> ClassData.load(json)
         }
     } catch (e: Exception) {
         Melinoe.logger.warn("[TelosData] Failed to parse $type payload: ${e.message}")

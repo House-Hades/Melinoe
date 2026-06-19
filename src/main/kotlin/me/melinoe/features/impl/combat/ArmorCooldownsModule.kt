@@ -121,15 +121,16 @@ object ArmorCooldownsModule : Module(
             Triple(EquipmentSlot.FEET, "Boots", "Boots Ready!")
         )) {
             val dropdown = +DropdownSetting("$label Settings", false)
-            val titleEnabled = +BooleanSetting("Title", true, desc = "Show a title popup when the $label ability is ready.").withDependency { dropdown.value }
-            val titleText = +StringSetting("Title Text", defaultTitle, desc = "Text shown when the $label ability is ready.", length = 64).withDependency { dropdown.value && titleEnabled.value }
-            val titleColor = +ColorSetting("Title Color", Color(0xFF7CFFB2.toInt()), desc = "Color of the $label title text.").withDependency { dropdown.value && titleEnabled.value }
-            val duration = +NumberSetting("Duration", 60.0f, 10.0f, 100.0f, desc = "Duration of the $label title in ticks.").withDependency { dropdown.value && titleEnabled.value }
-            val playSound = +BooleanSetting("Play Sound", true, desc = "Play a sound when the $label ability is ready.").withDependency { dropdown.value }
+            val titleEnabled = +BooleanSetting("$label Title", true, desc = "Show a title popup when the $label ability is ready.").withDependency { dropdown.value }
+            val titleText = +StringSetting("$label Title Text", defaultTitle, desc = "Text shown when the $label ability is ready.", length = 64).withDependency { dropdown.value && titleEnabled.value }
+            val titleColor = +ColorSetting("$label Title Color", Color(0xFF7CFFB2.toInt()), desc = "Color of the $label title text.").withDependency { dropdown.value && titleEnabled.value }
+            val duration = +NumberSetting("$label Duration", 60.0f, 10.0f, 100.0f, desc = "Duration of the $label title in ticks.").withDependency { dropdown.value && titleEnabled.value }
+            val playSound = +BooleanSetting("$label Play Sound", true, desc = "Play a sound when the $label ability is ready.").withDependency { dropdown.value }
             val sound = createSoundSettings(
-                name = "Sound",
+                name = "$label Sound",
                 default = "entity.player.levelup",
-                dependencies = { dropdown.value && playSound.value }
+                dependencies = { dropdown.value && playSound.value },
+                buttonName = "$label Test Sound"
             )
 
             slotConfigs[slot] = SlotConfig(slot, titleEnabled, titleText, titleColor, duration, playSound, sound)
@@ -139,15 +140,26 @@ object ArmorCooldownsModule : Module(
             if (!enabled) return@on
             val player = mc.player ?: return@on
             val now = System.currentTimeMillis()
-
-            // Discover/refresh cooldowns on currently worn ability pieces
+            
+            val candidates = ArrayList<Pair<ItemStack, EquipmentSlot>>()
             val wornKeys = HashSet<String>()
             for (slot in ARMOR_SLOTS) {
                 val stack = player.getItemBySlot(slot)
                 if (!ItemUtils.hasArmorAbility(stack)) continue
+                wornKeys.add(keyOf(stack))
+                candidates.add(stack to slot)
+            }
+            for (stack in player.inventory.nonEquipmentItems) {
+                if (!ItemUtils.hasArmorAbility(stack)) continue
+                val slot = slotOf(stack) ?: continue
+                candidates.add(stack to slot)
+            }
 
+            // Discover/refresh cooldowns across all gathered pieces
+            val seenKeys = HashSet<String>()
+            for ((stack, slot) in candidates) {
                 val key = keyOf(stack)
-                wornKeys.add(key)
+                if (!seenKeys.add(key)) continue
 
                 val percent = player.cooldowns.getCooldownPercent(stack, 0f)
                 val existing = entries[key]
@@ -160,9 +172,9 @@ object ArmorCooldownsModule : Module(
                 }
             }
 
-            // Re-sync pieces no longer worn but still tracked
+            // Re-sync any tracked
             for (entry in entries.values) {
-                if (entry.key in wornKeys) continue
+                if (entry.key in seenKeys) continue
                 val percent = player.cooldowns.getCooldownPercent(entry.stack, 0f)
                 if (percent > 0f) entry.endMs = now + (percent * totalMs(entry.stack)).toLong()
             }
@@ -195,6 +207,12 @@ object ArmorCooldownsModule : Module(
         on<RealmToRealmEvent> { reset() }
     }
     
+    // Resolves the armor slot an ability piece belongs to via its Equippable component, or null if it isn't armor
+    private fun slotOf(stack: ItemStack): EquipmentSlot? {
+        val slot = stack.get(DataComponents.EQUIPPABLE)?.slot() ?: return null
+        return if (slot in ARMOR_SLOTS) slot else null
+    }
+
     // Stable identity for an ability piece
     private fun keyOf(stack: ItemStack): String {
         val model = stack.get(DataComponents.ITEM_MODEL)?.toString() ?: ""

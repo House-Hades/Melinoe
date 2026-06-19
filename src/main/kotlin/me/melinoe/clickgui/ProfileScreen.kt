@@ -7,12 +7,17 @@ import me.melinoe.network.Companions
 import me.melinoe.network.PlayerClass
 import me.melinoe.network.ProfileException
 import me.melinoe.network.ProfileFetcher
+import me.melinoe.network.StashItem
 import me.melinoe.network.TelosCharacter
 import me.melinoe.network.TelosCharacterDetail
 import me.melinoe.network.TelosProfile
+import me.melinoe.utils.data.ClassData
 import me.melinoe.utils.data.CompanionData
 import me.melinoe.utils.data.SeasonPassData
+import me.melinoe.utils.Color
 import me.melinoe.utils.data.TelosItems
+import me.melinoe.utils.data.TraitData
+import me.melinoe.utils.render.hollowFill
 import me.melinoe.utils.handlers.schedule
 import me.melinoe.utils.ui.animations.EaseOutAnimation
 import me.melinoe.utils.ui.rendering.Gradient
@@ -120,7 +125,7 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
     private var unlockedPetCount = 0
     private var unlockedMountCount = 0
     private var maxedClasses = 0
-    private var stashGroups: List<Pair<String, List<TelosItems.Resolved?>>> = emptyList()
+    private var stashGroups: List<Pair<String, List<StashItem?>>> = emptyList()
     private var stashCount = 0
     private var classesSorted: List<PlayerClass> = emptyList()
     private var totalFame = 0L
@@ -161,6 +166,11 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
     private var bodyBottom = 0f
     private var curScroll = 0f
     private var tooltip: Pair<String, Int>? = null
+    // Item tooltip (name + trait lore). Rendered through the vanilla GUI pass with the Minecraft
+    // font so the Telos stat glyphs in the trait descriptions render. Reset each frame.
+    private var itemTip: ItemTip? = null
+
+    private data class ItemTip(val title: String, val titleColor: Int, val lines: List<List<TraitData.Run>>)
     
     // Screen-space (scroll-adjusted) season pass paginator hitboxes.
     private var spLeftRect: FloatArray? = null
@@ -409,6 +419,7 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
     private fun startFetch() {
         if (fetchStarted) return
         fetchStarted = true
+        ProfileFetcher.loadDefinitions()
         ProfileFetcher.fetch(username).whenComplete { result, error ->
             if (error != null) {
                 val cause = error.cause ?: error
@@ -501,30 +512,30 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         val c: Companions? = p.companions
         if (c != null) {
             val list = mutableListOf<EquippedCompanion>()
-            c.pet?.let { list.add(EquippedCompanion("Pet", TelosItems.resolve(it), it.substringAfter('/', "").ifEmpty { null }, prettySkin(c.petSkin))) }
-            c.mount?.let { list.add(EquippedCompanion("Mount", TelosItems.resolve(it), it.substringAfter('/', "").ifEmpty { null }, prettySkin(c.mountSkin))) }
+            c.pet?.let { list.add(EquippedCompanion("Pet", TelosItems.resolve(it), null, prettySkin(c.petSkin))) }
+            c.mount?.let { list.add(EquippedCompanion("Mount", TelosItems.resolve(it), null, prettySkin(c.mountSkin))) }
             equipped = list
-            
-            // Equipped companion ids, resolving the rank-specific starter variant from the "/N" suffix.
-            equippedPetId = c.pet?.let(::equippedVariantId)
-            equippedMountId = c.mount?.let(::equippedVariantId)
+
+            // Equipped companion ids are full keys now ("pet/tenebris", "mount/onyx").
+            equippedPetId = c.pet?.ifBlank { null }
+            equippedMountId = c.mount?.ifBlank { null }
             equippedPetSkin = c.petSkin?.ifBlank { null }
             equippedMountSkin = c.mountSkin?.ifBlank { null }
-            
-            val ids = (c.unlocked ?: emptyList()).map { it.substringBefore('/') }.toMutableSet()
+
+            val ids = (c.unlocked ?: emptyList()).toMutableSet()
             equippedPetId?.let { ids.add(it) }
             equippedMountId?.let { ids.add(it) }
             unlockedIds = ids
-            unlockedPetCount = ids.count { it.startsWith("pet-") }
-            unlockedMountCount = ids.count { it.startsWith("mount-") }
+            unlockedPetCount = ids.count { it.startsWith("pet/") }
+            unlockedMountCount = ids.count { it.startsWith("mount/") }
         }
         
         // Stash: keep the full slot layout (with empty slots) for any page that has at least 1 item.
-        val groups = mutableListOf<Pair<String, List<TelosItems.Resolved?>>>()
+        val groups = mutableListOf<Pair<String, List<StashItem?>>>()
         var count = 0
         p.stash?.forEach { page ->
-            val slots = page.items?.map { it?.key?.let { key -> TelosItems.resolve(key) } } ?: emptyList()
-            val filled = slots.count { it != null }
+            val slots = page.items ?: emptyList()
+            val filled = slots.count { it?.key != null }
             if (filled > 0) {
                 count += filled
                 val label = (if (page.seasonal) "Seasonal" else "Normal") + "  •  Page ${page.page + 1}"
@@ -542,23 +553,12 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         
         overviewCards = listOf(
             Triple("Playtime", duration(p.playTime), TEXT),
-            Triple("Glory", commas(p.normalBalance), GOLD),
-            Triple("Seasonal Glory", commas(p.seasonalBalance), SEASONAL),
+            Triple("Glory", commas(p.normalBalance.toLong()), GOLD),
+            Triple("Seasonal Glory", commas(p.seasonalBalance.toLong()), SEASONAL),
             Triple("Total Fame", compact(totalFame), ACCENT),
             Triple("Deaths", commas(totalDeaths), TEXT),
             Triple("Classes", classesSorted.size.toString(), TEXT)
         )
-    }
-    
-    /**
-     * Maps an equipped companion key like "pet-starter/6" to the id of the variant it represents.
-     * For starters the "/N" suffix is the rank (-> "pet-starter6"); other companions ignore it.
-     */
-    private fun equippedVariantId(raw: String): String {
-        val base = raw.substringBefore('/')
-        if (CompanionData.starterRank(base) == null) return base
-        val rank = raw.substringAfter('/', "0").toIntOrNull() ?: 0
-        return if (rank <= 0) base.removeSuffix("0") else "${base}$rank"
     }
     
     /** Whether a catalogue companion is unlocked (starters use the maxed-class rank rule). */
@@ -566,14 +566,7 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         val rank = CompanionData.starterRank(id)
         return if (rank != null) rank <= maxedClasses else unlockedIds.contains(id)
     }
-    
-    /** Converts an equipped skin id ("skinpet-raaah") to its companion id ("pet-raaah"), or null. */
-    private fun skinToCompanionId(skin: String): String? = when {
-        skin.startsWith("skinpet-") -> "pet-" + skin.removePrefix("skinpet-")
-        skin.startsWith("skinmount-") -> "mount-" + skin.removePrefix("skinmount-")
-        else -> null
-    }
-    
+
     // ==================== LAYOUT ====================
     
     private fun computeLayout(vW: Float, vH: Float, anim: Float) {
@@ -640,6 +633,7 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
             }
             
             tooltip = null
+            itemTip = null
             drawProfile()
             if (tooltip == null) lastTooltipText = null
             tooltip?.let { drawTooltip(it.first, it.second) }
@@ -652,8 +646,47 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         
         // Player model is submitted through the vanilla GUI pass, on top of the NVG sidebar panel.
         submitModel(context, mouseX.toFloat(), mouseY.toFloat())
-        
+        // The item tooltip is drawn here too so the trait glyphs use the Minecraft font.
+        drawItemTooltip(context, mouseX, mouseY)
+
         super.extractRenderState(context, mouseX, mouseY, deltaTicks)
+    }
+    
+    private fun drawItemTooltip(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int) {
+        val tip = itemTip ?: return
+        val f = mc.font
+        val pad = 4
+        val lineH = f.lineHeight + 1
+
+        var w = f.width(tip.title)
+        for (line in tip.lines) {
+            var lw = 0
+            for (r in line) lw += f.width(r.text)
+            if (lw > w) w = lw
+        }
+        val boxW = w + pad * 2
+        val bodyH = if (tip.lines.isEmpty()) 0 else 3 + tip.lines.size * lineH
+        val boxH = f.lineHeight + bodyH + pad * 2
+
+        var x = mouseX + 12
+        var y = mouseY + 12
+        if (x + boxW > context.guiWidth()) x = (mouseX - boxW - 12).coerceAtLeast(2)
+        if (y + boxH > context.guiHeight()) y = (mouseY - boxH - 12).coerceAtLeast(2)
+
+        // Backing panel with a faint accent border.
+        context.fill(x, y, x + boxW, y + boxH, 0xF00E1A12.toInt())
+        context.hollowFill(x, y, boxW, boxH, 1, Color(blend(tip.titleColor, STROKE, 0.5f)))
+
+        context.text(f, tip.title, x + pad, y + pad, tip.titleColor, true)
+        var ly = y + pad + f.lineHeight + 2
+        for (line in tip.lines) {
+            var lx = x + pad
+            for (r in line) {
+                context.text(f, r.text, lx, ly, r.color, true)
+                lx += f.width(r.text)
+            }
+            ly += lineH
+        }
     }
     
     /** Submits the rotating 3D avatar, converting the model box from NVG to GUI coordinates. */
@@ -1080,12 +1113,10 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
     
     // ==================== TRANSCENDENCE ====================
     
-    /** Soul point cap per class and across all six classes. */
-    private val maxSoulPointsPerClass = 3_000_000L
-    private val maxSoulPointsTotal = 18_000_000L
-    
-    /** Fixed class order so each archetype always occupies the same grid slot. */
-    private val classOrder = listOf("KNIGHT", "ASSASSIN", "NECROMANCER", "SAMURAI", "HUNTRESS", "ARCANIST")
+    /** Soul point caps and class order, sourced from the remotely-updatable [ClassData]. */
+    private val maxSoulPointsPerClass get() = ClassData.maxSoulPointsPerClass
+    private val maxSoulPointsTotal get() = ClassData.maxSoulPointsTotal
+    private val classOrder get() = ClassData.classOrder
     
     private fun drawTranscendence(bx: Float, by: Float, bw: Float): Float {
         var cy = by
@@ -1309,7 +1340,7 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         val iy = y + (h - itemSize) / 2f
         items.forEach { item ->
             val key = item?.key
-            if (key != null) drawTile(TelosItems.resolve(key), ix, iy, itemSize) else drawEmptyTile(ix, iy, itemSize)
+            if (key != null) drawTile(TelosItems.resolve(key), ix, iy, itemSize, item) else drawEmptyTile(ix, iy, itemSize)
             ix += itemSize + itemGap
         }
     }
@@ -1413,8 +1444,8 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
     private fun drawDetailOverview(bx: Float, by: Float, bw: Float, d: TelosCharacterDetail): Float {
         var cy = by
         val inv = d.inventory ?: emptyList()
-        fun slot(i: Int): TelosItems.Resolved? = inv.getOrNull(i)?.key?.let { TelosItems.resolve(it) }
-        
+        fun slot(i: Int): StashItem? = inv.getOrNull(i)?.takeIf { it.key != null }
+
         // Equipped gear.
         diamond(bx + 5f, cy + 4f, 5f, ACCENT_DIM)
         NVGRenderer.text("EQUIPPED", bx + 13f, cy, 9f, MUTE, font)
@@ -1427,7 +1458,8 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         val eqGap = 10f
         equipped.forEachIndexed { i, (label, item) ->
             val ex = bx + i * (eqSize + eqGap)
-            if (item != null) drawTile(item, ex, cy, eqSize) else drawEmptyTile(ex, cy, eqSize)
+            val key = item?.key
+            if (key != null) drawTile(TelosItems.resolve(key), ex, cy, eqSize, item) else drawEmptyTile(ex, cy, eqSize)
             NVGRenderer.text(label, ex + (eqSize - NVGRenderer.textWidth(label, 9f, font)) / 2f, cy + eqSize + 3f, 9f, MUTE, font)
         }
         cy += eqSize + 18f
@@ -1475,7 +1507,7 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
             val tx = bx + (i % cols) * (tile + gap)
             val ty = startY + (i / cols) * (tile + gap)
             val key = item?.key
-            if (key != null) drawTile(TelosItems.resolve(key), tx, ty, tile) else drawEmptyTile(tx, ty, tile)
+            if (key != null) drawTile(TelosItems.resolve(key), tx, ty, tile, item) else drawEmptyTile(tx, ty, tile)
         }
         val rows = ceil(slots.size / cols.toFloat()).toInt()
         return startY + rows * (tile + gap)
@@ -1575,7 +1607,7 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
     
     /** Display name for a companion; the starter pet is "Gelato" and the starter mount is "Rolo". */
     private fun companionName(id: String): String {
-        if (CompanionData.starterRank(id) != null) return if (id.startsWith("mount-")) "Rolo" else "Gelato"
+        if (CompanionData.starterRank(id) != null) return if (id.startsWith("mount/")) "Rolo" else "Gelato"
         return TelosItems.resolve(id).displayName
     }
     
@@ -1603,7 +1635,7 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         val slotY = y + (h - slot) / 2f
         NVGRenderer.rect(slotX, slotY, slot, slot, PANEL_HI, 6f)
         NVGRenderer.hollowRect(slotX, slotY, slot, slot, 1f, STROKE, 6f)
-        val skinResolved = skinRaw?.let { skinToCompanionId(it) }?.let { TelosItems.resolve(it) }
+        val skinResolved = skinRaw?.let { TelosItems.resolve(it) }
         if (skinResolved != null) drawIcon(skinResolved, slotX + 4f, slotY + 4f, slot - 8f)
         val skinLabel = "SKIN"
         val labelW = NVGRenderer.textWidth(skinLabel, 9f, font)
@@ -1737,14 +1769,15 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         return cy - by
     }
     
-    private fun drawStashPage(px: Float, py: Float, label: String, slots: List<TelosItems.Resolved?>, cols: Int, rows: Int, tile: Float, gap: Float) {
+    private fun drawStashPage(px: Float, py: Float, label: String, slots: List<StashItem?>, cols: Int, rows: Int, tile: Float, gap: Float) {
         NVGRenderer.text(label, px + 2f, py, 10f, SUBTEXT, font)
         val gridTop = py + 15f
         for (i in 0 until cols * rows) {
             val tx = px + (i % cols) * (tile + gap)
             val ty = gridTop + (i / cols) * (tile + gap)
             val item = slots.getOrNull(i)
-            if (item != null) drawTile(item, tx, ty, tile) else drawEmptyTile(tx, ty, tile)
+            val key = item?.key
+            if (key != null) drawTile(TelosItems.resolve(key), tx, ty, tile, item) else drawEmptyTile(tx, ty, tile)
         }
     }
     
@@ -1755,11 +1788,11 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         NVGRenderer.hollowRect(x, y, size, size, 1f, STROKE, 6f)
     }
     
-    private fun drawTile(item: TelosItems.Resolved, x: Float, y: Float, size: Float = TILE) {
+    private fun drawTile(item: TelosItems.Resolved, x: Float, y: Float, size: Float = TILE, stack: StashItem? = null) {
         NVGRenderer.rect(x, y, size, size, blend(item.rarityColor, WELL, 0.82f), 6f)
         NVGRenderer.hollowRect(x, y, size, size, 1f, blend(item.rarityColor, CARD, 0.45f), 6f)
         drawIcon(item, x + 3f, y + 3f, size - 6f)
-        
+
         val hovered = visibleHover(x, y, size, size)
         val hf = hoverFrac("t${x.toInt()},${y.toInt()}", hovered)
         if (hf > 0.02f) {
@@ -1768,9 +1801,20 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
         }
         if (hovered) {
             val rarity = item.rarity?.name?.lowercase()?.replaceFirstChar { it.uppercaseChar() }
-            tooltip = (if (rarity != null) "${item.displayName}  ($rarity)" else item.displayName) to item.rarityColor
+            val title = if (rarity != null) "${item.displayName}  ($rarity)" else item.displayName
+            itemTip = ItemTip(title, item.rarityColor, stack?.let { traitLines(it) } ?: emptyList())
         }
     }
+
+    /**
+     * Builds the trait lore lines for an item, one per slot (lowest slot first). Each line is a
+     * tier badge (D/C/B/A/S) followed by the trait's coloured description.
+     */
+    private fun traitLines(stack: StashItem): List<List<TraitData.Run>> =
+        stack.traitKeys()
+            .mapNotNull { TraitData.get(it) }
+            .sortedBy { it.slot }
+            .map { t -> listOf(TraitData.Run("${TraitData.tierLetter(t.tier)}  ", TraitData.tierColor(t.tier))) + t.runs() }
     
     private fun drawIcon(item: TelosItems.Resolved, x: Float, y: Float, size: Float) {
         if (!NVGRenderer.texturedRect(item.textureResource, x, y, size, size)) {
@@ -1955,7 +1999,7 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
     
     private fun prettySkin(skin: String?): String? {
         if (skin.isNullOrBlank()) return null
-        return skin.removePrefix("skinpet-").removePrefix("skinmount-").removePrefix("skin-")
+        return skin.substringAfterLast('/').removePrefix("skin-")
             .replace('_', ' ').split(' ').joinToString(" ") { w -> w.replaceFirstChar { it.uppercaseChar() } }
     }
     

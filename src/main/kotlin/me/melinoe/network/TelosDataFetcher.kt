@@ -15,16 +15,23 @@ import java.util.concurrent.CompletableFuture
  */
 object TelosDataFetcher {
     
-    private const val ITEMS_URL = "https://raw.githubusercontent.com/House-Hades/melinoe-data/refs/heads/main/items.json"
-    private const val BOSSES_URL = "https://raw.githubusercontent.com/House-Hades/melinoe-data/refs/heads/main/bosses.json"
-    private const val DUNGEONS_URL = "https://raw.githubusercontent.com/House-Hades/melinoe-data/refs/heads/main/dungeons.json"
-    private const val PORTALS_URL = "https://raw.githubusercontent.com/House-Hades/melinoe-data/refs/heads/main/portals.json"
+    private const val BASE_URL = "https://raw.githubusercontent.com/House-Hades/melinoe-data/refs/heads/main/"
+    private const val ITEMS_URL = "${BASE_URL}items.json"
+    private const val BOSSES_URL = "${BASE_URL}bosses.json"
+    private const val DUNGEONS_URL = "${BASE_URL}dungeons.json"
+    private const val PORTALS_URL = "${BASE_URL}portals.json"
+    private const val COMPANIONS_URL = "${BASE_URL}companions.json"
+    private const val SEASON_PASS_URL = "${BASE_URL}season_pass.json"
+    private const val CLASSES_URL = "${BASE_URL}classes.json"
 
     private val urls: Map<TelosData.Type, String> = mapOf(
         TelosData.Type.ITEMS to ITEMS_URL,
         TelosData.Type.BOSSES to BOSSES_URL,
         TelosData.Type.DUNGEONS to DUNGEONS_URL,
         TelosData.Type.PORTALS to PORTALS_URL,
+        TelosData.Type.COMPANIONS to COMPANIONS_URL,
+        TelosData.Type.SEASON_PASS to SEASON_PASS_URL,
+        TelosData.Type.CLASSES to CLASSES_URL,
     )
 
     private val client: HttpClient by lazy {
