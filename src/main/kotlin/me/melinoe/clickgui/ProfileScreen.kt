@@ -1521,7 +1521,7 @@ class ProfileScreen private constructor(private val username: String) : Screen(C
      */
     private fun drawSkillTree(bx: Float, by: Float, bw: Float, d: TelosCharacterDetail): Float {
         val branches = d.type?.skillTreeSelection ?: emptyList()
-        val active = branches.firstOrNull { row -> row.any { it != null } }
+        val active = branches.firstOrNull { row -> row?.any { it != null } == true }
         NVGRenderer.text("Path taken is highlighted.", bx + 2f, by, 9.5f, MUTE, font)
         
         val rowCounts = listOf(3, 2, 3, 2, 2, 1)
