@@ -7,13 +7,27 @@ import java.util.regex.Pattern
 import kotlin.math.abs
 
 /**
+ * Represents a weapon/ability range with optional modifier.
+ * @param baseRange The base range value
+ * @param minRange The minimum range (baseRange - modifier if negative modifier exists)
+ * @param maxRange The maximum range (baseRange + modifier if positive modifier exists)
+ */
+data class RangeInfo(
+    val baseRange: Float,
+    val minRange: Float = baseRange,
+    val maxRange: Float = baseRange
+) {
+    val hasModifier: Boolean get() = minRange != maxRange
+}
+
+/**
  * Utility functions for working with items.
  */
 object ItemUtils {
     
     // Pre-compiled patterns for performance.
     // Kept as Java Patterns to allow zero-allocation Matcher resets.
-    private val ITEM_RANGE_PATTERN = Pattern.compile("Range\\s*[»:]\\s*(-?\\d+(\\.\\d+)?)")
+    private val ITEM_RANGE_PATTERN = Pattern.compile("Range\\s*[»:]\\s*(-?\\d+(\\.\\d+)?)(?:\\s*([+-])\\s*(\\d+(\\.\\d+)?))?")
     private val COOLDOWN_PATTERN = Pattern.compile("Cooldown\\s*[»:]\\s*(\\d+(\\.\\d+)?)s?")
     
     /**
@@ -76,8 +90,8 @@ object ItemUtils {
         return stripped.trim()
     }
     
-    fun parseItemRange(stack: ItemStack): Float {
-        val loreComponent = stack.get(DataComponents.LORE) ?: return -1f
+    fun parseItemRange(stack: ItemStack): RangeInfo {
+        val loreComponent = stack.get(DataComponents.LORE) ?: return RangeInfo(-1f)
         // Using a locally scoped Matcher prevents Thread concurrency crashes
         val rangeMatcher = ITEM_RANGE_PATTERN.matcher("")
         
@@ -85,14 +99,28 @@ object ItemUtils {
             rangeMatcher.reset(line.string) // Zero-allocation reset
             
             if (rangeMatcher.find()) {
-                val parsedRange = rangeMatcher.group(1)?.toFloatOrNull()
-                if (parsedRange != null) {
-                    return abs(parsedRange)
+                val baseRange = rangeMatcher.group(1)?.toFloatOrNull()
+                if (baseRange != null) {
+                    val absBaseRange = abs(baseRange)
+                    
+                    // Check for modifier (group 3 is +/-, group 4 is the number)
+                    val operator = rangeMatcher.group(3)
+                    val modifier = rangeMatcher.group(4)?.toFloatOrNull()
+                    
+                    if (operator != null && modifier != null) {
+                        return when (operator) {
+                            "+" -> RangeInfo(absBaseRange, absBaseRange, absBaseRange + modifier)
+                            "-" -> RangeInfo(absBaseRange, absBaseRange - modifier, absBaseRange)
+                            else -> RangeInfo(absBaseRange)
+                        }
+                    }
+                    
+                    return RangeInfo(absBaseRange)
                 }
             }
         }
         
-        return -1f
+        return RangeInfo(-1f)
     }
     
     fun parseItemCooldown(stack: ItemStack): Float {
@@ -113,10 +141,10 @@ object ItemUtils {
         return -1f
     }
     
-    fun getItemRangeWithOffset(stack: ItemStack): Pair<Float, Float> {
+    fun getItemRangeWithOffset(stack: ItemStack): Pair<RangeInfo, Float> {
         val itemType = ItemType.fromItemStack(stack)
         if (itemType != null) {
-            return Pair(itemType.range, itemType.offset)
+            return Pair(RangeInfo(itemType.range), itemType.offset)
         }
         
         return Pair(parseItemRange(stack), 0f)

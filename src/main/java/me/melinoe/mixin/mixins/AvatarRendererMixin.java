@@ -1,6 +1,9 @@
 package me.melinoe.mixin.mixins;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.authlib.GameProfile;
+import me.melinoe.Melinoe;
+import me.melinoe.features.impl.misc.NoNametagsModule;
 import me.melinoe.features.impl.visual.PlayerSizeModule;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
@@ -24,6 +27,24 @@ public class AvatarRendererMixin {
     )
     private void melinoe$scale(AvatarRenderState avatarRenderState, PoseStack poseStack, CallbackInfo ci) {
         PlayerSizeModule.preRenderCallbackScaleHook(avatarRenderState, poseStack);
+    }
+
+    @Inject(
+            method = "submitNameDisplay(Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/CameraRenderState;)V",
+            at = @At("HEAD"),
+            cancellable = true
+    )
+    private void melinoe$checkHideNametag(AvatarRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, net.minecraft.client.renderer.state.level.CameraRenderState camera, CallbackInfo ci) {
+        // Check if we should hide this nametag
+        GameProfile gameProfile = state.getData(PlayerSizeModule.getGAME_PROFILE_KEY());
+        if (gameProfile != null) {
+            boolean isPersonal = Melinoe.getMc().player != null && 
+                               gameProfile.name().equals(Melinoe.getMc().player.getGameProfile().name());
+            
+            if (NoNametagsModule.shouldHideNametag(isPersonal)) {
+                ci.cancel();
+            }
+        }
     }
 
     @Inject(

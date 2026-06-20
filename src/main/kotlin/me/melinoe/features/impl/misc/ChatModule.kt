@@ -207,6 +207,7 @@ object ChatModule : Module(
      */
     private fun setActiveTab(tab: ChatTab) {
         if (activeTab != tab) {
+            val previousTab = activeTab
             activeTab = tab
             
             // Automatically switch the chat mode when entering specific tabs
@@ -214,6 +215,12 @@ object ChatModule : Module(
                 ChatTab.CHAT -> setServerChatMode(ServerChatCategory.DEFAULT)
                 ChatTab.GUILD -> setServerChatMode(ServerChatCategory.GUILD)
                 ChatTab.GROUP -> setServerChatMode(ServerChatCategory.GROUP)
+                ChatTab.ALL -> {
+                    // When switching from guild to all, swap back to default chat mode
+                    if (previousTab == ChatTab.GUILD || previousTab == ChatTab.GROUP) {
+                        setServerChatMode(ServerChatCategory.DEFAULT)
+                    }
+                }
                 else -> {}
             }
             

@@ -1,6 +1,7 @@
 package me.melinoe.mixin.mixins;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import me.melinoe.features.impl.misc.NoNametagsModule;
 import me.melinoe.features.impl.visual.PlayerSizeModule;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -35,11 +36,16 @@ public abstract class EntityRendererMixin {
             method = "submit",
             at = @At("HEAD")
     )
-    private void melinoe$scaleEntity(EntityRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, net.minecraft.client.renderer.state.level.CameraRenderState camera, CallbackInfo ci) {
+    private void melinoe$hideOrScaleNametag(EntityRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, net.minecraft.client.renderer.state.level.CameraRenderState camera, CallbackInfo ci) {
         Boolean isNametag = state.getData(PlayerSizeModule.getREALM_NAMETAG_KEY());
 
         if (Boolean.TRUE.equals(isNametag)) {
             Boolean isPersonal = state.getData(PlayerSizeModule.getIS_PERSONAL_KEY());
+            
+            // First check if NoNametagsModule wants to hide this nametag (by scaling to 0)
+            NoNametagsModule.textDisplayHideHook(true, isPersonal, poseStack);
+            
+            // Then apply PlayerSize scaling if not hidden
             PlayerSizeModule.textDisplayScaleHook(true, isPersonal, poseStack);
         }
     }

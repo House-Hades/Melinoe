@@ -219,7 +219,7 @@ val devCommand = Commodore("melinoedev", "mdev") {
         val itemType = ItemUtils.ItemType.fromItemStack(heldItem)
         
         // Parse range from lore if available
-        val parsedRange = ItemUtils.parseItemRange(heldItem)
+        val parsedRangeInfo = ItemUtils.parseItemRange(heldItem)
         
         // Build the message dynamically
         val message = buildString {
@@ -249,15 +249,38 @@ val devCommand = Commodore("melinoedev", "mdev") {
             }
             
             // Show parsed range from lore
-            if (parsedRange > 0) {
-                append("<#555555><bold>›</bold> <reset><#FFD700>Lore Range: <#00FF00>${parsedRange}f\n")
+            if (parsedRangeInfo.baseRange > 0) {
+                if (parsedRangeInfo.hasModifier) {
+                    // Calculate the modifier value
+                    val modifier = if (parsedRangeInfo.maxRange > parsedRangeInfo.baseRange) {
+                        parsedRangeInfo.maxRange - parsedRangeInfo.baseRange
+                    } else {
+                        parsedRangeInfo.minRange - parsedRangeInfo.baseRange
+                    }
+                    val modifierSign = if (modifier >= 0) "+" else ""
+                    append("<#555555><bold>›</bold> <reset><#FFD700>Lore Range: <#00FF00>${parsedRangeInfo.baseRange}f <#AAAAAA>($modifierSign<#00FF00>${modifier}f<#AAAAAA>) = <#00FF00>${if (modifier >= 0) parsedRangeInfo.maxRange else parsedRangeInfo.minRange}f\n")
+                } else {
+                    append("<#555555><bold>›</bold> <reset><#FFD700>Lore Range: <#00FF00>${parsedRangeInfo.baseRange}f\n")
+                }
             }
             
             // Show ItemType match status
             if (itemType != null) {
                 append("<#555555><bold>›</bold> <reset><#FFD700>ItemType: <#00FF00>${itemType.name}\n")
-                val (range, offset) = ItemUtils.getItemRangeWithOffset(heldItem)
-                append("<#555555><bold>›</bold> <reset><#FFD700>Range: <#00FF00>${range}f <#AAAAAA>(offset: <#00FF00>${offset}f<#AAAAAA>)\n")
+                val (rangeInfo, offset) = ItemUtils.getItemRangeWithOffset(heldItem)
+                if (rangeInfo.hasModifier) {
+                    // Calculate the modifier value
+                    val modifier = if (rangeInfo.maxRange > rangeInfo.baseRange) {
+                        rangeInfo.maxRange - rangeInfo.baseRange
+                    } else {
+                        rangeInfo.minRange - rangeInfo.baseRange
+                    }
+                    val modifierSign = if (modifier >= 0) "+" else ""
+                    val effectiveRange = if (modifier >= 0) rangeInfo.maxRange else rangeInfo.minRange
+                    append("<#555555><bold>›</bold> <reset><#FFD700>Range: <#00FF00>${rangeInfo.baseRange}f <#AAAAAA>($modifierSign<#00FF00>${modifier}f<#AAAAAA>) = <#00FF00>${effectiveRange}f <#AAAAAA>(offset: <#00FF00>${offset}f<#AAAAAA>)\n")
+                } else {
+                    append("<#555555><bold>›</bold> <reset><#FFD700>Range: <#00FF00>${rangeInfo.baseRange}f <#AAAAAA>(offset: <#00FF00>${offset}f<#AAAAAA>)\n")
+                }
             } else {
                 append("<#555555><bold>›</bold> <reset><#FFD700>ItemType: <#AAAAAA>Not found\n")
             }

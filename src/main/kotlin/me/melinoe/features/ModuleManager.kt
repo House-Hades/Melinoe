@@ -188,6 +188,7 @@ object ModuleManager {
             KeybindsModule,
             HideHeldTooltipsModule,
             ChatModule,
+            NoNametagsModule,
 
             // Utility
             me.melinoe.features.impl.combat.AutoSprintModule,

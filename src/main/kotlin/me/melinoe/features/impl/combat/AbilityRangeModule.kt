@@ -11,6 +11,7 @@ import me.melinoe.events.RenderEvent
 import me.melinoe.events.core.on
 import me.melinoe.utils.Color
 import me.melinoe.utils.ItemUtils
+import me.melinoe.utils.RangeInfo
 import me.melinoe.utils.render.TriangleStripData
 import me.melinoe.utils.render.TriangleStripPoint
 import me.melinoe.utils.render.drawCircle
@@ -34,7 +35,7 @@ object AbilityRangeModule : Module(
     private val showLine by BooleanSetting("Line", false, desc = "Show line from player to range").withDependency { rangeType.selected == "Circle" || rangeType.selected == "Arc" }
     
     // Cached values to avoid recalculation
-    private var cachedRange = -1f
+    private var cachedRangeInfo = RangeInfo(-1f)
     private var cachedOffset = 0f
     private var cachedItemStack: net.minecraft.world.item.ItemStack? = null
     private var cachedIsHeraldEssence = false
@@ -54,7 +55,7 @@ object AbilityRangeModule : Module(
                 ItemUtils.isAbility(mainHandStack) -> mainHandStack
                 ItemUtils.isAbility(offHandStack) -> offHandStack
                 else -> {
-                    cachedRange = -1f
+                    cachedRangeInfo = RangeInfo(-1f)
                     cachedOffset = 0f
                     cachedItemStack = null
                     return@on
@@ -63,17 +64,17 @@ object AbilityRangeModule : Module(
             
             // Only recalculate if item changed
             if (stack != cachedItemStack) {
-                val (range, offset) = ItemUtils.getItemRangeWithOffset(stack)
-                cachedRange = range
+                val (rangeInfo, offset) = ItemUtils.getItemRangeWithOffset(stack)
+                cachedRangeInfo = rangeInfo
                 cachedOffset = offset
                 cachedItemStack = stack
                 cachedIsHeraldEssence = ItemUtils.isHeraldEssence(stack)
             }
             
-            val range = cachedRange
+            val rangeInfo = cachedRangeInfo
             val offset = cachedOffset
             
-            if (range < 0) return@on
+            if (rangeInfo.baseRange < 0) return@on
             
             // Calculate player position with interpolation
             val tickDelta = Melinoe.mc.deltaTracker.getGameTimeDeltaPartialTick(false)
@@ -95,22 +96,27 @@ object AbilityRangeModule : Module(
             val isHeraldEssence = cachedIsHeraldEssence
             
             if (!isHeraldEssence) {
+                // Use the effective range (maxRange for + modifiers, minRange for - modifiers)
+                val effectiveRange = if (rangeInfo.hasModifier) {
+                    if (rangeInfo.maxRange > rangeInfo.baseRange) rangeInfo.maxRange else rangeInfo.minRange
+                } else {
+                    rangeInfo.baseRange
+                }
+                
                 // Draw based on range type
                 val type = rangeType.selected
                 when (type) {
                     "Circle" -> {
                         if (showLine) {
-                            // Draw thick line from player to range edge with gradient
-                            val lineEnd = center.add(-range * kotlin.math.sin(yawRad), 0.0, range * kotlin.math.cos(yawRad))
+                            val lineEnd = center.add(-effectiveRange * kotlin.math.sin(yawRad), 0.0, effectiveRange * kotlin.math.cos(yawRad))
                             val transparentColor = Color((rangeColor.rgba and 0x00FFFFFF) or 0x00000000)
                             drawThickLine(playerPos, lineEnd, transparentColor, rangeColor, thickness = 0.125f, depth = true)
                         }
-                        drawCircle(center, range, rangeColor, segments = 64, thickness = 1f, depth = true)
+                        drawCircle(center, effectiveRange, rangeColor, segments = 64, thickness = 1f, depth = true)
                     }
                     "Arc" -> {
                         if (showLine) {
-                            // Draw thick line from player to range edge with gradient
-                            val lineEnd = center.add(-range * kotlin.math.sin(yawRad), 0.0, range * kotlin.math.cos(yawRad))
+                            val lineEnd = center.add(-effectiveRange * kotlin.math.sin(yawRad), 0.0, effectiveRange * kotlin.math.cos(yawRad))
                             val transparentColor = Color((rangeColor.rgba and 0x00FFFFFF) or 0x00000000)
                             drawThickLine(playerPos, lineEnd, transparentColor, rangeColor, thickness = 0.125f, depth = true)
                         }
@@ -125,16 +131,15 @@ object AbilityRangeModule : Module(
                             val t = i.toDouble() / segments
                             val angle = arcStartAngle + (arcEndAngle - arcStartAngle) * t
                             
-                            val x = center.x - range * kotlin.math.sin(angle)
-                            val z = center.z + range * kotlin.math.cos(angle)
+                            val x = center.x - effectiveRange * kotlin.math.sin(angle)
+                            val z = center.z + effectiveRange * kotlin.math.cos(angle)
                             
                             // Calculate fade: only fade at the outer 20% on each edge
-                            val distanceFromCenter = kotlin.math.abs(t - 0.5) * 2.0 // 0 at center, 1 at edges
+                            val distanceFromCenter = kotlin.math.abs(t - 0.5) * 2.0
                             val fadeAmount = if (distanceFromCenter > 0.8) {
-                                // Fade from 100% to 0% in the last 20% on each side
                                 1.0 - ((distanceFromCenter - 0.8) / 0.2)
                             } else {
-                                1.0 // Full opacity in the middle 80%
+                                1.0
                             }
                             
                             // Apply fade to alpha channel
@@ -151,7 +156,7 @@ object AbilityRangeModule : Module(
                         consumer.triangleStrips[0].add(TriangleStripData(arcPoints))
                     }
                     "Line" -> {
-                        val lineEnd = center.add(-range * kotlin.math.sin(yawRad), 0.0, range * kotlin.math.cos(yawRad))
+                        val lineEnd = center.add(-effectiveRange * kotlin.math.sin(yawRad), 0.0, effectiveRange * kotlin.math.cos(yawRad))
                         val transparentColor = Color((rangeColor.rgba and 0x00FFFFFF) or 0x00000000)
                         drawThickLine(playerPos, lineEnd, transparentColor, rangeColor, thickness = 0.125f, depth = true)
                     }
@@ -171,7 +176,7 @@ object AbilityRangeModule : Module(
     
     override fun onDisable() {
         super.onDisable()
-        cachedRange = -1f
+        cachedRangeInfo = RangeInfo(-1f)
         cachedOffset = 0f
         cachedItemStack = null
         cachedIsHeraldEssence = false
