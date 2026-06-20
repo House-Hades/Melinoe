@@ -34,14 +34,15 @@ object TelosItemUtils {
     
     // ==================== POUCH/TOTEM RESOURCE LOCATIONS ====================
     
-    val POUCH_ROYAL = Identifier.fromNamespaceAndPath("telos", "material/pouch/royal")
-    val POUCH_BLOODSHOT = Identifier.fromNamespaceAndPath("telos", "material/pouch/bloodshot")
-    val POUCH_COMPANION = Identifier.fromNamespaceAndPath("telos", "material/pouch/companion")
-    val POUCH_UNHOLY = Identifier.fromNamespaceAndPath("telos", "material/pouch/unholy")
-    val POUCH_VOIDBOUND = Identifier.fromNamespaceAndPath("telos", "material/pouch/voidbound")
-    val POUCH_HALLOWEEN = Identifier.fromNamespaceAndPath("telos", "material/pouch/halloween")
-    val POUCH_VALENTINE = Identifier.fromNamespaceAndPath("telos", "material/pouch/valentine")
-    val POUCH_CHRISTMAS = Identifier.fromNamespaceAndPath("telos", "material/pouch/christmas")
+    val POUCH_ROYAL = Identifier.fromNamespaceAndPath("telos", "mob/pouch/royal_totem")
+    val POUCH_BLOODSHOT = Identifier.fromNamespaceAndPath("telos", "mob/pouch/bloodshot_totem")
+    val POUCH_COMPANION = Identifier.fromNamespaceAndPath("telos", "mob/pouch/companion_totem")
+    val POUCH_UNHOLY = Identifier.fromNamespaceAndPath("telos", "mob/pouch/unholy_totem")
+    val POUCH_VOIDBOUND = Identifier.fromNamespaceAndPath("telos", "mob/pouch/voidbound_totem")
+    val POUCH_HALLOWEEN = Identifier.fromNamespaceAndPath("telos", "mob/pouch/halloween_totem")
+    val POUCH_VALENTINE = Identifier.fromNamespaceAndPath("telos", "mob/pouch/valentine_totem")
+    val POUCH_CHRISTMAS = Identifier.fromNamespaceAndPath("telos", "mob/pouch/christmas_totem")
+    val POUCH_SHINY = Identifier.fromNamespaceAndPath("telos", "mob/pouch/shiny_totem")
     
     // ==================== STRING KEY MAPPINGS ====================
     
@@ -74,7 +75,8 @@ object TelosItemUtils {
         "voidbound" to POUCH_VOIDBOUND,
         "halloween" to POUCH_HALLOWEEN,
         "valentine" to POUCH_VALENTINE,
-        "christmas" to POUCH_CHRISTMAS
+        "christmas" to POUCH_CHRISTMAS,
+        "shiny" to POUCH_SHINY
     )
     
     // ==================== LOOKUP METHODS ====================
@@ -90,10 +92,10 @@ object TelosItemUtils {
     
     /**
      * Create an ItemStack with a custom model identifier.
-     * Uses CARROT_ON_A_STICK as the base item (standard for Telos custom models).
+     * Uses STICK as the base item (standard for Telos custom models).
      */
     fun createItemStack(Identifier: Identifier): ItemStack {
-        val item = ItemStack(Items.CARROT_ON_A_STICK)
+        val item = ItemStack(Items.STICK)
         item.set(DataComponents.ITEM_MODEL, Identifier)
         return item
     }

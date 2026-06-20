@@ -69,76 +69,62 @@ val devCommand = Commodore("melinoedev", "mdev") {
                 return@runs
             }
             
-            val itemStack = when (bagType.lowercase()) {
-                "bloodshot" -> {
-                    val stack = ItemStack(Items.STICK)
-                    stack.set(DataComponents.ITEM_MODEL, Identifier.fromNamespaceAndPath("telos", "entity/pouch/bloodshot_totem"))
-                    stack
-                }
-                "unholy" -> {
-                    val stack = ItemStack(Items.STICK)
-                    stack.set(DataComponents.ITEM_MODEL, Identifier.fromNamespaceAndPath("telos", "entity/pouch/unholy_totem"))
-                    stack
-                }
-                "voidbound" -> {
-                    val stack = ItemStack(Items.STICK)
-                    stack.set(DataComponents.ITEM_MODEL, Identifier.fromNamespaceAndPath("telos", "entity/pouch/voidbound_totem"))
-                    stack
-                }
-                "royal" -> {
-                    val stack = ItemStack(Items.STICK)
-                    stack.set(DataComponents.ITEM_MODEL, Identifier.fromNamespaceAndPath("telos", "entity/pouch/royal_totem"))
-                    stack
-                }
-                "companion" -> {
-                    val stack = ItemStack(Items.STICK)
-                    stack.set(DataComponents.ITEM_MODEL, Identifier.fromNamespaceAndPath("telos", "entity/pouch/companion"))
-                    stack
-                }
-                "event" -> {
-                    val stack = ItemStack(Items.STICK)
-                    stack.set(DataComponents.ITEM_MODEL, Identifier.fromNamespaceAndPath("telos", "entity/pouch/halloween_totem"))
-                    stack
-                }
+            // Map bag types to TelosItemUtils identifiers
+            val pouchIdentifier = when (bagType.lowercase()) {
+                "bloodshot" -> TelosItemUtils.POUCH_BLOODSHOT
+                "unholy" -> TelosItemUtils.POUCH_UNHOLY
+                "voidbound" -> TelosItemUtils.POUCH_VOIDBOUND
+                "royal" -> TelosItemUtils.POUCH_ROYAL
+                "companion" -> TelosItemUtils.POUCH_COMPANION
+                "halloween", "event" -> TelosItemUtils.POUCH_HALLOWEEN
+                "valentine" -> TelosItemUtils.POUCH_VALENTINE
+                "christmas" -> TelosItemUtils.POUCH_CHRISTMAS
+                "shiny" -> TelosItemUtils.POUCH_SHINY
                 else -> null
             }
             
-            // Trigger the totem animation if we have an item
-            // The GameRendererMixin will detect the animation and call the appropriate handler
-            if (itemStack != null) {
-                Melinoe.mc.gameRenderer.displayItemActivation(itemStack)
-                Melinoe.mc.particleEngine.createTrackingEmitter(player, ParticleTypes.TOTEM_OF_UNDYING, 30)
-                
-                // Show confirmation message
-                when (bagType.lowercase()) {
-                    "bloodshot" -> {
-                        Message.dev("<#AA0000>Bloodshot</#AA0000> <#AAAAAA>bag animation triggered!")
-                        TypeSafeDataAccess.get(TrackingKey.LifetimeStat.BloodshotBags) ?: 0
-                    }
-                    "unholy" -> {
-                        Message.dev("<#FFFFFF>Unholy <#AAAAAA>bag animation triggered!")
-                        TypeSafeDataAccess.get(TrackingKey.LifetimeStat.UnholyBags) ?: 0
-                    }
-                    "voidbound" -> {
-                        Message.dev("<#AA00FF>Voidbound <#AAAAAA>bag animation triggered!")
-                        TypeSafeDataAccess.get(TrackingKey.LifetimeStat.VoidboundBags) ?: 0
-                    }
-                    "royal" -> {
-                        Message.dev("<#FFD700>Royal <#AAAAAA>bag animation triggered!")
-                        TypeSafeDataAccess.get(TrackingKey.LifetimeStat.RoyalBags) ?: 0
-                    }
-                    "companion" -> {
-                        Message.dev("<#FFFF00>Companion <#AAAAAA>bag animation triggered!")
-                        TypeSafeDataAccess.get(TrackingKey.LifetimeStat.CompanionBags) ?: 0
-                    }
-                    "event" -> {
-                        Message.dev("<#AA00AA>Event <#AAAAAA>bag animation triggered!")
-                        TypeSafeDataAccess.get(TrackingKey.LifetimeStat.EventBags) ?: 0
-                    }
+            if (pouchIdentifier == null) {
+                Message.error("Invalid bag type. Valid types: bloodshot, unholy, voidbound, royal, companion, halloween, valentine, christmas, shiny")
+                return@runs
+            }
+            
+            // Create the item stack using TelosItemUtils
+            val itemStack = TelosItemUtils.createItemStack(pouchIdentifier)
+            
+            // Trigger the totem animation
+            Melinoe.mc.gameRenderer.displayItemActivation(itemStack)
+            Melinoe.mc.particleEngine.createTrackingEmitter(player, ParticleTypes.TOTEM_OF_UNDYING, 30)
+            
+            // Show confirmation message
+            when (bagType.lowercase()) {
+                "bloodshot" -> {
+                    Message.dev("<#AA0000>Bloodshot</#AA0000> <#AAAAAA>bag animation triggered!")
+                    TypeSafeDataAccess.get(TrackingKey.LifetimeStat.BloodshotBags) ?: 0
                 }
-            } else {
-                Message.error("Unknown bag type: $bagType")
-                Message.error("Available types: bloodshot, unholy, voidbound, royal, companion, event")
+                "unholy" -> {
+                    Message.dev("<#FFFFFF>Unholy <#AAAAAA>bag animation triggered!")
+                    TypeSafeDataAccess.get(TrackingKey.LifetimeStat.UnholyBags) ?: 0
+                }
+                "voidbound" -> {
+                    Message.dev("<#AA00FF>Voidbound <#AAAAAA>bag animation triggered!")
+                    TypeSafeDataAccess.get(TrackingKey.LifetimeStat.VoidboundBags) ?: 0
+                }
+                "royal" -> {
+                    Message.dev("<#FFD700>Royal <#AAAAAA>bag animation triggered!")
+                    TypeSafeDataAccess.get(TrackingKey.LifetimeStat.RoyalBags) ?: 0
+                }
+                "companion" -> {
+                    Message.dev("<#FFFF00>Companion <#AAAAAA>bag animation triggered!")
+                    TypeSafeDataAccess.get(TrackingKey.LifetimeStat.CompanionBags) ?: 0
+                }
+                "halloween", "valentine", "christmas", "event" -> {
+                    Message.dev("<#AA00AA>Event <#AAAAAA>bag animation triggered!")
+                    TypeSafeDataAccess.get(TrackingKey.LifetimeStat.EventBags) ?: 0
+                }
+                "shiny" -> {
+                    Message.dev("<#00FFFF>Shiny <#AAAAAA>bag animation triggered!")
+                    TypeSafeDataAccess.get(TrackingKey.LifetimeStat.ShinyBags) ?: 0
+                }
             }
         }
     }

@@ -33,6 +33,7 @@ object LifetimeStatsModule : Module(
     private val showBloodshotBags by BooleanSetting("Bloodshot Bags", true, desc = "Display bloodshot bags counter")
     private val showVoidboundBags by BooleanSetting("Voidbound Bags", true, desc = "Display voidbound bags counter")
     private val showUnholyBags by BooleanSetting("Unholy Bags", true, desc = "Display unholy bags counter")
+    private val showShinyBags by BooleanSetting("Shiny Bags", true, desc = "Display shiny bags counter")
     private val showTotalRuns by BooleanSetting("Total Runs", true, desc = "Display total runs counter")
 
     // Cached values for instant updates
@@ -43,6 +44,7 @@ object LifetimeStatsModule : Module(
     private var cachedRoyalBags = 0
     private var cachedCompanionBags = 0
     private var cachedEventBags = 0
+    private var cachedShinyBags = 0
 
     // Render loop state tracking
     private var forceRenderUpdate = true
@@ -88,6 +90,7 @@ object LifetimeStatsModule : Module(
         cachedRoyalBags = TypeSafeDataAccess.get(TrackingKey.LifetimeStat.RoyalBags) ?: 0
         cachedCompanionBags = TypeSafeDataAccess.get(TrackingKey.LifetimeStat.CompanionBags) ?: 0
         cachedEventBags = TypeSafeDataAccess.get(TrackingKey.LifetimeStat.EventBags) ?: 0
+        cachedShinyBags = TypeSafeDataAccess.get(TrackingKey.LifetimeStat.ShinyBags) ?: 0
         
         // Flag to rebuild the UI text cache on the next frame
         forceRenderUpdate = true
@@ -103,7 +106,8 @@ object LifetimeStatsModule : Module(
                 (if (showBloodshotBags) 8 else 0) or
                 (if (showVoidboundBags) 16 else 0) or
                 (if (showUnholyBags) 32 else 0) or
-                (if (showTotalRuns) 64 else 0)
+                (if (showShinyBags) 64 else 0) or
+                (if (showTotalRuns) 128 else 0)
     }
     
     /**
@@ -134,6 +138,7 @@ object LifetimeStatsModule : Module(
             if (showBloodshotBags) addStat("Bloodshot", 56)
             if (showVoidboundBags) addStat("Voidbound", 8)
             if (showUnholyBags) addStat("Unholy", 12)
+            if (showShinyBags) addStat("Shiny", 3)
             if (showTotalRuns) addStat("Total Runs", 1234)
         } else {
             if (showEventBags) addStat("Events", cachedEventBags)
@@ -142,6 +147,7 @@ object LifetimeStatsModule : Module(
             if (showBloodshotBags) addStat("Bloodshots", cachedBloodshotBags)
             if (showVoidboundBags) addStat("Voidbounds", cachedVoidboundBags)
             if (showUnholyBags) addStat("Unholys", cachedUnholyBags)
+            if (showShinyBags) addStat("Shinies", cachedShinyBags)
             if (showTotalRuns) addStat("Total Runs", cachedTotalRuns)
         }
     }

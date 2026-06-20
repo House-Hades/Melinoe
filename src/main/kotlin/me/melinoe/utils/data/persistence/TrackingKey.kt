@@ -33,6 +33,7 @@ sealed class TrackingKey<T> {
         data object RoyalBags : LifetimeStat("royalBags")
         data object CompanionBags : LifetimeStat("companionBags")
         data object EventBags : LifetimeStat("eventBags")
+        data object ShinyBags : LifetimeStat("shinyBags")
         
         companion object {
             /**
@@ -45,7 +46,8 @@ sealed class TrackingKey<T> {
                 UnholyBags,
                 RoyalBags,
                 CompanionBags,
-                EventBags
+                EventBags,
+                ShinyBags
             )
         }
     }

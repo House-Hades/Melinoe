@@ -30,32 +30,35 @@ public abstract class GameRendererMixin {
             floatingItem.getItem().getDescriptionId(), path);
             
         // Match bag types and trigger handlers
-        // Note: path is just the path part, not including namespace (e.g., "entity/pouch/bloodshot_totem")
         switch (path) {
-            case "entity/pouch/royal_totem":
+            case "mob/pouch/royal_totem":
                 BagTracker.INSTANCE.onRoyalBagDrop();
                 break;
                     
-            case "entity/pouch/bloodshot_totem":
+            case "mob/pouch/bloodshot_totem":
                 BagTracker.INSTANCE.onBloodshotBagDrop();
                 break;
                     
-            case "entity/pouch/companion":
+            case "mob/pouch/companion_totem":
                 BagTracker.INSTANCE.onCompanionBagDrop();
                 break;
                     
-            case "entity/pouch/unholy_totem":
+            case "mob/pouch/unholy_totem":
                 BagTracker.INSTANCE.onUnholyBagDrop();
                 break;
                     
-            case "entity/pouch/halloween_totem":
-            case "entity/pouch/valentine_totem":
-            case "entity/pouch/christmas_totem":
+            case "mob/pouch/halloween_totem":
+            case "mob/pouch/valentine_totem":
+            case "mob/pouch/christmas_totem":
                 BagTracker.INSTANCE.onEventBagDrop();
                 break;
                     
-            case "entity/pouch/voidbound_totem":
+            case "mob/pouch/voidbound_totem":
                 BagTracker.INSTANCE.onVoidboundBagDrop();
+                break;
+                    
+            case "mob/pouch/shiny_totem":
+                BagTracker.INSTANCE.onShinyBagDrop();
                 break;
                     
             default:

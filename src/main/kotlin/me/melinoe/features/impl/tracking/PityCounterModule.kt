@@ -156,7 +156,7 @@ object PityCounterModule : Module(
     
     private fun getItemStack(item: Item): ItemStack {
         return cachedItemStacks.getOrPut(item) {
-            val itemStack = ItemStack(Items.CARROT_ON_A_STICK)
+            val itemStack = ItemStack(Items.STICK)
             itemStack.set(DataComponents.ITEM_MODEL, Identifier.parse(item.texturePath))
             itemStack
         }

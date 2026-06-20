@@ -30,6 +30,7 @@ import net.minecraft.world.entity.item.ItemEntity
  * - voidbound: Voidbound totem drops (Nihility)
  * - unholy: Unholy totem drops (Holy Cross, Pendant of Sin)
  * - eventBags: Event bag drops (Halloween, Valentine, Christmas)
+ * - shinyBags: Shiny bag drops
  * - totalRuns: Total boss runs (incremented on boss defeat)
  *
  * Item Drop Detection:
@@ -136,6 +137,15 @@ object BagTracker {
     fun onEventBagDrop() {
         Melinoe.logger.info("Event bag dropped")
         TypeSafeDataAccess.increment(TrackingKey.LifetimeStat.EventBags)
+    }
+    
+    /**
+     * Handle shiny bag drop
+     * Increments shinyBags stat
+     */
+    fun onShinyBagDrop() {
+        Melinoe.logger.info("Shiny bag dropped")
+        TypeSafeDataAccess.increment(TrackingKey.LifetimeStat.ShinyBags)
     }
     
     // ==================== BOSS DEFEAT HANDLER ====================
