@@ -112,6 +112,9 @@ object KeybindsModule : Module(
     
     private var lastUsedTime: Long = 0L
     private val PORTAL_REGEX = Regex("-=\\[(.*?)]=-")
+
+    private const val APOSTLE_BAR_HASH = -1329808852
+    private const val HIEROPHANT_BAR_HASH = -1329807891
     
     private val globalCallouts: Cache<String, CalloutData> = CacheBuilder.newBuilder()
         .expireAfterWrite(1, TimeUnit.MINUTES)
@@ -122,8 +125,8 @@ object KeybindsModule : Module(
         .build()
     
     private val CHAT_MESSAGE_REGEX = Regex("^\\[([^\\]]+)\\].*?\\s+([A-Za-z0-9_]+):\\s+(.*)")
-    private val CALLOUT_TELEPORT_REGEX = Regex("^Teleport for (.+?) - (?:(\\d+)% HP|\\d+s left)")
-    private val CALLOUT_BOSS_HP_REGEX = Regex("^(.+?) is at (\\d+)% HP - .*")
+    private val CALLOUT_TELEPORT_REGEX = Regex("^Teleport for (.+?) - (?:(\\d+)%(?:/\\d+%)? HP|\\d+s left)")
+    private val CALLOUT_BOSS_HP_REGEX = Regex("^(.+?) (?:is|are) at (\\d+)%(?:/\\d+%)? HP - .*")
     private val CALLOUT_DUNGEON_REGEX = Regex("^Currently in (.+)")
     
     private var lastClickTpTarget: Pair<String, String>? = null
@@ -420,20 +423,28 @@ object KeybindsModule : Module(
         var trackedHp = -1
         
         if (LocalAPI.isInDungeon()) {
-            if (hp <= 0) {
+            val duoHp = getDuoBossHealth(currentBoss)
+            
+            if (duoHp != null) {
+                val (apostleHp, hierophantHp) = duoHp
+                messageToSend = "Apostle & Hierophant are at $apostleHp%/$hierophantHp% HP - $currentArea"
+                targetName = "Apostle & Hierophant"
+                trackedHp = minOf(apostleHp, hierophantHp)
+                lastUsedTime = currentTime
+            } else if (hp <= 0) {
                 player.connection.sendChat("Currently in $currentArea")
                 return
-            }
-            
-            val currentPhase = getCurrentPhase(currentBoss, hp)
-            messageToSend = if (currentPhase != null) {
-                "$currentBoss is at $hp% HP - $currentPhase"
             } else {
-                "$currentBoss is at $hp% HP - $currentArea"
+                val currentPhase = getCurrentPhase(currentBoss, hp)
+                messageToSend = if (currentPhase != null) {
+                    "$currentBoss is at $hp% HP - $currentPhase"
+                } else {
+                    "$currentBoss is at $hp% HP - $currentArea"
+                }
+                targetName = currentBoss
+                trackedHp = hp
+                lastUsedTime = currentTime
             }
-            targetName = currentBoss
-            trackedHp = hp
-            lastUsedTime = currentTime
         } else {
             if (hp > 0) {
                 targetName = currentBoss
@@ -453,9 +464,12 @@ object KeybindsModule : Module(
                         // Evokers are used as they are the entity behind portals
                         val headItem = evoker.getItemBySlot(EquipmentSlot.HEAD)
                         val itemModel = headItem.get(DataComponents.ITEM_MODEL)?.toString()
-                            ?: return@mapNotNull null
                         
-                        val rawName = itemModel.substringAfterLast("/").uppercase(Locale.ROOT)
+                        val rawName = if (itemModel == null) {
+                            "NEO_EDEN"
+                        } else {
+                            itemModel.substringAfterLast("/").uppercase(Locale.ROOT)
+                        }
                         
                         // Ignore return portals
                         if (rawName == "RETURN") return@mapNotNull null
@@ -567,7 +581,31 @@ object KeybindsModule : Module(
         
         return -1
     }
-    
+
+    /**
+     * Apostle & Hierophant are duo bosses that appear at the same time but each keeps its own HP bar.
+     * When fighting either of them, returns both HP percentages as (Apostle, Hierophant).
+     */
+    private fun getDuoBossHealth(bossName: String): Pair<Int, Int>? {
+        if (bossName != "Apostle" && bossName != "Hierophant") return null
+        val apostleHp = (getBossHealthForBar(APOSTLE_BAR_HASH) - 50) * 2
+        val hierophantHp = (getBossHealthForBar(HIEROPHANT_BAR_HASH) - 50) * 2
+        return apostleHp to hierophantHp
+    }
+
+    /**
+     * Get the health percentage of a specific boss bar, identified by its name hash.
+     * Returns -1 if no matching active bar is found.
+     */
+    private fun getBossHealthForBar(barHash: Int): Int {
+        val bar = BossBarUtils.getBossBarMap().values.firstOrNull { it.name.hashCode() == barHash } ?: return -1
+        val progress = bar.progress
+        if (progress > 0.0f && progress <= 1.0f) {
+            return kotlin.math.round(progress * 100.0f).toInt()
+        }
+        return -1
+    }
+
     /**
      * Determine the current phase based on boss name, health percentage, and dungeon
      */
