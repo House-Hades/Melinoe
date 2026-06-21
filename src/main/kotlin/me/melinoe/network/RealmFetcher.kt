@@ -12,22 +12,25 @@ import java.util.concurrent.CompletableFuture
 
 object RealmFetcher {
     // Fallbacks in case they aren't fetched properly
-    var naServers: List<String> = listOf("Ashburn", "Bayou", "Cedar", "Dakota", "Eagleton", "Farrion", "Groveridge", "Holloway", "Hub-1", "Missions")
-    var euServers: List<String> = listOf("Astra", "Balkan", "Creska", "Draskov", "Estenmoor", "Falkenburg", "Galla", "Helmburg", "Ivarn", "Jarnwald", "Krausenfeld", "Lindenburg", "Hub-1", "Missions")
+    var naServers: List<String> = listOf("Ashburn", "Bayou", "Cedar", "Dakota", "Eagleton", "Farrion", "Groveridge", "Nalwood", "Hub-1", "Hub-2", "Missions")
+    var euServers: List<String> = listOf("Astra", "Balkan", "Creska", "Darkon", "Draskov", "Estenmoor", "Falkenburg", "Galla", "Harvenfeld", "Helmburg", "Holloway", "Inderfall", "Ivarn", "Jarnholm", "Jarnwald", "Krausenfeld", "Larpswood", "Lindenburg", "Hub-1", "Hub-2", "Hub-3", "Missions")
     var sgServers: List<String> = listOf("Asura", "Bayan", "Chantara", "Hub-1", "Missions")
     
-    private const val SERVERS_JSON_URL = "https://gist.githubusercontent.com/Retuning/64674dd830e79fadf537b83cc88fc107/raw/904c0952159c19df31079fcca627fa6576f03789/servers.json"
+    private const val SERVERS_URL = "https://raw.githubusercontent.com/House-Hades/melinoe-data/refs/heads/main/servers.json"
+
+    private val client: HttpClient by lazy {
+        HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(10))
+            .build()
+    }
     
     fun fetchServers() {
         CompletableFuture.runAsync {
             try {
-                val client = HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(10))
-                    .build()
-                
                 val request = HttpRequest.newBuilder()
-                    .uri(URI.create(SERVERS_JSON_URL))
+                    .uri(URI.create(SERVERS_URL))
                     .timeout(Duration.ofSeconds(10))
+                    .header("Accept", "application/json")
                     .GET()
                     .build()
                 
