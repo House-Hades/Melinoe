@@ -38,7 +38,7 @@ object AbilityRangeModule : Module(
     private var cachedRangeInfo = RangeInfo(-1f)
     private var cachedOffset = 0f
     private var cachedItemStack: net.minecraft.world.item.ItemStack? = null
-    private var cachedIsHeraldEssence = false
+    private var cachedIsSeraphsEssence = false
     
     init {
         on<RenderEvent.Extract> {
@@ -68,7 +68,7 @@ object AbilityRangeModule : Module(
                 cachedRangeInfo = rangeInfo
                 cachedOffset = offset
                 cachedItemStack = stack
-                cachedIsHeraldEssence = ItemUtils.isHeraldEssence(stack)
+                cachedIsSeraphsEssence = ItemUtils.isSeraphsEssence(stack)
             }
             
             val rangeInfo = cachedRangeInfo
@@ -92,10 +92,10 @@ object AbilityRangeModule : Module(
             
             val center = playerPos.add(offsetX, 0.0, offsetZ)
             
-            // Skip main range rendering for Herald Essence (only show center square)
-            val isHeraldEssence = cachedIsHeraldEssence
+            // Skip main range rendering for Seraph's Essence (only show center square)
+            val isSeraphsEssence = cachedIsSeraphsEssence
             
-            if (!isHeraldEssence) {
+            if (!isSeraphsEssence) {
                 // Use the effective range (maxRange for + modifiers, minRange for - modifiers)
                 val effectiveRange = if (rangeInfo.hasModifier) {
                     if (rangeInfo.maxRange > rangeInfo.baseRange) rangeInfo.maxRange else rangeInfo.minRange
@@ -163,9 +163,9 @@ object AbilityRangeModule : Module(
                 }
             }
             
-            // Draw center square for Herald Essence or center dot for other items with offset
+            // Draw center square for Seraph's Essence or center dot for other items with offset
             if (offset != 0f) {
-                if (isHeraldEssence) {
+                if (isSeraphsEssence) {
                     drawSquare(center, 0.5f, rangeColor, yaw, depth = true)
                 } else {
                     drawCircle(center, 0.15f, rangeColor, segments = 8, thickness = 1f, depth = true)
@@ -179,6 +179,6 @@ object AbilityRangeModule : Module(
         cachedRangeInfo = RangeInfo(-1f)
         cachedOffset = 0f
         cachedItemStack = null
-        cachedIsHeraldEssence = false
+        cachedIsSeraphsEssence = false
     }
 }
