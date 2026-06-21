@@ -34,33 +34,29 @@ object ItemUtils {
      * Special item types with custom ranges and offsets.
      */
     enum class ItemType(
-        val unicode: String,
         val range: Float,
         val offset: Float,
         val displayName: String
     ) {
-        UT_HERALD_ESSENCE("\uD83E\uDF45", 6f, 3f, "Herald Essence"),
-        UT_AYAHUASCA_FLASK("\uD83E\uDF9D", 8f, 0f, "Ayahuasca Flask"),
-        UT_MALICE("\uD83D\uDD25", 7f, 0f, "Malice"),
-        UT_HORIZON("\uD815\uDC74", 8f, 0f, "Horizon"),
-        UT_NATURE("\uD815\uDC34", -1f, 0f, "Nature's Gift");
+        UT_SERAPHS_ESSENCE(6f, 3f, "seraph's essence"),
+        UT_AYAHUASCA_FLASK(8f, 0f, "ayahuasca flask"),
+        UT_EVENT_HORIZON(8f, 0f, "event horizon"),
+        UT_NATURE(-1f, 0f, "nature's gift"),
+        UT_PROMINENCE(6.5f, 0f, "prominence");
         
-        val isHeraldEssence: Boolean
-            get() = this == UT_HERALD_ESSENCE
+        
+        val isSeraphsEssence: Boolean
+            get() = this == UT_SERAPHS_ESSENCE
         
         companion object {
-            private val unicodeMap: Map<String, ItemType> = entries.associateBy { it.unicode }
-            
-            fun fromUnicode(unicode: String): ItemType? = unicodeMap[unicode]
+            private val nameMap: Map<String, ItemType> = entries.associateBy { it.displayName }
             
             fun fromItemStack(item: ItemStack): ItemType? {
                 if (item.isEmpty) return null
                 
-                val plainName = item.hoverName.string.trim()
-                if (plainName.length < 2) return null
+                val plainName = item.displayName.string.replace("\uF801", "").replace("[", "").replace("]", "").trim()
                 
-                val unicode = plainName.substring(1, plainName.length - 1)
-                return unicodeMap[unicode]
+                return nameMap[plainName]
             }
         }
     }
@@ -150,8 +146,8 @@ object ItemUtils {
         return Pair(parseItemRange(stack), 0f)
     }
     
-    fun isHeraldEssence(stack: ItemStack): Boolean {
-        return ItemType.fromItemStack(stack) === ItemType.UT_HERALD_ESSENCE
+    fun isSeraphsEssence(stack: ItemStack): Boolean {
+        return ItemType.fromItemStack(stack) === ItemType.UT_SERAPHS_ESSENCE
     }
 
     /**

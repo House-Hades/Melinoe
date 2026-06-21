@@ -350,6 +350,8 @@ object PityCounterModule : Module(
             BossData.itemsOf("VALERION", "NEBULA", "OPHANIM")
         } else if (cachedArea == "Celestial's Province") {
             BossData.itemsOf("ASMODEUS", "SERAPHIM")
+        } else if (cachedArea == "Neo Eden") {
+            BossData.itemsOf("HIEROPHANT", "APOSTLE", "CHERUBIM")
         } else {
             cachedItemsToDisplay
         }
@@ -385,6 +387,7 @@ object PityCounterModule : Module(
         else if (example) "Eddie"
         else if (cachedArea == "Rustborn Kingdom") "Rustborn Kingdom"
         else if (cachedArea == "Celestial's Province") "Celestial's Province"
+        else if (cachedArea == "Neo Eden") "Neo Eden"
         else currentBossData?.label ?: "Pity Counters"
         
         // Cache title string and width to avoid rebuilding Component and width checks

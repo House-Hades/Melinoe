@@ -354,8 +354,6 @@ object LocalAPI {
             1420701227 -> "Malthar"
             -1643392642 -> "Silex"
             -1382454635 -> "Loa"
-            -828991878 -> "Aetheris"
-            1824190226 -> "Solarflare"
             2131893865 -> "Orion & Osiris"
             254038329 -> "Raphael"
             -1253581965 -> "Voided Omnipotent"
@@ -375,6 +373,14 @@ object LocalAPI {
             -1622067598 -> "Asmodeus"
             -1643406096 -> "Seraphim"
             -1643245609 -> "True Seraph"
+            
+            // Radiant Isles
+            -1370503157 -> "Cog Sentinel"
+            -828991878 -> "Aetheris"
+            1824190226 -> "Solarflare"
+            -1329808852 -> "Apostle"
+            -1329807891 -> "Hierophant"
+            -132588532 -> "Cherubim"
             else -> ""
         }
         

@@ -215,6 +215,12 @@
       "areaName": "Resounding Ruins",
       "dungeonType": "ENDGAME",
       "finalBoss": "UNREST"
+    },
+    {
+      "name": "NEO_EDEN",
+      "areaName": "Neo Eden",
+      "dungeonType": "ENDGAME",
+      "finalBoss": "CHERUBIM"
     }
   ]
 }

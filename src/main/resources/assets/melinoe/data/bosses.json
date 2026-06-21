@@ -15,6 +15,21 @@
       ]
     },
     {
+      "name": "COG_SENTINEL",
+      "label": "Cog Sentinel",
+      "spawnPosition": {
+        "x": 100000,
+        "y": 50,
+        "z": 100000
+      },
+      "bossType": "WORLD",
+      "items": [
+        "ENGINEERS_BLUEPRINT",
+        "COGWHEEL_SHIELD",
+        "MASTERS_KEY"
+      ]
+    },
+    {
       "name": "ASTAROTH",
       "label": "Astaroth",
       "spawnPosition": {
@@ -189,7 +204,7 @@
       "items": [
         "HERALDIC_HEELGUARDS",
         "LUMINOUS_FLAME",
-        "HERALDS_ESSENCE"
+        "LAST_STAND"
       ]
     },
     {
@@ -438,8 +453,7 @@
         "OMNIPOTENT_LEGGINGS",
         "BLACKHOLE_SINGULARITY",
         "MINI_ARCHMAGE",
-        "ETHEREALMARE",
-        "MAGE_RUNE"
+        "ETHEREALMARE"
       ]
     },
     {
@@ -453,8 +467,7 @@
         "CRYSTAL_BOOTS",
         "AMETHYST_WORMPIERCER",
         "MINOBI",
-        "MYCOHAWK",
-        "CRYSTAL_RUNE"
+        "MYCOHAWK"
       ]
     },
     {
@@ -468,8 +481,7 @@
         "SPECTRAL_ARMOUR",
         "OCEANIC_TORRENT",
         "MINI_ILLUSIONIST",
-        "SPECTRAL_STEED",
-        "SPECTRAL_TIDES_RUNE"
+        "SPECTRAL_STEED"
       ]
     },
     {
@@ -482,8 +494,7 @@
         "CARL_TRAP",
         "MECHANICAL_FUR_SANDALS",
         "BARD",
-        "MECHAMAJESTIC",
-        "FAZZBEAR_RUNE"
+        "MECHAMAJESTIC"
       ]
     },
     {
@@ -497,8 +508,7 @@
         "CHRONOS_LEGGINGS",
         "ROBE_OF_CHRONOS",
         "NIGHT_RISER",
-        "PHANTOMMARE",
-        "TIME_RUNE"
+        "PHANTOMMARE"
       ]
     },
     {
@@ -512,8 +522,7 @@
         "VOLTAIC_BOMB",
         "CLOAK_OF_IONISED_DARKNESS",
         "BEAST_MASTER",
-        "NECROWYRM",
-        "GEARS_RUNE"
+        "NECROWYRM"
       ]
     },
     {
@@ -527,8 +536,7 @@
         "CULTIST_HOOD",
         "SOULS_OF_THE_CULT",
         "LIL_MONK",
-        "DUSK_MANTICULTIST",
-        "CULT_RUNE"
+        "DUSK_MANTICULTIST"
       ]
     },
     {
@@ -542,8 +550,7 @@
         "GREATWOOD_GREAVES",
         "BOOK_OF_LIFE",
         "ELDER_ENT",
-        "WOODLAND_MANTIBANE",
-        "NATURE_RUNE"
+        "WOODLAND_MANTIBANE"
       ]
     },
     {
@@ -557,8 +564,7 @@
         "PHOENIX_PLATE",
         "RESURGENCE",
         "DRAGON_WARRIOR",
-        "SUNFLARE",
-        "SOL_RUNE"
+        "SUNFLARE"
       ]
     },
     {
@@ -583,8 +589,7 @@
         "HEAVENS_AUGMENTATION",
         "SUNS_BLESSING",
         "RADLE",
-        "GLOWSCALE",
-        "GLASS_SKY_RUNE"
+        "GLOWSCALE"
       ]
     },
     {
@@ -597,8 +602,7 @@
         "CINDER_SKULL",
         "SCORCHSCALE_LEGGINGS",
         "TARTALINK",
-        "EMBERAPTOR",
-        "PENTACURSE_RUNE"
+        "EMBERAPTOR"
       ]
     },
     {
@@ -622,8 +626,7 @@
         "RUEFORGE",
         "SOURCESTONE",
         "EXALTLING",
-        "CELESTIAL_SERPENT",
-        "FALLEN_RUNE"
+        "CELESTIAL_SERPENT"
       ]
     },
     {
@@ -637,8 +640,7 @@
         "SHADOW_SILK",
         "FRACTURED_NIHILITY",
         "SHADOW_CHIRP",
-        "DREADSPIRE_DRAKE",
-        "ETERNAL_MAW_RUNE"
+        "DREADSPIRE_DRAKE"
       ]
     },
     {
@@ -673,8 +675,7 @@
         "ORACLES_END",
         "CROWN_OF_ETHEREAL_RADIANCE",
         "LUMINE",
-        "ASTRALFLARE",
-        "OBSERVER_RUNE"
+        "ASTRALFLARE"
       ]
     },
     {
@@ -694,8 +695,7 @@
         "CROWN_OF_ETHEREAL_RADIANCE",
         "PENDANT_OF_SIN",
         "LUMINE",
-        "ASTRALFLARE",
-        "OBSERVER_RUNE"
+        "ASTRALFLARE"
       ]
     },
     {
@@ -708,8 +708,7 @@
         "NATURES_GIFT",
         "SPIRITBLOOM_GOWN",
         "MOSSLIGHT",
-        "VINEGLEAM",
-        "DREAD_RUNE"
+        "VINEGLEAM"
       ]
     },
     {
@@ -730,11 +729,10 @@
       "bossType": "DUNGEON",
       "items": [
         "FEATHERS_OF_THE_SERAPH",
-        "SERAPHIC_SHIV",
+        "SERAPHS_ESSENCE",
         "EMPYREAN_EPITOME",
         "THANATOS",
-        "SERAPHIX",
-        "SERAPH_RUNE"
+        "SERAPHIX"
       ]
     },
     {
@@ -747,12 +745,11 @@
         "BAPHOMETS_BOMB",
         "BLOOD_OF_THE_HERETICS",
         "FEATHERS_OF_THE_SERAPH",
-        "SERAPHIC_SHIV",
+        "SERAPHS_ESSENCE",
         "EMPYREAN_EPITOME",
         "HOLY_CROSS",
         "THANATOS",
-        "SERAPHIX",
-        "SERAPH_RUNE"
+        "SERAPHIX"
       ]
     },
     {
@@ -765,8 +762,43 @@
         "ECHOLURKATOR",
         "SPINESTONE",
         "LEGION",
-        "ECHORAPTOR",
-        "ECHOES_RUNE"
+        "ECHORAPTOR"
+      ]
+    },
+    {
+      "name": "APOSTLE",
+      "label": "Apostle",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "SEARAH",
+        "CATEGORY_SIX",
+        "LEGGINGS_OF_FALSE_GLORY"
+      ]
+    },
+    {
+      "name": "HIEROPHANT",
+      "label": "Hierophant",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "PROMINENCE",
+        "FLAME_OF_PENTECOST",
+        "DAUNTLESS_INFERNO"
+      ]
+    },
+    {
+      "name": "CHERUBIM",
+      "label": "Cherubim",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "items": [
+        "SCEPTRE_OF_THE_FRACTURED_FIRMAMENT",
+        "NACHASH_OF_THE_FIRST_LIE",
+        "FORBIDDEN_FLEECE",
+        "CHARM_OF_BLASPHEMY",
+        "CHERACUBE",
+        "EZEKYROS"
       ]
     }
   ]

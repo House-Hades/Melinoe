@@ -722,13 +722,6 @@
       "maxPity": 120
     },
     {
-      "name": "MAGE_RUNE",
-      "rarity": "RUNE",
-      "displayName": "Rune (Mage)",
-      "texturePath": "telos:material/rune/omnipotents_citadel",
-      "maxPity": 120
-    },
-    {
       "name": "CRYSTAL_TRAP",
       "rarity": "ROYAL",
       "displayName": "Crystal Trap",
@@ -768,13 +761,6 @@
       "rarity": "COMPANION",
       "displayName": "Mycohawk",
       "texturePath": "telos:material/mount/fungal_cavern",
-      "maxPity": 120
-    },
-    {
-      "name": "CRYSTAL_RUNE",
-      "rarity": "RUNE",
-      "displayName": "Rune (Crystal)",
-      "texturePath": "telos:material/rune/fungal_cavern",
       "maxPity": 120
     },
     {
@@ -820,13 +806,6 @@
       "maxPity": 120
     },
     {
-      "name": "SPECTRAL_TIDES_RUNE",
-      "rarity": "RUNE",
-      "displayName": "Rune (Spectral Tides)",
-      "texturePath": "telos:material/rune/corsairs_conductorium",
-      "maxPity": 120
-    },
-    {
       "name": "ENDOSKELETON_SCEPTRE",
       "rarity": "ROYAL",
       "displayName": "Endoskeleton Sceptre",
@@ -859,13 +838,6 @@
       "rarity": "COMPANION",
       "displayName": "Mechamajestic",
       "texturePath": "telos:material/mount/freddys_pizzeria",
-      "maxPity": 120
-    },
-    {
-      "name": "FAZZBEAR_RUNE",
-      "rarity": "RUNE",
-      "displayName": "Rune (Fazzbear)",
-      "texturePath": "telos:material/rune/freddys_pizzeria",
       "maxPity": 120
     },
     {
@@ -911,13 +883,6 @@
       "maxPity": 120
     },
     {
-      "name": "TIME_RUNE",
-      "rarity": "RUNE",
-      "displayName": "Rune (Time)",
-      "texturePath": "telos:material/rune/chronos",
-      "maxPity": 120
-    },
-    {
       "name": "MECHANICAL_CUTLASS",
       "rarity": "ROYAL",
       "displayName": "Mechanical Cutlass",
@@ -957,13 +922,6 @@
       "rarity": "COMPANION",
       "displayName": "Necrowyrm",
       "texturePath": "telos:material/mount/anubis_lair",
-      "maxPity": 120
-    },
-    {
-      "name": "GEARS_RUNE",
-      "rarity": "RUNE",
-      "displayName": "Rune (Gears)",
-      "texturePath": "telos:material/rune/anubis_lair",
       "maxPity": 120
     },
     {
@@ -1009,13 +967,6 @@
       "maxPity": 120
     },
     {
-      "name": "CULT_RUNE",
-      "rarity": "RUNE",
-      "displayName": "Rune (Cult)",
-      "texturePath": "telos:material/rune/cultists_hideout",
-      "maxPity": 120
-    },
-    {
       "name": "BLOSSOM_BLADE",
       "rarity": "ROYAL",
       "displayName": "Blossom Blade",
@@ -1055,13 +1006,6 @@
       "rarity": "COMPANION",
       "displayName": "Woodland Mantibane",
       "texturePath": "telos:material/mount/illarius_hideout",
-      "maxPity": 120
-    },
-    {
-      "name": "NATURE_RUNE",
-      "rarity": "RUNE",
-      "displayName": "Rune (Nature)",
-      "texturePath": "telos:material/rune/illarius_hideout",
       "maxPity": 120
     },
     {
@@ -1107,13 +1051,6 @@
       "maxPity": 120
     },
     {
-      "name": "SOL_RUNE",
-      "rarity": "RUNE",
-      "displayName": "Rune (Sol)",
-      "texturePath": "telos:material/rune/aviary",
-      "maxPity": 120
-    },
-    {
       "name": "LIGHTS_PULL",
       "rarity": "ROYAL",
       "displayName": "Light's Pull",
@@ -1156,13 +1093,6 @@
       "maxPity": 120
     },
     {
-      "name": "GLASS_SKY_RUNE",
-      "rarity": "RUNE",
-      "displayName": "Rune (Glass Sky)",
-      "texturePath": "telos:material/rune/aurora_sanctum",
-      "maxPity": 120
-    },
-    {
       "name": "CINDER_REACH",
       "rarity": "ROYAL",
       "displayName": "Cinder Reach",
@@ -1195,13 +1125,6 @@
       "rarity": "COMPANION",
       "displayName": "Emberaptor",
       "texturePath": "telos:material/mount/tartarus",
-      "maxPity": 120
-    },
-    {
-      "name": "PENTACURSE_RUNE",
-      "rarity": "RUNE",
-      "displayName": "Rune (Pentacurse)",
-      "texturePath": "telos:material/rune/tartarus",
       "maxPity": 120
     },
     {
@@ -1310,13 +1233,6 @@
       "maxPity": 120
     },
     {
-      "name": "FALLEN_RUNE",
-      "rarity": "RUNE",
-      "displayName": "Rune (Fallen)",
-      "texturePath": "telos:material/rune/onyx",
-      "maxPity": 120
-    },
-    {
       "name": "EVENT_HORIZON",
       "rarity": "BLOODSHOT",
       "displayName": "Event Horizon",
@@ -1356,13 +1272,6 @@
       "rarity": "COMPANION",
       "displayName": "Dreadspire Drake",
       "texturePath": "telos:material/mount/tenebris",
-      "maxPity": 120
-    },
-    {
-      "name": "ETERNAL_MAW_RUNE",
-      "rarity": "RUNE",
-      "displayName": "Rune (Eternal Maw)",
-      "texturePath": "telos:material/rune/tenebris",
       "maxPity": 120
     },
     {
@@ -1443,13 +1352,6 @@
       "maxPity": 120
     },
     {
-      "name": "OBSERVER_RUNE",
-      "rarity": "RUNE",
-      "displayName": "Rune (Observer)",
-      "texturePath": "telos:material/rune/shatters",
-      "maxPity": 120
-    },
-    {
       "name": "PENDANT_OF_SIN",
       "rarity": "UNHOLY",
       "displayName": "The Pendant of Sin",
@@ -1478,6 +1380,13 @@
       "maxPity": 120
     },
     {
+      "name": "LAST_STAND",
+      "rarity": "BLOODSHOT",
+      "displayName": "Last Stand",
+      "texturePath": "telos:material/ability/trap/ut-last",
+      "maxPity": 120
+    },
+    {
       "name": "HERALDIC_HEELGUARDS",
       "rarity": "ROYAL",
       "displayName": "Heraldic Heelguards",
@@ -1492,9 +1401,9 @@
       "maxPity": 120
     },
     {
-      "name": "HERALDS_ESSENCE",
+      "name": "SERAPHS_ESSENCE",
       "rarity": "BLOODSHOT",
-      "displayName": "Herald's Essence",
+      "displayName": "Seraph's Essence",
       "texturePath": "telos:material/ability/orb/ut-essence",
       "maxPity": 120
     },
@@ -1576,13 +1485,6 @@
       "maxPity": 120
     },
     {
-      "name": "DREAD_RUNE",
-      "rarity": "RUNE",
-      "displayName": "Rune (Dread)",
-      "texturePath": "telos:material/rune/dreadwood_thicket",
-      "maxPity": 120
-    },
-    {
       "name": "SONIC_DOOM",
       "rarity": "BLOODSHOT",
       "displayName": "Sonic Doom",
@@ -1618,13 +1520,6 @@
       "maxPity": 120
     },
     {
-      "name": "ECHOES_RUNE",
-      "rarity": "RUNE",
-      "displayName": "Rune (Echoes)",
-      "texturePath": "telos:material/rune/resounding_ruins",
-      "maxPity": 120
-    },
-    {
       "name": "VISAGE_OF_THE_NIGHT",
       "rarity": "BLOODSHOT",
       "displayName": "Visage of the Night",
@@ -1653,13 +1548,6 @@
       "maxPity": 120
     },
     {
-      "name": "SERAPHIC_SHIV",
-      "rarity": "BLOODSHOT",
-      "displayName": "Seraphic Shiv",
-      "texturePath": "telos:material/weapon/dagger/ut-seraphic",
-      "maxPity": 120
-    },
-    {
       "name": "EMPYREAN_EPITOME",
       "rarity": "BLOODSHOT",
       "displayName": "Empyrean Epitome",
@@ -1681,17 +1569,115 @@
       "maxPity": 120
     },
     {
-      "name": "SERAPH_RUNE",
-      "rarity": "RUNE",
-      "displayName": "Rune (Seraph)",
-      "texturePath": "telos:material/rune/celestials_province",
-      "maxPity": 120
-    },
-    {
       "name": "HOLY_CROSS",
       "rarity": "UNHOLY",
       "displayName": "The Holy Cross",
-      "texturePath": "telos:material/fragment/cross",
+      "texturePath": "telos:material/misc/cross",
+      "maxPity": 120
+    },
+    {
+      "name": "CHARM_OF_BLASPHEMY",
+      "rarity": "UNHOLY",
+      "displayName": "Charm of Blasphemy",
+      "texturePath": "telos:material/misc/blasphemy",
+      "maxPity": 120
+    },
+    {
+      "name": "CHERACUBE",
+      "rarity": "COMPANION",
+      "displayName": "Cheracube",
+      "texturePath": "telos:material/pet/neo_eden",
+      "maxPity": 120
+    },
+    {
+      "name": "EZEKYROS",
+      "rarity": "COMPANION",
+      "displayName": "Ezekyros",
+      "texturePath": "telos:material/mount/neo_eden",
+      "maxPity": 120
+    },
+    {
+      "name": "MASTERS_KEY",
+      "rarity": "BLOODSHOT",
+      "displayName": "Master's Key",
+      "texturePath": "telos:material/ability/kunai/ut-key",
+      "maxPity": 120
+    },
+    {
+      "name": "PROMINENCE",
+      "rarity": "BLOODSHOT",
+      "displayName": "Prominence",
+      "texturePath": "telos:material/weapon/sword/ut-prominence",
+      "maxPity": 120
+    },
+    {
+      "name": "FLAME_OF_PENTECOST",
+      "rarity": "BLOODSHOT",
+      "displayName": "Flame of Pentecost",
+      "texturePath": "telos:material/weapon/staff/ut-pentecost",
+      "maxPity": 120
+    },
+    {
+      "name": "DAUNTLESS_INFERNO",
+      "rarity": "BLOODSHOT",
+      "displayName": "Dauntless Inferno",
+      "texturePath": "telos:material/armour/heavy/boots/ut-inferno",
+      "maxPity": 120
+    },
+    {
+      "name": "FORBIDDEN_FLEECE",
+      "rarity": "BLOODSHOT",
+      "displayName": "Forbidden Fleece",
+      "texturePath": "telos:material/armour/light/chestplate/ut-forbidden",
+      "maxPity": 120
+    },
+    {
+      "name": "NACHASH_OF_THE_FIRST_LIE",
+      "rarity": "BLOODSHOT",
+      "displayName": "Nachash of the First Lie",
+      "texturePath": "telos:material/weapon/katana/ut-nachash",
+      "maxPity": 120
+    },
+    {
+      "name": "SCEPTRE_OF_THE_FRACTURED_FIRMAMENT",
+      "rarity": "BLOODSHOT",
+      "displayName": "Sceptre of the Fractured Firmament",
+      "texturePath": "telos:material/weapon/sceptre/ut-firmament",
+      "maxPity": 120
+    },
+    {
+      "name": "LEGGINGS_OF_FALSE_GLORY",
+      "rarity": "BLOODSHOT",
+      "displayName": "Leggings of False Glory",
+      "texturePath": "telos:material/armour/magical/leggings/ut-glory",
+      "maxPity": 120
+    },
+    {
+      "name": "CATEGORY_SIX",
+      "rarity": "BLOODSHOT",
+      "displayName": "Category Six",
+      "texturePath": "telos:material/weapon/dagger/ut-six",
+      "maxPity": 120
+    },
+    {
+      "name": "SEARAH",
+      "rarity": "BLOODSHOT",
+      "displayName": "Se'arah",
+      "texturePath": "telos:material/weapon/bow/ut-searah",
+      "maxPity": 120
+    },
+    {
+      "name": "ENGINEERS_BLUEPRINT",
+      "rarity": "ROYAL",
+      "displayName": "Engineer's Blueprint",
+      "texturePath": "telos:material/ability/scripture/ut-engineer",
+      "maxPity": 120
+    },
+    {
+      "name": "COGWHEEL_SHIELD",
+      "rarity": "ROYAL",
+      "displayName": "Cogwheel Shield",
+      "texturePath": "telos:material/ability/shield/ut-cogwheel",
       "maxPity": 120
     }
   ]
