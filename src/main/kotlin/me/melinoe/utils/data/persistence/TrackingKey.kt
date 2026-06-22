@@ -59,13 +59,4 @@ sealed class TrackingKey<T> {
     data class PersonalBest(val name: String) : TrackingKey<PersonalBestRecord>() {
         override val key: String = "pb_$name"
     }
-    
-    /**
-     * Tracking metadata (last update time, version, etc.)
-     */
-    sealed class Metadata(override val key: String) : TrackingKey<String>() {
-        data object LastUpdateTime : Metadata("lastUpdateTime")
-        data object DataVersion : Metadata("dataVersion")
-        data object PlayerUUID : Metadata("playerUUID")
-    }
 }

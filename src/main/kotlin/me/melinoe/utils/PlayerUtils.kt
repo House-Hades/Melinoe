@@ -2,7 +2,6 @@ package me.melinoe.utils
 
 import me.melinoe.Melinoe
 import net.minecraft.client.resources.sounds.SimpleSoundInstance
-import net.minecraft.core.BlockPos
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
 import net.minecraft.sounds.SoundEvent
@@ -27,10 +26,4 @@ fun setTitle(title: String) {
 fun alert(title: String, playSound: Boolean = true) {
     setTitle(title)
     if (playSound) playSoundAtPlayer(SoundEvents.NOTE_BLOCK_PLING.value())
-}
-
-fun getPositionString(): String {
-    with(Melinoe.mc.player?.blockPosition() ?: BlockPos(0, 0, 0)) {
-        return "x: $x, y: $y, z: $z"
-    }
 }

@@ -72,10 +72,6 @@ fun createMelinoeWatermark(): Component {
     return getMelinoeWatermark().toNative()
 }
 
-fun sendChatMessage(message: Any) {
-    Melinoe.mc.execute { Melinoe.mc.player?.connection?.sendChat(message.toString()) }
-}
-
 fun sendCommand(command: String) {
     Melinoe.mc.execute { Melinoe.mc.player?.connection?.sendCommand(command) }
 }

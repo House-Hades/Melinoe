@@ -88,6 +88,11 @@ object Melinoe : ClientModInitializer {
 
         // Initialize LocalAPI AFTER subscribing to EventBus
         LocalAPI.initialize()
+        
+        // Register shutdown hook to save data on game close
+        Runtime.getRuntime().addShutdownHook(Thread {
+            shutdown()
+        })
     }
 
     /**
@@ -100,7 +105,7 @@ object Melinoe : ClientModInitializer {
             // Save module configurations
             ModuleManager.saveConfigurations()
             
-            // Shutdown DataConfig (handles async saves and creates final backup)
+            // Shutdown DataConfig (handles async saves)
             DataConfig.shutdown()
             
             logger.info("Melinoe shutdown complete")

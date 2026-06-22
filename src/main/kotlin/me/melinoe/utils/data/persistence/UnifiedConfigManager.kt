@@ -57,8 +57,6 @@ object UnifiedConfigManager {
             // Shutdown DataConfig (waits for pending saves)
             DataConfig.shutdown()
             
-            // Note: PersistentTrackingManager shutdown is handled separately during migration
-            
             initialized = false
             Melinoe.logger.info("UnifiedConfigManager shutdown complete")
         } catch (e: Exception) {
@@ -110,43 +108,6 @@ object UnifiedConfigManager {
         DataConfig.setPersonalBest(dungeonName, timeInSeconds)
     }
     
-    /**
-     * Get tracking metadata.
-     */
-    fun getTrackingMetadata(key: String): Any? {
-        return DataConfig.getTrackingMetadata(key)
-    }
-    
-    /**
-     * Set tracking metadata.
-     */
-    fun setTrackingMetadata(key: String, value: Any) {
-        DataConfig.setTrackingMetadata(key, value)
-    }
-    
-    // ==================== BACKUP OPERATIONS ====================
-    
-    /**
-     * Create a backup of all configuration data.
-     */
-    fun createBackup(): Boolean {
-        return DataConfig.createBackup()
-    }
-    
-    /**
-     * Restore from a backup by index (0 = most recent).
-     */
-    fun restoreFromBackup(index: Int): Boolean {
-        return DataConfig.restoreFromBackup(index)
-    }
-    
-    /**
-     * List all available backups.
-     */
-    fun listBackups(): List<BackupManager.BackupInfo> {
-        return DataConfig.listBackups()
-    }
-    
     // ==================== SAVE/LOAD OPERATIONS ====================
     
     /**
@@ -165,28 +126,5 @@ object UnifiedConfigManager {
         runBlocking {
             DataConfig.loadAllData()
         }
-    }
-    
-    // ==================== EXPORT/IMPORT OPERATIONS ====================
-    
-    /**
-     * Export all tracking data to a Base64-encoded string.
-     * 
-     * @param compressed Whether to compress the data (default: true)
-     * @return Base64-encoded string containing all tracking data, or null if export fails
-     */
-    fun exportData(compressed: Boolean = true): String? {
-        return DataConfig.exportData(compressed)
-    }
-    
-    /**
-     * Import tracking data from a Base64-encoded string.
-     * 
-     * @param data The Base64-encoded string or raw JSON
-     * @param merge Whether to merge with existing data (true) or replace it (false)
-     * @return true if import was successful, false otherwise
-     */
-    fun importData(data: String, merge: Boolean = false): Boolean {
-        return DataConfig.importData(data, merge)
     }
 }

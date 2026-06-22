@@ -22,7 +22,6 @@ object DataConfig {
     private const val PITY_COUNTERS_FILE = "pity_counters.json"
     private const val LIFETIME_STATS_FILE = "lifetime_stats.json"
     private const val PERSONAL_BESTS_FILE = "personal_bests.json"
-    private const val TRACKING_METADATA_FILE = "tracking_metadata.json"
     
     private val GSON = GsonBuilder()
         .setPrettyPrinting()
@@ -41,13 +40,9 @@ object DataConfig {
     private val lifetimeStats = ConcurrentHashMap<String, Int>()
     private val personalBests = ConcurrentHashMap<String, Float>() // Legacy format for backward compatibility
     private val personalBestRecords = ConcurrentHashMap<String, PersonalBestRecord>() // New enhanced format
-    private val trackingMetadata = ConcurrentHashMap<String, Any>()
     
     // Callback support for modules that need instant updates
     private val updateCallbacks = mutableListOf<() -> Unit>()
-    
-    // Backup manager
-    private val backupManager = BackupManager
     
     @Volatile
     private var initialized = false
@@ -142,13 +137,7 @@ object DataConfig {
         return personalBestRecords[dungeonName]
     }
     
-    /**
-     * Get tracking metadata.
-     */
-    fun getTrackingMetadata(key: String): Any? {
-        return trackingMetadata[key]
-    }
-    
+
     // ==================== WRITE OPERATIONS ====================
     
     /**
@@ -225,17 +214,7 @@ object DataConfig {
         }
     }
     
-    /**
-     * Set tracking metadata.
-     */
-    fun setTrackingMetadata(key: String, value: Any) {
-        trackingMetadata[key] = value
-        notifyCallbacks()
-        asyncPersistence.scheduleSave("trackingMetadata") {
-            saveTrackingMetadata()
-        }
-    }
-    
+
     // ==================== PERSISTENCE OPERATIONS ====================
     
     /**
@@ -245,7 +224,6 @@ object DataConfig {
         loadPityCounters()
         loadLifetimeStats()
         loadPersonalBests()
-        loadTrackingMetadata()
         Melinoe.logger.info("Loaded all tracking data")
     }
     
@@ -256,7 +234,6 @@ object DataConfig {
         savePityCounters()
         saveLifetimeStats()
         savePersonalBests()
-        saveTrackingMetadata()
         Melinoe.logger.info("Saved all tracking data")
     }
     
@@ -484,270 +461,10 @@ object DataConfig {
     }
     
     /**
-     * Load tracking metadata from file.
-     */
-    private fun loadTrackingMetadata() {
-        try {
-            val filePath = Paths.get(DATA_DIR, TRACKING_METADATA_FILE)
-            if (Files.exists(filePath)) {
-                val content = Files.readString(filePath)
-                val json = JsonParser.parseString(content).asJsonObject
-                
-                trackingMetadata.clear()
-                for ((key, value) in json.entrySet()) {
-                    if (!key.startsWith("_")) {
-                        trackingMetadata[key] = value
-                    }
-                }
-                Melinoe.logger.info("Loaded tracking metadata")
-            }
-        } catch (e: Exception) {
-            Melinoe.logger.error("Failed to load tracking metadata: ${e.message}", e)
-        }
-    }
-    
-    /**
-     * Save tracking metadata to file.
-     */
-    private fun saveTrackingMetadata() {
-        try {
-            val filePath = Paths.get(DATA_DIR, TRACKING_METADATA_FILE)
-            val json = JsonObject()
-            
-            for ((key, value) in trackingMetadata) {
-                json.add(key, GSON.toJsonTree(value))
-            }
-            
-            json.addProperty("_version", "1.0")
-            
-            Files.writeString(filePath, GSON.toJson(json))
-        } catch (e: Exception) {
-            Melinoe.logger.error("Failed to save tracking metadata: ${e.message}", e)
-        }
-    }
-    
-    // ==================== EXPORT/IMPORT OPERATIONS ====================
-    
-    /**
-     * Export all tracking data to a Base64-encoded string.
-     * 
-     * @param compressed Whether to compress the data (default: true)
-     * @return Base64-encoded string containing all tracking data, or null if export fails
-     */
-    fun exportData(compressed: Boolean = true): String? {
-        return try {
-            val exportData = JsonObject().apply {
-                addProperty("version", "1.0")
-                addProperty("timestamp", System.currentTimeMillis())
-                add("data", JsonObject().apply {
-                    add("pityCounters", GSON.toJsonTree(pityCounters))
-                    add("lifetimeStats", GSON.toJsonTree(lifetimeStats))
-                    add("personalBestRecords", GSON.toJsonTree(personalBestRecords))
-                    add("trackingMetadata", GSON.toJsonTree(trackingMetadata))
-                })
-            }
-            
-            val jsonString = GSON.toJson(exportData)
-            
-            if (compressed) {
-                CompressionUtils.compressAndEncode(jsonString)
-            } else {
-                jsonString
-            }
-        } catch (e: Exception) {
-            Melinoe.logger.error("Export failed: ${e.message}", e)
-            null
-        }
-    }
-    
-    /**
-     * Import tracking data from a Base64-encoded string.
-     * 
-     * @param data The Base64-encoded string or raw JSON
-     * @param merge Whether to merge with existing data (true) or replace it (false)
-     * @return true if import was successful, false otherwise
-     */
-    fun importData(data: String, merge: Boolean = false): Boolean {
-        return try {
-            // Detect if compressed (Base64) or raw JSON
-            val jsonString = if (data.startsWith("{")) {
-                data
-            } else {
-                CompressionUtils.decodeAndDecompress(data)
-            }
-            
-            val importData = JsonParser.parseString(jsonString).asJsonObject
-            
-            // Validate version
-            val version = importData.get("version")?.asString
-            if (version == null) {
-                Melinoe.logger.error("Import data missing version field")
-                return false
-            }
-            
-            if (version > "1.0") {
-                Melinoe.logger.error("Unsupported import version: $version")
-                return false
-            }
-            
-            val dataObj = importData.getAsJsonObject("data")
-            
-            // Clear existing data if not merging
-            if (!merge) {
-                pityCounters.clear()
-                lifetimeStats.clear()
-                personalBests.clear()
-                personalBestRecords.clear()
-                trackingMetadata.clear()
-            }
-            
-            // Import pity counters
-            dataObj.getAsJsonObject("pityCounters")?.let { obj ->
-                for ((key, value) in obj.entrySet()) {
-                    if (!key.startsWith("_") && value.isJsonPrimitive) {
-                        pityCounters[key] = value.asInt
-                    }
-                }
-            }
-            
-            // Import lifetime stats
-            dataObj.getAsJsonObject("lifetimeStats")?.let { obj ->
-                for ((key, value) in obj.entrySet()) {
-                    if (!key.startsWith("_") && value.isJsonPrimitive) {
-                        lifetimeStats[key] = value.asInt
-                    }
-                }
-            }
-            
-            // Import personal bests (support both old and new format)
-            dataObj.getAsJsonObject("personalBests")?.let { obj ->
-                for ((key, value) in obj.entrySet()) {
-                    if (!key.startsWith("_") && value.isJsonPrimitive) {
-                        personalBests[key] = value.asFloat
-                        personalBestRecords[key] = PersonalBestRecord.fromTime(value.asFloat)
-                    }
-                }
-            }
-            
-            // Import personal best records (new format)
-            dataObj.getAsJsonObject("personalBestRecords")?.let { obj ->
-                for ((key, value) in obj.entrySet()) {
-                    if (!key.startsWith("_") && value.isJsonObject) {
-                        personalBestRecords[key] = parsePersonalBestRecord(value.asJsonObject)
-                    }
-                }
-            }
-            
-            // Import tracking metadata
-            dataObj.getAsJsonObject("trackingMetadata")?.let { obj ->
-                for ((key, value) in obj.entrySet()) {
-                    if (!key.startsWith("_")) {
-                        trackingMetadata[key] = value
-                    }
-                }
-            }
-            
-            // Save imported data
-            runBlocking {
-                saveAllData()
-            }
-            
-            Melinoe.logger.info("Successfully imported tracking data (merge=$merge)")
-            true
-        } catch (e: Exception) {
-            Melinoe.logger.error("Import failed: ${e.message}", e)
-            false
-        }
-    }
-    
-    // ==================== BACKUP OPERATIONS ====================
-    
-    /**
-     * Create a backup of all data files.
-     */
-    fun createBackup(): Boolean {
-        return try {
-            val dataDir = File(DATA_DIR)
-            backupManager.createBackup(dataDir)
-        } catch (e: Exception) {
-            Melinoe.logger.error("Failed to create backup: ${e.message}", e)
-            false
-        }
-    }
-    
-    /**
-     * Restore from a backup by index (0 = most recent).
-     */
-    fun restoreFromBackup(index: Int): Boolean {
-        return try {
-            val dataDir = File(DATA_DIR)
-            val success = backupManager.restoreFromBackup(index, dataDir)
-            if (success) {
-                // Reload data after restoration
-                runBlocking {
-                    loadAllData()
-                }
-            }
-            success
-        } catch (e: Exception) {
-            Melinoe.logger.error("Failed to restore backup: ${e.message}", e)
-            false
-        }
-    }
-    
-    /**
-     * List all available backups.
-     */
-    fun listBackups(): List<BackupManager.BackupInfo> {
-        return backupManager.listBackups()
-    }
-    
-    // ==================== UTILITY OPERATIONS ====================
-    
-    /**
-     * Get all pity counters as a map.
-     */
-    fun getAllPityCounters(): Map<String, Int> {
-        return HashMap(pityCounters)
-    }
-    
-    /**
-     * Get all lifetime stats as a map.
-     */
-    fun getAllLifetimeStats(): Map<String, Int> {
-        return HashMap(lifetimeStats)
-    }
-    
-    /**
-     * Get all personal bests as a map (simple time values).
-     */
-    fun getAllPersonalBests(): Map<String, Float> {
-        return personalBestRecords.mapValues { it.value.time }
-    }
-    
-    /**
      * Get all personal best records with metadata.
      */
     fun getAllPersonalBestRecords(): Map<String, PersonalBestRecord> {
         return HashMap(personalBestRecords)
-    }
-    
-    /**
-     * Clear all tracking data (use with caution!).
-     * Creates a backup before clearing.
-     */
-    fun clearAllData() {
-        pityCounters.clear()
-        lifetimeStats.clear()
-        personalBests.clear()
-        personalBestRecords.clear()
-        trackingMetadata.clear()
-        
-        runBlocking {
-            saveAllData()
-        }
-        
-        Melinoe.logger.warn("Cleared all tracking data")
     }
     
     // ==================== SHUTDOWN ====================
@@ -768,9 +485,6 @@ object DataConfig {
             runBlocking {
                 asyncPersistence.awaitAllSaves(timeoutMs = 10000L)
             }
-            
-            // Create final backup
-            createBackup()
             
             initialized = false
             Melinoe.logger.info("DataConfig shutdown complete")

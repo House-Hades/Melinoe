@@ -20,7 +20,6 @@ object TypeSafeDataAccess {
             is TrackingKey.PityCounter -> DataConfig.getPityCounter(key.bossName) as T
             is TrackingKey.LifetimeStat -> DataConfig.getLifetimeStat(key.key) as T
             is TrackingKey.PersonalBest -> DataConfig.getPersonalBestRecord(key.name) as T
-            is TrackingKey.Metadata -> DataConfig.getTrackingMetadata(key.key) as T
         }
     }
     
@@ -48,10 +47,6 @@ object TypeSafeDataAccess {
             is TrackingKey.PersonalBest -> {
                 require(value is PersonalBestRecord) { "PersonalBest value must be PersonalBestRecord" }
                 DataConfig.setPersonalBestRecord(key.name, value)
-            }
-            is TrackingKey.Metadata -> {
-                require(value is String) { "Metadata value must be String" }
-                DataConfig.setTrackingMetadata(key.key, value)
             }
         }
     }
