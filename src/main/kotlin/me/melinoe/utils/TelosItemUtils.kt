@@ -27,6 +27,8 @@ object TelosItemUtils {
     val BOSS_CLAUS = Identifier.fromNamespaceAndPath("telos", "material/boss/claus")
     val BOSS_RAPHAEL = Identifier.fromNamespaceAndPath("telos", "material/pet/onyx")
     val BOSS_DEFENDER = Identifier.fromNamespaceAndPath("telos", "material/boss/defender")
+    val BOSS_COG_SENTINEL = Identifier.fromNamespaceAndPath("telos", "material/boss/cog_sentinel")
+    val BOSS_COG_STABILIZER = Identifier.fromNamespaceAndPath("melinoe", "boss/cog_stabilizer")
 
     val BOSS_REAPER = Identifier.fromNamespaceAndPath("telos", "material/boss/reaper")
     val BOSS_HERALD = Identifier.fromNamespaceAndPath("telos", "material/boss/herald")
@@ -62,6 +64,8 @@ object TelosItemUtils {
         "claus" to BOSS_CLAUS,
         "raphael" to BOSS_RAPHAEL,
         "defender" to BOSS_DEFENDER,
+        "cog_sentinel" to BOSS_COG_SENTINEL,
+        "cog_stabilizer" to BOSS_COG_STABILIZER,
 
         "reaper" to BOSS_REAPER,
         "herald" to BOSS_HERALD,

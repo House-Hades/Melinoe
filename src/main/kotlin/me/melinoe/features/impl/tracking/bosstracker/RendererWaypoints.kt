@@ -33,24 +33,37 @@ object RendererWaypoints {
         val cameraPos = camera.position()
         val cameraDirection = Vec3.directionFromRotation(camera.xRot(), camera.yRot())
         
-        // Fetch current area safely to determine shadowlands logic filtering
-        val inShadowlands = try {
-            LocalAPI.getCurrentCharacterArea() == "Shadowlands"
+        // Fetch current area safely to determine area-based waypoint filtering
+        val currentArea = try {
+            LocalAPI.getCurrentCharacterArea()
         } catch (e: Exception) {
-            false
+            ""
         }
-        
+        val inShadowlands = currentArea == "Shadowlands"
+        val inRadiantIsles = currentArea == "Radiant Isles"
+
         val waypointsToRender = mutableListOf<WaypointData>()
-        
+
         for (boss in BossState.getAllBosses()) {
-            val isShadowlandsBoss = boss.name in listOf("Reaper", "Warden", "Herald")
-            
-            if (inShadowlands) {
-                // If in shadowlands, hide all other bosses (except shadowlands minibosses, raphael, & defender
-                if (!isShadowlandsBoss && boss.name != "Raphael" && boss.name != "Defender") continue
+            // The Cog Sentinel and its Cog Stabilizers are the Radiant Isles waypoints
+            val isRadiantIslesWaypoint = boss.data == BossData.COG_SENTINEL || boss.data == BossData.COG_STABILIZER
+
+            if (inRadiantIsles) {
+                // In the Radiant Isles, only show the Cog Sentinel/Stabilizers and hide every other waypoint
+                if (!isRadiantIslesWaypoint) continue
             } else {
-                // If not in shadowlands, hide shadowlands bosses
-                if (isShadowlandsBoss) continue
+                // These are area-locked, so they never show outside the Radiant Isles
+                if (isRadiantIslesWaypoint) continue
+
+                val isShadowlandsBoss = boss.name in listOf("Reaper", "Warden", "Herald")
+
+                if (inShadowlands) {
+                    // If in shadowlands, hide all other bosses (except shadowlands minibosses, raphael, & defender
+                    if (!isShadowlandsBoss && boss.name != "Raphael" && boss.name != "Defender") continue
+                } else {
+                    // If not in shadowlands, hide shadowlands bosses
+                    if (isShadowlandsBoss) continue
+                }
             }
 
             // Skip defeated bosses without portals (unless they are Shadowlands bosses returning to idle)

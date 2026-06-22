@@ -159,7 +159,9 @@ object RendererHUD {
                 }
             )
         } else {
-            BossState.getBossesByState(BossState.State.ALIVE).filter { it.name !in hiddenShadowlandsBosses }
+            BossState.getBossesByState(BossState.State.ALIVE)
+                .filter { it.name !in hiddenShadowlandsBosses }
+                .filter { it.data != BossData.COG_SENTINEL && it.data != BossData.COG_STABILIZER }
         }
         
         val portalBosses = if (example) emptyList() else BossState.getBossesByState(BossState.State.DEFEATED_PORTAL_ACTIVE).filter { it.name != "Raphael" && it.name !in hiddenShadowlandsBosses }

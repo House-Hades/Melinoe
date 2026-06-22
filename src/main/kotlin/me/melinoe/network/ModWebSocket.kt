@@ -30,7 +30,7 @@ object ModWebSocket {
         isConnecting.set(true)
         // Build and connect asynchronously
         httpClient.newWebSocketBuilder()
-            .buildAsync(URI.create("wss://fig.magnetite.dev"), Listener())
+            .buildAsync(URI.create("wss://melinoe.magnetite.dev"), Listener())
             .thenAccept { ws ->
                 this.webSocket = ws
                 isConnecting.set(false)

@@ -116,6 +116,18 @@ enum class BossData(
         Pattern.compile("^\\[Warden] Look at it, (.+). This battle standard is all I have left to honour my fallen brethren."),
         BlockPos(-125, -46, -122),
         TelosItemUtils.BOSS_WARDEN
+    ),
+    COG_SENTINEL(
+        "Cog Sentinel",
+        Pattern.compile("^\\[Cog Sentinel] .+"), // Dummy pattern - Cog Sentinel doesn't have player calls
+        BlockPos(100000, 50, 100000),
+        TelosItemUtils.BOSS_COG_SENTINEL
+    ),
+    COG_STABILIZER(
+        "Cog Stabilizer",
+        Pattern.compile("^\\[Cog Stabilizer] .+"), // Dummy pattern - Cog Stabilizers don't have player calls
+        BlockPos(0, 0, 0),
+        TelosItemUtils.BOSS_COG_STABILIZER
     );
 
     /**

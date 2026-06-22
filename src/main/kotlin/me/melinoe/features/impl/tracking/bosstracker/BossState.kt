@@ -32,6 +32,7 @@ object BossState {
             trackedBossesByState[state] = mutableSetOf()
         }
         initShadowlandsBosses()
+        initRadiantIslesBosses()
     }
 
     /**
@@ -41,6 +42,35 @@ object BossState {
         updateBoss("Reaper", State.SHADOWLANDS_IDLE)
         updateBoss("Warden", State.SHADOWLANDS_IDLE)
         updateBoss("Herald", State.SHADOWLANDS_IDLE)
+    }
+
+    /**
+     * Initializes the waypoints that are always present in the Radiant Isles:
+     * the Cog Sentinel boss plus its 10 Cog Stabilizers
+     */
+    private fun initRadiantIslesBosses() {
+        val data = BossData.COG_SENTINEL
+
+        // The Cog Sentinel boss itself
+        addBoss(TrackedBoss(data.label, data.spawnPosition, State.ALIVE, data))
+
+        // The 10 Cog Stabilizers, which use their own icon
+        val stabilizerData = BossData.COG_STABILIZER
+        val stabilizers = listOf(
+            BlockPos(99627, 45, 99992),
+            BlockPos(99649, 129, 100180),
+            BlockPos(99934, 167, 100313),
+            BlockPos(100027, 71, 100211),
+            BlockPos(100163, 114, 100110),
+            BlockPos(100427, 49, 99959),
+            BlockPos(100074, 48, 99716),
+            BlockPos(99867, 142, 99594),
+            BlockPos(99703, 65, 99730),
+            BlockPos(99806, 9, 99869)
+        )
+        stabilizers.forEachIndexed { index, pos ->
+            addBoss(TrackedBoss("Cog Stabilizer (${index + 1})", pos, State.ALIVE, stabilizerData))
+        }
     }
     
     /**
@@ -117,6 +147,7 @@ object BossState {
             trackedBossesByState[state]?.clear()
         }
         initShadowlandsBosses()
+        initRadiantIslesBosses()
     }
     
     /**
