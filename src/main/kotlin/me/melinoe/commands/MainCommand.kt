@@ -2,7 +2,6 @@ package me.melinoe.commands
 
 import com.github.stivais.commodore.Commodore
 import com.github.stivais.commodore.utils.SyntaxException
-import me.melinoe.Melinoe
 import me.melinoe.Melinoe.mc
 import me.melinoe.clickgui.ClickGUI
 import me.melinoe.clickgui.HudManager
@@ -35,6 +34,7 @@ val mainCommand = Commodore("melinoe", "m", "mel") {
             $p$c/melinoe pity \<dungeon/boss> $s${t}Shows pity for a dungeon or boss
             $p$c/melinoe reset module \<moduleName> $s${t}Resets a module's settings
             $p$c/melinoe reset \<clickgui╏hud> $s${t}Resets ClickGUI or HUD positions
+            $p$c/profile$m, $c/pv \<username> $s${t}Opens a player's profile
         """.trimIndent())
     }
     
