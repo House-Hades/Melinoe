@@ -547,7 +547,7 @@ object ChatModule : Module(
         val font = mc.font
         val maxWidth = ChatComponent.getWidth(Melinoe.mc.options.chatWidth().get())
         var currentX = 0
-        val tabPadding = 3
+        val tabPadding = 2
         val tabSpacing = 2
         
         for (tab in availableTabs) {
@@ -577,7 +577,7 @@ object ChatModule : Module(
         val font = mc.font
         val maxWidth = ChatComponent.getWidth(Melinoe.mc.options.chatWidth().get())
         val currentY = mc.window.guiScaledHeight - 32 // Offset just above input box
-        val tabPadding = 3
+        val tabPadding = 2
         val tabSpacing = 2
         val tabHeight = font.lineHeight + (tabPadding * 2)
         
@@ -591,26 +591,19 @@ object ChatModule : Module(
             if (currentX + tabWidth > 4 && currentX < 4 + maxWidth) {
                 val isHovered = mouseX >= currentX && mouseX <= currentX + tabWidth && mouseY >= currentY && mouseY <= currentY + tabHeight
                 
-                val bgColor = when {
-                    tab == activeTab -> 0xCC000000.toInt()
-                    isHovered -> 0x99202020.toInt()
-                    else -> 0x66101010.toInt() 
-                }
-                guiGraphics.fill(currentX, currentY, currentX + tabWidth, currentY + tabHeight, bgColor)
-                
-                if (tab == activeTab) {
-                    guiGraphics.fill(currentX, currentY, currentX + tabWidth, currentY + 1, 0xFF7CFFB2.toInt())
-                    guiGraphics.fill(currentX, currentY, currentX + 1, currentY + tabHeight, 0xFF7CFFB2.toInt())
-                    guiGraphics.fill(currentX + tabWidth - 1, currentY, currentX + tabWidth, currentY + tabHeight, 0xFF7CFFB2.toInt())
-                    guiGraphics.fill(currentX, currentY + tabHeight - 1, currentX + tabWidth, currentY + tabHeight, 0xFF7CFFB2.toInt())
-                }
-                
                 val textColor = when {
-                    tab == activeTab -> -1              // White text for active
-                    isHovered -> 0xFFEEEEEE.toInt()     // Light gray on hover
-                    else -> 0xFFAAAAAA.toInt()          // Normal gray
+                    tab == activeTab -> -1                  // White text for active
+                    isHovered -> 0xFFEEEEEE.toInt()         // Light gray on hover
+                    else -> 0xFFAAAAAA.toInt()              // Normal gray
                 }
                 guiGraphics.text(font, tab.displayName, currentX + tabPadding, currentY + tabPadding, textColor, true)
+                
+                // Draw green underline for active tab
+                if (tab == activeTab) {
+                    val textWidth = getTabWidth(tab, font)
+                    val underlineY = currentY + tabPadding + font.lineHeight + 1
+                    guiGraphics.fill(currentX + tabPadding, underlineY, currentX + tabPadding + textWidth, underlineY + 1, 0xFF7CFFB2.toInt())
+                }
             }
             currentX += tabWidth + tabSpacing
         }
@@ -628,7 +621,7 @@ object ChatModule : Module(
         val font = mc.font
         val maxWidth = ChatComponent.getWidth(Melinoe.mc.options.chatWidth().get())
         val currentY = mc.window.guiScaledHeight - 32
-        val tabPadding = 3
+        val tabPadding = 2
         val tabSpacing = 2
         val tabHeight = font.lineHeight + (tabPadding * 2)
         
