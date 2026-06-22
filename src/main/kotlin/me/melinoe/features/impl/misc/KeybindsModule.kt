@@ -21,14 +21,13 @@ import net.minecraft.core.component.DataComponents
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.HoverEvent
-import net.minecraft.network.chat.MutableComponent
-import net.minecraft.network.chat.contents.PlainTextContents
-import net.minecraft.network.chat.contents.TranslatableContents
+import net.minecraft.network.chat.Style
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.entity.monster.illager.Evoker
 import org.lwjgl.glfw.GLFW
 import java.util.Locale
+import java.util.Optional
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 
@@ -234,55 +233,45 @@ object KeybindsModule : Module(
     fun applyCalloutClickEvent(original: Component): Component {
         val plainText = original.string
         val calloutMatch = parseCallout(plainText) ?: return original
-        
+
         val myName = mc.player?.name?.string
         if (calloutMatch.player.equals(myName, ignoreCase = true)) return original
-        
+
         val contentIndex = plainText.indexOf(": ") + 2
         if (contentIndex < 2) return original
-        
+
         val clickEvent = ClickEvent.RunCommand("/tp ${calloutMatch.player}")
         val hoverEvent = HoverEvent.ShowText(
             Component.literal("Click to teleport to ${calloutMatch.player}").withStyle(net.minecraft.ChatFormatting.YELLOW)
         )
+
+        val result = Component.empty()
+        var currentLen = 0
         
-        return makeClickableComponent(original, contentIndex, IntArray(1) { 0 }, clickEvent, hoverEvent)
-    }
-    
-    private fun makeClickableComponent(node: Component, contentStartIndex: Int, currentLen: IntArray, clickEvent: ClickEvent, hoverEvent: HoverEvent): Component {
-        val result: MutableComponent
-        val contents = node.contents
-        
-        if (contents is PlainTextContents) {
-            val text = contents.text()
-            val textLen = text.length
-            
-            if (currentLen[0] >= contentStartIndex) {
-                result = Component.literal(text).withStyle(node.style.withClickEvent(clickEvent).withHoverEvent(hoverEvent))
-                currentLen[0] += textLen
-            } else if (currentLen[0] + textLen > contentStartIndex) {
-                val splitIdx = contentStartIndex - currentLen[0]
-                val prefixPart = text.substring(0, splitIdx)
-                val contentPart = text.substring(splitIdx)
-                
-                result = Component.literal(prefixPart).withStyle(node.style)
-                result.append(Component.literal(contentPart).withStyle(node.style.withClickEvent(clickEvent).withHoverEvent(hoverEvent)))
-                currentLen[0] += textLen
-            } else {
-                result = Component.literal(text).withStyle(node.style)
-                currentLen[0] += textLen
+        original.visit({ style: Style, text: String ->
+            val segStart = currentLen
+            val segEnd = currentLen + text.length
+            currentLen = segEnd
+
+            when {
+                segEnd <= contentIndex -> {
+                    // Entirely within the prefix - keep the original styling
+                    result.append(Component.literal(text).withStyle(style))
+                }
+                segStart >= contentIndex -> {
+                    // Entirely within the content - apply the teleport click/hover
+                    result.append(Component.literal(text).withStyle(style.withClickEvent(clickEvent).withHoverEvent(hoverEvent)))
+                }
+                else -> {
+                    // Segment straddles the boundary
+                    val splitIdx = contentIndex - segStart
+                    result.append(Component.literal(text.substring(0, splitIdx)).withStyle(style))
+                    result.append(Component.literal(text.substring(splitIdx)).withStyle(style.withClickEvent(clickEvent).withHoverEvent(hoverEvent)))
+                }
             }
-        } else if (contents is TranslatableContents) {
-            result = Component.translatable(contents.key, *contents.args).withStyle(node.style)
-        } else {
-            result = node.copy()
-            result.siblings.clear()
-        }
-        
-        for (sibling in node.siblings) {
-            result.append(makeClickableComponent(sibling, contentStartIndex, currentLen, clickEvent, hoverEvent))
-        }
-        
+            Optional.empty<Unit>()
+        }, Style.EMPTY)
+
         return result
     }
     

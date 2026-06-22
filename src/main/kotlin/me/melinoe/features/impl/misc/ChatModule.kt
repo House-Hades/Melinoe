@@ -438,7 +438,11 @@ object ChatModule : Module(
             val shouldCensor = (hideGroupContent && category == ChatTab.GROUP) ||
                     (hideGuildContent && category == ChatTab.GUILD)
             
-            val processed = if (shouldCensor) censorComponent(original, plainText) else original
+            val processed = when {
+                shouldCensor -> censorComponent(original, plainText)
+                isCallout -> KeybindsModule.applyCalloutClickEvent(original)
+                else -> original
+            }
             
             ProcessedMessage(category, processed, isTransient = false)
         }
