@@ -10,6 +10,7 @@ import me.melinoe.features.Module
 import me.melinoe.interfaces.ChatTabs
 import me.melinoe.utils.Message
 import me.melinoe.utils.emoji.EmojiShortcodes
+import me.melinoe.utils.setClipboardContent
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -611,6 +612,24 @@ object ChatModule : Module(
         guiGraphics.disableScissor()
     }
     
+    /**
+     * Right-clicking a chat message copies its text to the clipboard, converting mod/server emoji
+     * glyphs back into readable shortcodes
+     */
+    fun copyMessageAt(mouseX: Double, mouseY: Double): Boolean {
+        if (!enabled) return false
+
+        val chat = Minecraft.getInstance().gui?.chat as? ChatTabs ?: return false
+        val component = chat.`melinoe$getMessageAt`(mouseX, mouseY) ?: return false
+
+        val text = EmojiShortcodes.replaceEmojiWithShortcodesForCopy(component.string)
+        if (text.isBlank()) return false
+
+        setClipboardContent(text)
+        Message.info("Copied message to clipboard.")
+        return true
+    }
+
     /**
      * Handles left-clicking tabs
      */

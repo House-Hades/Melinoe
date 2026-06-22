@@ -40,6 +40,7 @@ public abstract class ChatComponentMixin implements ChatTabs {
     @Shadow protected abstract boolean isChatFocused();
     @Shadow @Final private Minecraft minecraft;
     @Shadow public abstract void scrollChat(int pos);
+    @Shadow public abstract int getLinesPerPage();
 
     // Stores the individual chat history for every single tab
     @Unique
@@ -68,6 +69,42 @@ public abstract class ChatComponentMixin implements ChatTabs {
         // Reset scroll position so the user is looking at the newest messages
         this.chatScrollbarPos = 0;
         this.newMessageSinceScroll = false;
+    }
+
+    /**
+     * Hit-tests a screen position against the currently rendered chat lines and returns the original
+     * message component sitting under the cursor
+     */
+    @Override
+    public Component melinoe$getMessageAt(double mouseX, double mouseY) {
+        if (this.trimmedMessages.isEmpty() || !this.isChatFocused()) return null;
+
+        float scale = (float) this.getScale();
+        if (scale <= 0.0f) return null;
+
+        // Bottom baseline of the chat lines, in chat-local coordinates
+        int guiHeight = this.minecraft.getWindow().getGuiScaledHeight();
+        int baseY = Mth.floor((float) (guiHeight - 40) / scale);
+
+        double lineSpacing = this.minecraft.options.chatLineSpacing().get();
+        int lineHeight = (int) (9.0 * (lineSpacing + 1.0));
+        if (lineHeight <= 0) return null;
+
+        // Horizontal bounds: chat is drawn from the left edge out to its configured width
+        if (mouseX < 0 || mouseX > this.getWidth() + 8) return null;
+
+        // Lines stack upward from baseY
+        double localY = mouseY / scale;
+        int line = Mth.floor((baseY - localY) / lineHeight);
+
+        int visibleCount = Math.min(this.trimmedMessages.size() - this.chatScrollbarPos, this.getLinesPerPage());
+        if (line < 0 || line >= visibleCount) return null;
+
+        int index = line + this.chatScrollbarPos;
+        if (index < 0 || index >= this.trimmedMessages.size()) return null;
+
+        GuiMessage parent = this.trimmedMessages.get(index).parent();
+        return parent == null ? null : parent.content();
     }
 
     /**

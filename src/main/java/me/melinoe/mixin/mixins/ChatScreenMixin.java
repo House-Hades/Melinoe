@@ -7,6 +7,7 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
+import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -78,10 +79,15 @@ public class ChatScreenMixin {
     }
 
     /**
-     * Handles clicking the Chat Tabs UI
+     * Handles clicking the Chat Tabs UI, plus right clicking a message to copy it to the clipboard
      */
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void melinoe$onMouseClicked(MouseButtonEvent mouseButtonEvent, boolean bl, CallbackInfoReturnable<Boolean> cir) {
+        if (mouseButtonEvent.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT
+                && ChatModule.INSTANCE.copyMessageAt(mouseButtonEvent.x(), mouseButtonEvent.y())) {
+            cir.setReturnValue(true);
+            return;
+        }
         if (ChatModule.INSTANCE.mouseClicked(mouseButtonEvent.x(), mouseButtonEvent.y(), mouseButtonEvent.button())) {
             cir.setReturnValue(true);
         }

@@ -221,6 +221,37 @@ object EmojiShortcodes {
         }
     }
     
+    /**
+     * Converts every emoji glyph (mod + server) back into its `:shortcode:` form for copying
+     */
+    fun replaceEmojiWithShortcodesForCopy(input: String?): String {
+        if (input.isNullOrEmpty()) return input ?: ""
+        return buildString(input.length) {
+            var i = 0
+            while (i < input.length) {
+                val c = input[i]
+                if (isEmojiStart(c)) {
+                    var matched = false
+                    for (len in maxEmojiLength downTo 1) {
+                        if (i + len <= input.length) {
+                            val candidate = input.substring(i, i + len)
+                            val shortcode = reverseMappings[candidate]
+                            if (shortcode != null) {
+                                append(shortcode)
+                                i += len
+                                matched = true
+                                break
+                            }
+                        }
+                    }
+                    if (!matched) { append(c); i++ }
+                } else {
+                    append(c); i++
+                }
+            }
+        }
+    }
+
     fun processEditBox(input: EditBox) {
         val original = input.value
         if (original.isEmpty()) return
