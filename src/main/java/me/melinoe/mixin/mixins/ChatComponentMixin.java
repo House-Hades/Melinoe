@@ -221,7 +221,7 @@ public abstract class ChatComponentMixin implements ChatTabs {
      * Processes emojis and injects unconditionally the click-to-teleport logic to the component immediately.
      */
     @ModifyVariable(
-            method = "addPlayerMessage",
+            method = "addMessage(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/MessageSignature;Lnet/minecraft/client/multiplayer/chat/GuiMessageSource;Lnet/minecraft/client/multiplayer/chat/GuiMessageTag;)V",
             at = @At("HEAD"),
             argsOnly = true,
             ordinal = 0
