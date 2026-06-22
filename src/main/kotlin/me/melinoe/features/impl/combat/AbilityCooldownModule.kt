@@ -104,28 +104,29 @@ object AbilityCooldownModule : Module(
             val heldAbility = getCurrentPlayerAbility(player)
             displayedAbility = heldAbility
             
-            if (!heldAbility.isEmpty && !ItemStack.isSameItemSameComponents(heldAbility, trackedAbility)) {
+            previousCooldownProgress = cooldownProgress
+            
+            val heldCooldown = if (heldAbility.isEmpty) 0f else player.cooldowns.getCooldownPercent(heldAbility, 0f)
+            val trackedCooldown = if (trackedAbility.isEmpty) 0f else player.cooldowns.getCooldownPercent(trackedAbility, 0f)
+            
+            // Track cooldown even if we switched items
+            if (heldCooldown > 0f || (trackedCooldown <= 0f && !heldAbility.isEmpty)) {
                 trackedAbility = heldAbility.copy()
             }
             
-            // Track cooldown even if we switched items
-            if (!trackedAbility.isEmpty) {
-                previousCooldownProgress = cooldownProgress
+            cooldownProgress = maxOf(heldCooldown, trackedCooldown)
+            
+            // Triggers exactly when it hits 0.0f
+            if (previousCooldownProgress > 0f && cooldownProgress == 0f) {
+                indicatorStartTime = System.currentTimeMillis()
                 
-                cooldownProgress = player.cooldowns.getCooldownPercent(trackedAbility, 0f)
+                if (titleHud.enabled) {
+                    customTitle = buildStyledTitleText(titleText, titleColor.rgba)
+                    titleDisplayTicks = duration.toInt()
+                }
                 
-                // Triggers exactly when it hits 0.0f
-                if (previousCooldownProgress > 0f && cooldownProgress == 0f) {
-                    indicatorStartTime = System.currentTimeMillis()
-                    
-                    if (titleHud.enabled) {
-                        customTitle = buildStyledTitleText(titleText, titleColor.rgba)
-                        titleDisplayTicks = duration.toInt()
-                    }
-                    
-                    if (playSound.enabled) {
-                        playNotificationSound()
-                    }
+                if (playSound.enabled) {
+                    playNotificationSound()
                 }
             }
             

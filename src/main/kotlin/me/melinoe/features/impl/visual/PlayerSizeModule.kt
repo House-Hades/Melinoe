@@ -76,8 +76,25 @@ object PlayerSizeModule : Module(
     @JvmStatic
     fun isPersonalNametag(entity: Entity): Boolean {
         val localPlayer = Melinoe.mc.player ?: return false
+        val level = Melinoe.mc.level ?: return false
+
+        // Ensure nametag is the player's own nametag
+        val nx = entity.x
+        val nz = entity.z
         
-        return entity.distanceToSqr(localPlayer) < 4.0
+        var nearest: net.minecraft.world.entity.player.Player? = null
+        var nearestDistSq = Double.MAX_VALUE
+        for (player in level.players()) {
+            val dx = player.x - nx
+            val dz = player.z - nz
+            val distSq = dx * dx + dz * dz
+            if (distSq < nearestDistSq) {
+                nearestDistSq = distSq
+                nearest = player
+            }
+        }
+
+        return nearest === localPlayer
     }
     
     @JvmStatic
@@ -85,6 +102,9 @@ object PlayerSizeModule : Module(
         if (!enabled || isNametag != true) return
         
         val personal = isPersonal == true
+
+        // Hide own personal nametag in first person
+        if (personal && Melinoe.mc.options.cameraType.isFirstPerson) return
         val shouldScale = when (target) {
             0 -> true
             1 -> personal

@@ -104,27 +104,29 @@ object WeaponCooldownModule : Module(
             val heldWeapon = getCurrentPlayerWeapon(player)
             displayedWeapon = heldWeapon
             
-            if (!heldWeapon.isEmpty && !ItemStack.isSameItemSameComponents(heldWeapon, trackedWeapon)) {
+            previousCooldownProgress = cooldownProgress
+            
+            val heldCooldown = if (heldWeapon.isEmpty) 0f else player.cooldowns.getCooldownPercent(heldWeapon, 0f)
+            val trackedCooldown = if (trackedWeapon.isEmpty) 0f else player.cooldowns.getCooldownPercent(trackedWeapon, 0f)
+            
+            // Track cooldown even if we switched items
+            if (heldCooldown > 0f || (trackedCooldown <= 0f && !heldWeapon.isEmpty)) {
                 trackedWeapon = heldWeapon.copy()
             }
             
-            // Track cooldown even if we switched items
-            if (!trackedWeapon.isEmpty) {
-                previousCooldownProgress = cooldownProgress
-                cooldownProgress = player.cooldowns.getCooldownPercent(trackedWeapon, 0f)
+            cooldownProgress = maxOf(heldCooldown, trackedCooldown)
+            
+            // Triggers exactly when it hits 0.0f
+            if (previousCooldownProgress > 0f && cooldownProgress == 0f) {
+                indicatorStartTime = System.currentTimeMillis()
                 
-                // Triggers exactly when it hits 0.0f
-                if (previousCooldownProgress > 0f && cooldownProgress == 0f) {
-                    indicatorStartTime = System.currentTimeMillis()
-                    
-                    if (titleHud.enabled) {
-                        customTitle = buildStyledTitleText(titleText, titleColor.rgba)
-                        titleDisplayTicks = duration.toInt()
-                    }
-                    
-                    if (playSound.enabled) {
-                        playNotificationSound()
-                    }
+                if (titleHud.enabled) {
+                    customTitle = buildStyledTitleText(titleText, titleColor.rgba)
+                    titleDisplayTicks = duration.toInt()
+                }
+                
+                if (playSound.enabled) {
+                    playNotificationSound()
                 }
             }
             
