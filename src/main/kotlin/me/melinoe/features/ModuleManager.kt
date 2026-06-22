@@ -172,6 +172,7 @@ object ModuleManager {
             HealthBarModule,
             HealthIndicatorModule,
             PlayerSizeModule,
+            BossBarScaleModule,
             CameraModule,
             HitboxModule,
             HideArmorModule,

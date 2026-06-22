@@ -307,89 +307,9 @@ object LocalAPI {
         }
         
         val currentBossHash = bossBar.name.hashCode()
+        currentCharacterFighting = getBossNameFromHash(currentBossHash)
         
-        // All updated as of 21th January 2026
-        currentCharacterFighting = when (currentBossHash) {
-            // Lowlands
-            -167372549 -> "Eddie"
-            -1381648356 -> "Zhum"
-            -1659173216 -> "Drayruk"
-            -973820290 -> "Miraj"
-            230865898 -> "Khufu"
-            -167370627 -> "Choji"
-            291455870 -> "Flora"
-            
-            // Centre
-            -1019671711 -> "Malfas"
-            -1659169372 -> "Heptavius"
-            -1659167450 -> "Arctic Colossus"
-            -1659168411 -> "Frostgaze"
-            -1659166489 -> "Magnus"
-            -1253198526 -> "Pyro"
-            -1621485232 -> "Thalor"
-            -167373510 -> "Ashenclaw"
-            832610318 -> "Corvack"
-            
-            // Realm Bosses
-            -168181711 -> "Chungus"
-            1368623635 -> "Illarius"
-            -1253632898 -> "Astaroth"
-            -168176906 -> "Glumi"
-            -1254008649 -> "Lotil"
-            1368934038 -> "Tidol"
-            -1622056066 -> "Valus"
-            -1907114029 -> "Oozul"
-            -1343349613 -> "Freddy"
-            -342545608 -> "Anubis"
-            -1240191621 -> "Hollowbane"
-            -1048713371 -> "Claus"
-            
-            // High
-            -1254007688 -> "Omnipotent"
-            -708336010 -> "Prismara"
-            -1621744702 -> "Thalassar"
-            -422985676 -> "Golden Freddy"
-            290925398 -> "Chronos"
-            -342534076 -> "Kurvaros"
-            1420701227 -> "Malthar"
-            -1643392642 -> "Silex"
-            -1382454635 -> "Loa"
-            2131893865 -> "Orion & Osiris"
-            254038329 -> "Raphael"
-            -1253581965 -> "Voided Omnipotent"
-            -132746136 -> "Valerion"
-            -707883379 -> "Mithrion"
-            -829226362 -> "Nebula"
-            -132585649 -> "Ophanim"
-            -132915272 -> "True Ophan"
-            
-            // Shadowlands
-            -1370656917 -> "Warden"
-            -1370655956 -> "Herald"
-            -1370654995 -> "Reaper"
-            230903377 -> "Sylvaris"
-            1301379752 -> "Unrest"
-            -1370654034 -> "Defender"
-            -1622067598 -> "Asmodeus"
-            -1643406096 -> "Seraphim"
-            -1643245609 -> "True Seraph"
-            
-            // Radiant Isles
-            -1370503157 -> "Cog Sentinel"
-            -828991878 -> "Aetheris"
-            1824190226 -> "Solarflare"
-            -1329808852 -> "Apostle"
-            -1329807891 -> "Hierophant"
-            -132588532 -> "Cherubim"
-            else -> ""
-        }
-        
-        // Improved system to find HashCodes
-        // This can honestly be kept in if needed, it does not spam logs like before very useful to get Hash's
-        // If the initial hash is known and the player is on an actual boss
         if (lastKnownBossHash != currentBossHash) {
-            // Comparing Hash cause they are unique, else if we fight two unknown bosses back to back it won't print
-            
             // Check if this is an unknown boss
             if (currentCharacterFighting.isEmpty()) {
                 Melinoe.logger.warn("═══════════════════════════════════════════════════════")
@@ -409,6 +329,87 @@ object LocalAPI {
             lastKnownBoss = currentCharacterFighting
             lastKnownBossHash = currentBossHash
         }
+    }
+
+    /**
+     * Resolves a boss name from the hash of its boss-bar name [net.minecraft.network.chat.Component]
+     * Returns an empty string if the hash does not correspond to a known boss
+     *
+     * All updated as of 22nd of June 2026.
+     */
+    fun getBossNameFromHash(hash: Int): String = when (hash) {
+        // Lowlands
+        -167372549 -> "Eddie"
+        -1381648356 -> "Zhum"
+        -1659173216 -> "Drayruk"
+        -973820290 -> "Miraj"
+        230865898 -> "Khufu"
+        -167370627 -> "Choji"
+        291455870 -> "Flora"
+
+        // Centre
+        -1019671711 -> "Malfas"
+        -1659169372 -> "Heptavius"
+        -1659167450 -> "Arctic Colossus"
+        -1659168411 -> "Frostgaze"
+        -1659166489 -> "Magnus"
+        -1253198526 -> "Pyro"
+        -1621485232 -> "Thalor"
+        -167373510 -> "Ashenclaw"
+        832610318 -> "Corvack"
+
+        // Realm Bosses
+        -168181711 -> "Chungus"
+        1368623635 -> "Illarius"
+        -1253632898 -> "Astaroth"
+        -168176906 -> "Glumi"
+        -1254008649 -> "Lotil"
+        1368934038 -> "Tidol"
+        -1622056066 -> "Valus"
+        -1907114029 -> "Oozul"
+        -1343349613 -> "Freddy"
+        -342545608 -> "Anubis"
+        -1240191621 -> "Hollowbane"
+        -1048713371 -> "Claus"
+
+        // High
+        -1254007688 -> "Omnipotent"
+        -708336010 -> "Prismara"
+        -1621744702 -> "Thalassar"
+        -422985676 -> "Golden Freddy"
+        290925398 -> "Chronos"
+        -342534076 -> "Kurvaros"
+        1420701227 -> "Malthar"
+        -1643392642 -> "Silex"
+        -1382454635 -> "Loa"
+        2131893865 -> "Orion & Osiris"
+        254038329 -> "Raphael"
+        -1253581965 -> "Voided Omnipotent"
+        -132746136 -> "Valerion"
+        -707883379 -> "Mithrion"
+        -829226362 -> "Nebula"
+        -132585649 -> "Ophanim"
+        -132915272 -> "True Ophan"
+
+        // Shadowlands
+        -1370656917 -> "Warden"
+        -1370655956 -> "Herald"
+        -1370654995 -> "Reaper"
+        230903377 -> "Sylvaris"
+        1301379752 -> "Unrest"
+        -1370654034 -> "Defender"
+        -1622067598 -> "Asmodeus"
+        -1643406096 -> "Seraphim"
+        -1643245609 -> "True Seraph"
+
+        // Radiant Isles
+        -1370503157 -> "Cog Sentinel"
+        -828991878 -> "Aetheris"
+        1824190226 -> "Solarflare"
+        -1329808852 -> "Apostle"
+        -1329807891 -> "Hierophant"
+        -132588532 -> "Cherubim"
+        else -> ""
     }
 
     /**
