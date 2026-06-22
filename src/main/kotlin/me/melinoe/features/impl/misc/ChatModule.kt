@@ -547,7 +547,7 @@ object ChatModule : Module(
         val font = mc.font
         val maxWidth = ChatComponent.getWidth(Melinoe.mc.options.chatWidth().get())
         var currentX = 0
-        val tabPadding = 4
+        val tabPadding = 3
         val tabSpacing = 2
         
         for (tab in availableTabs) {
@@ -577,7 +577,7 @@ object ChatModule : Module(
         val font = mc.font
         val maxWidth = ChatComponent.getWidth(Melinoe.mc.options.chatWidth().get())
         val currentY = mc.window.guiScaledHeight - 32 // Offset just above input box
-        val tabPadding = 4
+        val tabPadding = 3
         val tabSpacing = 2
         val tabHeight = font.lineHeight + (tabPadding * 2)
         
@@ -628,7 +628,7 @@ object ChatModule : Module(
         val font = mc.font
         val maxWidth = ChatComponent.getWidth(Melinoe.mc.options.chatWidth().get())
         val currentY = mc.window.guiScaledHeight - 32
-        val tabPadding = 4
+        val tabPadding = 3
         val tabSpacing = 2
         val tabHeight = font.lineHeight + (tabPadding * 2)
         
