@@ -24,6 +24,12 @@ object ModWebSocket {
 
     val activeModUsers: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
+    /**
+     * Invoked on the websocket thread when another client sends a shared item
+     */
+    @Volatile
+    var itemDataHandler: ((sender: String, seq: Int, data: String, text: String?) -> Unit)? = null
+
     fun connect() {
         if (webSocket != null || isConnecting.get()) return
 
@@ -48,6 +54,28 @@ object ModWebSocket {
         isConnecting.set(false)
     }
     
+    /**
+     * Relays a shared item to the backend, which broadcasts it to all verified clients.
+     * @param seq a per-sender sequence number used by receivers for FIFO ordering
+     * @param data Base64 of the encoded item (see ItemShareCodec)
+     */
+    fun sendShareItem(seq: Int, data: String, text: String) {
+        val ws = webSocket ?: return
+        CompletableFuture.runAsync {
+            try {
+                val request = JsonObject().apply {
+                    addProperty("action", "share_item")
+                    addProperty("seq", seq)
+                    addProperty("data", data)
+                    addProperty("text", text)
+                }
+                ws.sendText(request.toString(), true)
+            } catch (e: Exception) {
+                Melinoe.logger.error("Failed to send item share: ${e.message}")
+            }
+        }
+    }
+
     /**
      * Informs the api of a realm switch
      */
@@ -123,6 +151,15 @@ object ModWebSocket {
                         }
                         "add" -> activeModUsers.add(json.get("name").asString)
                         "remove" -> activeModUsers.remove(json.get("name").asString)
+                        "item_data" -> {
+                            val sender = json.get("sender")?.asString
+                            val seq = json.get("seq")?.asInt ?: 0
+                            val data = json.get("data")?.asString
+                            val text = json.get("text")?.asString
+                            if (sender != null && data != null) {
+                                itemDataHandler?.invoke(sender, seq, data, text)
+                            }
+                        }
                     }
                 } catch (e: Exception) {
                     Melinoe.logger.error("Error processing WebSocket message: '${message}'", e)

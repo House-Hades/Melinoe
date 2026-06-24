@@ -189,9 +189,10 @@ object ModuleManager {
             KeybindsModule,
             HideHeldTooltipsModule,
             ChatModule,
+            ItemShareModule,
 
             // Utility
-            me.melinoe.features.impl.combat.AutoSprintModule,
+            AutoSprintModule,
             me.melinoe.features.impl.ClickGUIModule
         )
 
