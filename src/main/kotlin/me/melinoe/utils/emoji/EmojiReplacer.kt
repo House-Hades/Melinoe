@@ -1,13 +1,8 @@
 package me.melinoe.utils.emoji
 
-import me.melinoe.utils.createMelinoeGradient
 import me.melinoe.utils.getMelinoeGradient
 import me.melinoe.utils.toNative
-import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.HoverEvent
-import net.minecraft.network.chat.MutableComponent
-import net.minecraft.network.chat.Style
-import net.minecraft.network.chat.TextColor
+import net.minecraft.network.chat.*
 import net.minecraft.network.chat.contents.PlainTextContents
 import net.minecraft.network.chat.contents.TranslatableContents
 import java.util.concurrent.ConcurrentHashMap

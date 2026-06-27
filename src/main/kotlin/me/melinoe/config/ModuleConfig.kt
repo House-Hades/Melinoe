@@ -2,8 +2,8 @@ package me.melinoe.config
 
 import com.google.gson.*
 import me.melinoe.Melinoe
-import me.melinoe.features.Module
 import me.melinoe.clickgui.settings.Saving
+import me.melinoe.features.Module
 import java.io.File
 
 /**

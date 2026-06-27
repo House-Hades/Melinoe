@@ -3,8 +3,8 @@ package me.melinoe.features.impl.visual.dungeontimer
 import me.melinoe.utils.data.BossData
 import me.melinoe.utils.data.DungeonData
 import me.melinoe.utils.data.Item
-import me.melinoe.utils.data.persistence.TypeSafeDataAccess
 import me.melinoe.utils.data.persistence.TrackingKey
+import me.melinoe.utils.data.persistence.TypeSafeDataAccess
 
 /**
  * Configuration for pity counter displays in dungeon completion messages.

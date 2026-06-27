@@ -1,15 +1,7 @@
 package me.melinoe.utils
 
-import com.mojang.authlib.minecraft.client.MinecraftClient
-import kotlinx.serialization.builtins.serializer
-import me.melinoe.Melinoe
 import net.kyori.adventure.platform.modcommon.MinecraftClientAudiences
-import net.kyori.adventure.text.minimessage.MiniMessage
-import net.minecraft.network.chat.ClickEvent
-import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.HoverEvent
-import net.minecraft.network.chat.Style
-import net.minecraft.network.chat.TextColor
+import net.minecraft.network.chat.*
 
 /**
  * Fluent builder for constructing complex messages.

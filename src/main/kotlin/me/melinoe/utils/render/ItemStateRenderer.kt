@@ -21,8 +21,7 @@ import net.minecraft.client.renderer.texture.OverlayTexture
 import net.minecraft.world.item.ItemDisplayContext
 import net.minecraft.world.item.ItemStack
 import org.joml.Matrix3x2f
-import java.util.Objects
-import java.util.OptionalDouble
+import java.util.*
 
 /**
  * Special GUI renderer for item state previews.

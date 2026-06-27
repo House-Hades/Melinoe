@@ -1,18 +1,16 @@
 package me.melinoe.features.impl.combat
 
-import me.melinoe.features.Category
-import me.melinoe.features.Module
-import me.melinoe.clickgui.settings.impl.BooleanSetting
 import me.melinoe.clickgui.settings.impl.ColorSetting
 import me.melinoe.clickgui.settings.impl.HUDSetting
 import me.melinoe.events.core.onReceive
+import me.melinoe.features.Category
+import me.melinoe.features.Module
 import me.melinoe.utils.Color
 import me.melinoe.utils.LocalAPI
-import me.melinoe.utils.Message
 import me.melinoe.utils.ServerUtils
 import me.melinoe.utils.render.textDim
-import net.minecraft.network.protocol.game.ClientboundLevelParticlesPacket
 import net.minecraft.core.particles.ParticleTypes
+import net.minecraft.network.protocol.game.ClientboundLevelParticlesPacket
 import kotlin.math.sqrt
 
 /**

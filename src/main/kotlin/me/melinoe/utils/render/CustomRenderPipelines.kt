@@ -9,7 +9,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
-import java.util.Optional
+import java.util.*
 
 /**
  * Custom render pipelines for world rendering.

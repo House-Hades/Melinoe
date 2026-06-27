@@ -1,7 +1,7 @@
 package me.melinoe.events
 
 import net.minecraft.client.gui.components.LerpingBossEvent
-import java.util.UUID
+import java.util.*
 
 /**
  * Event fired when boss bars are updated.

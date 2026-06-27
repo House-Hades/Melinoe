@@ -4,13 +4,13 @@ import me.melinoe.Melinoe.mc
 import me.melinoe.clickgui.settings.impl.ColorSetting
 import me.melinoe.features.Category
 import me.melinoe.features.ModuleManager
+import me.melinoe.features.impl.ClickGUIModule
 import me.melinoe.utils.Color
 import me.melinoe.utils.Colors
 import me.melinoe.utils.ui.HoverHandler
 import me.melinoe.utils.ui.animations.EaseOutAnimation
 import me.melinoe.utils.ui.rendering.NVGPIPRenderer
 import me.melinoe.utils.ui.rendering.NVGRenderer
-import me.melinoe.features.impl.ClickGUIModule
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.input.CharacterEvent

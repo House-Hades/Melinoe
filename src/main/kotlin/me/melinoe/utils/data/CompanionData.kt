@@ -2,6 +2,7 @@ package me.melinoe.utils.data
 
 import com.google.gson.Gson
 import me.melinoe.Melinoe
+import me.melinoe.utils.data.CompanionData.STARTER_COUNT
 
 /**
  * Catalog of every pet and mount in the game, with each companion's rarity.

@@ -9,19 +9,16 @@ import me.melinoe.features.impl.visual.dungeontimer.MessageFormatter
 import me.melinoe.features.impl.visual.dungeontimer.PityCounterConfig
 import me.melinoe.features.impl.visual.dungeontimer.TimerState
 import me.melinoe.utils.*
+import me.melinoe.utils.data.BagTracker
 import me.melinoe.utils.data.BossData
 import me.melinoe.utils.data.DungeonData
-import me.melinoe.utils.data.BagTracker
 import me.melinoe.utils.data.persistence.TrackingKey
 import me.melinoe.utils.data.persistence.TypeSafeDataAccess
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.component.DataComponents
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.Items
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.Identifier
 import kotlin.random.Random
 
 val devCommand = Commodore("melinoedev", "mdev") {

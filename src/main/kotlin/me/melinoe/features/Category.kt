@@ -1,6 +1,6 @@
 package me.melinoe.features
 
-import kotlin.annotation.AnnotationTarget.CLASS
+import me.melinoe.features.Category.Companion.categories
 
 /**
  * Category system for organizing modules.

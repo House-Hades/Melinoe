@@ -1,6 +1,5 @@
 package me.melinoe.features.impl.visual.healthbar
 
-import me.melinoe.Melinoe
 import me.melinoe.utils.LocalAPI
 import me.melinoe.utils.equalsOneOf
 import me.melinoe.utils.playSoundAtPlayer

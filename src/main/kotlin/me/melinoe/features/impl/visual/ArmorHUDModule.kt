@@ -1,10 +1,10 @@
 package me.melinoe.features.impl.visual
 
+import me.melinoe.clickgui.settings.impl.HUDSetting
+import me.melinoe.clickgui.settings.impl.SelectorSetting
 import me.melinoe.features.Category
 import me.melinoe.features.Module
 import me.melinoe.features.impl.combat.ArmorCooldownsModule
-import me.melinoe.clickgui.settings.impl.HUDSetting
-import me.melinoe.clickgui.settings.impl.SelectorSetting
 import net.minecraft.core.component.DataComponents
 import net.minecraft.resources.Identifier
 import net.minecraft.world.item.ItemStack

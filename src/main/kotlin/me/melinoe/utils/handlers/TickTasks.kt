@@ -1,9 +1,9 @@
 package me.melinoe.utils.handlers
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import me.melinoe.events.TickEvent
 import me.melinoe.events.core.on
 import me.melinoe.utils.logError
-import it.unimi.dsi.fastutil.objects.ObjectArrayList
 
 open class TickTask(
     private val tickDelay: Int,

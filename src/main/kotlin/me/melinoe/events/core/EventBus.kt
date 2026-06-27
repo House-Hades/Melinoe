@@ -2,7 +2,6 @@ package me.melinoe.events.core
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
-import me.melinoe.Melinoe
 import me.melinoe.events.Event
 import net.minecraft.util.profiling.Profiler
 import net.minecraft.util.profiling.ProfilerFiller

@@ -19,8 +19,7 @@ import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
 import org.lwjgl.glfw.GLFW
 import java.io.File
-import java.util.Optional
-import java.util.WeakHashMap
+import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
 /**

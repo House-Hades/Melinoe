@@ -6,8 +6,8 @@ import me.melinoe.clickgui.settings.DevModule
 import me.melinoe.clickgui.settings.Setting
 import me.melinoe.events.core.EventBus
 import me.melinoe.features.impl.ClickGUIModule
-import kotlin.reflect.full.hasAnnotation
 import org.lwjgl.glfw.GLFW
+import kotlin.reflect.full.hasAnnotation
 
 /**
  * Class that represents a module. And handles all the settings.

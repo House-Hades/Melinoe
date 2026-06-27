@@ -1,6 +1,7 @@
 package me.melinoe.utils
 
 import me.melinoe.Melinoe
+import me.melinoe.utils.ItemShareCodec.encode
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.NbtAccounter
 import net.minecraft.nbt.NbtIo
@@ -8,7 +9,7 @@ import net.minecraft.nbt.NbtOps
 import net.minecraft.world.item.ItemStack
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import java.util.Base64
+import java.util.*
 
 /**
  * Serializes a full [ItemStack] (item id, count, and every data component) into a compact

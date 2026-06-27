@@ -1,12 +1,10 @@
 package me.melinoe.clickgui
 
 import me.melinoe.Melinoe
+import me.melinoe.clickgui.settings.impl.HudElement
 import me.melinoe.features.ModuleManager
 import me.melinoe.features.ModuleManager.hudSettingsCache
-import me.melinoe.clickgui.settings.impl.HudElement
 import me.melinoe.utils.Colors
-import me.melinoe.utils.ui.mouseX as melinoeMouseX
-import me.melinoe.utils.ui.mouseY as melinoeMouseY
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.input.KeyEvent
@@ -16,6 +14,8 @@ import org.lwjgl.glfw.GLFW
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.sign
+import me.melinoe.utils.ui.mouseX as melinoeMouseX
+import me.melinoe.utils.ui.mouseY as melinoeMouseY
 
 object HudManager : Screen(Component.literal("HUD Manager")) {
 

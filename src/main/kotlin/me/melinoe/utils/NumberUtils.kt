@@ -1,6 +1,6 @@
 package me.melinoe.utils
 
-import java.util.Locale
+import java.util.*
 
 /**
  * Extension function for number formatting.

@@ -2,20 +2,19 @@ package me.melinoe.features.impl.combat
 
 import me.melinoe.Melinoe
 import me.melinoe.clickgui.settings.Setting.Companion.withDependency
-import me.melinoe.features.Category
-import me.melinoe.features.Module
 import me.melinoe.clickgui.settings.impl.BooleanSetting
 import me.melinoe.clickgui.settings.impl.ColorSetting
 import me.melinoe.clickgui.settings.impl.SelectorSetting
 import me.melinoe.events.RenderEvent
 import me.melinoe.events.core.on
+import me.melinoe.features.Category
+import me.melinoe.features.Module
 import me.melinoe.utils.Color
 import me.melinoe.utils.ItemUtils
 import me.melinoe.utils.RangeInfo
 import me.melinoe.utils.render.TriangleStripData
 import me.melinoe.utils.render.TriangleStripPoint
 import me.melinoe.utils.render.drawCircle
-import me.melinoe.utils.render.drawSquare
 import me.melinoe.utils.render.drawThickLine
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3

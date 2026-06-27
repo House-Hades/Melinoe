@@ -9,9 +9,6 @@ import me.melinoe.clickgui.settings.impl.NumberSetting
 import me.melinoe.clickgui.settings.impl.StringSetting
 import me.melinoe.features.Module
 import net.minecraft.core.BlockPos
-import net.minecraft.network.chat.ClickEvent
-import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.HoverEvent
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3

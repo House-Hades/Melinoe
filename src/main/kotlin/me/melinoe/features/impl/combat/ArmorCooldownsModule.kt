@@ -2,17 +2,8 @@ package me.melinoe.features.impl.combat
 
 import me.melinoe.Melinoe
 import me.melinoe.clickgui.settings.Setting.Companion.withDependency
-import me.melinoe.clickgui.settings.impl.BooleanSetting
-import me.melinoe.clickgui.settings.impl.ColorSetting
-import me.melinoe.clickgui.settings.impl.DropdownSetting
-import me.melinoe.clickgui.settings.impl.HUDSetting
-import me.melinoe.clickgui.settings.impl.NumberSetting
-import me.melinoe.clickgui.settings.impl.StringSetting
-import me.melinoe.events.HubToRealmEvent
-import me.melinoe.events.RealmToHubEvent
-import me.melinoe.events.RealmToRealmEvent
-import me.melinoe.events.TickEvent
-import me.melinoe.events.WorldLoadEvent
+import me.melinoe.clickgui.settings.impl.*
+import me.melinoe.events.*
 import me.melinoe.events.core.on
 import me.melinoe.features.Category
 import me.melinoe.features.Module

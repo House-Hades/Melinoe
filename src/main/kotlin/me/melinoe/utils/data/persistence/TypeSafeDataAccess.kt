@@ -1,7 +1,5 @@
 package me.melinoe.utils.data.persistence
 
-import me.melinoe.Melinoe
-
 /**
  * Type-safe wrapper for DataConfig using TrackingKey sealed classes.
  * Provides compile-time safety and prevents typos in key names.

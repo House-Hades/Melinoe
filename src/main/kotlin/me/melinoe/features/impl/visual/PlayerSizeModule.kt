@@ -12,7 +12,7 @@ import net.minecraft.client.renderer.entity.state.AvatarRenderState
 import net.minecraft.network.chat.Component
 import net.minecraft.world.entity.Display
 import net.minecraft.world.entity.Entity
-import java.util.WeakHashMap
+import java.util.*
 
 
 /**

@@ -1,10 +1,10 @@
 package me.melinoe.features.impl.combat
 
+import me.melinoe.clickgui.settings.impl.BooleanSetting
 import me.melinoe.events.TickEvent
 import me.melinoe.events.core.on
 import me.melinoe.features.Category
 import me.melinoe.features.Module
-import me.melinoe.clickgui.settings.impl.BooleanSetting
 import net.minecraft.world.InteractionHand
 
 /**

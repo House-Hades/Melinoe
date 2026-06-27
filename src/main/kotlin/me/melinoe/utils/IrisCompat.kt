@@ -1,7 +1,6 @@
 package me.melinoe.utils
 
 import com.mojang.blaze3d.pipeline.RenderPipeline
-import me.melinoe.mixin.accessors.CompositeRenderTypeAccessor
 import me.melinoe.utils.render.CustomRenderLayer
 import net.fabricmc.loader.api.FabricLoader
 import net.irisshaders.iris.api.v0.IrisApi

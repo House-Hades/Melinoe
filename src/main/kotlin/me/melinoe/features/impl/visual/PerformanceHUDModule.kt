@@ -1,17 +1,15 @@
 package me.melinoe.features.impl.visual
 
-import me.melinoe.features.Category
-import me.melinoe.features.Module
-import me.melinoe.Melinoe
 import me.melinoe.clickgui.settings.impl.BooleanSetting
 import me.melinoe.clickgui.settings.impl.ColorSetting
 import me.melinoe.clickgui.settings.impl.HUDSetting
 import me.melinoe.clickgui.settings.impl.SelectorSetting
+import me.melinoe.features.Category
+import me.melinoe.features.Module
 import me.melinoe.utils.Color
-import me.melinoe.utils.Colors
 import me.melinoe.utils.ServerUtils
-import me.melinoe.utils.toFixed
 import me.melinoe.utils.render.textDim
+import me.melinoe.utils.toFixed
 import net.minecraft.client.gui.GuiGraphicsExtractor
 
 /**

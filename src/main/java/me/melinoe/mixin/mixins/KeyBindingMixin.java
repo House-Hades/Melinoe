@@ -1,7 +1,6 @@
 package me.melinoe.mixin.mixins;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import me.melinoe.events.InputEvent;
 import net.minecraft.client.KeyMapping;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

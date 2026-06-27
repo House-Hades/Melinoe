@@ -6,11 +6,9 @@ import me.melinoe.features.impl.ClickGUIModule
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer
 import net.minecraft.client.gui.components.ChatComponent
-import net.minecraft.client.multiplayer.chat.GuiMessageSource
 import net.minecraft.client.multiplayer.chat.GuiMessageTag
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.ComponentSerialization
-import net.minecraft.network.chat.MutableComponent
 
 /**
  * Melinoe message indicator for chat messages.

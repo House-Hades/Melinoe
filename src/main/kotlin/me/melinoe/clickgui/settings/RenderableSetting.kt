@@ -2,7 +2,6 @@ package me.melinoe.clickgui.settings
 
 import me.melinoe.clickgui.ClickGUI
 import me.melinoe.clickgui.Panel
-import me.melinoe.clickgui.settings.Setting
 import me.melinoe.utils.ui.HoverHandler
 import me.melinoe.utils.ui.isAreaHovered
 import net.minecraft.client.input.CharacterEvent

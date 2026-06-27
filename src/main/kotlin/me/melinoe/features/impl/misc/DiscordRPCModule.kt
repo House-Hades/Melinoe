@@ -13,7 +13,6 @@ import me.melinoe.clickgui.settings.impl.BooleanSetting
 import me.melinoe.clickgui.settings.impl.StringSetting
 import me.melinoe.features.Category
 import me.melinoe.features.Module
-import me.melinoe.utils.BossBarUtils
 import me.melinoe.utils.LocalAPI
 import me.melinoe.utils.ServerUtils
 import me.melinoe.utils.data.DungeonData

@@ -14,9 +14,7 @@ import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.Style
 import net.minecraft.world.item.ItemStackTemplate
-import java.util.ArrayDeque
-import java.util.Locale
-import java.util.Optional
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 

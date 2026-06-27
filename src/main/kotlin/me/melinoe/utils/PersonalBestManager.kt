@@ -4,8 +4,8 @@ import me.melinoe.Melinoe
 import me.melinoe.utils.data.BossData
 import me.melinoe.utils.data.DungeonData
 import me.melinoe.utils.data.persistence.PersonalBestRecord
-import me.melinoe.utils.data.persistence.TypeSafeDataAccess
 import me.melinoe.utils.data.persistence.TrackingKey
+import me.melinoe.utils.data.persistence.TypeSafeDataAccess
 import kotlin.math.abs
 
 /**

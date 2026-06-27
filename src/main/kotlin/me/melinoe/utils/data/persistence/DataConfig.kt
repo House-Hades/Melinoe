@@ -8,7 +8,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.runBlocking
 import me.melinoe.Melinoe
-import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.concurrent.ConcurrentHashMap

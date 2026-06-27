@@ -1,11 +1,11 @@
 package me.melinoe.features.impl.tracking.bosstracker
 
 import me.melinoe.Melinoe
+import me.melinoe.clickgui.settings.Setting.Companion.withDependency
 import me.melinoe.clickgui.settings.impl.BooleanSetting
 import me.melinoe.clickgui.settings.impl.ColorSetting
 import me.melinoe.clickgui.settings.impl.DropdownSetting
 import me.melinoe.clickgui.settings.impl.KeybindSetting
-import me.melinoe.clickgui.settings.Setting.Companion.withDependency
 import me.melinoe.events.ChatPacketEvent
 import me.melinoe.events.GuiEvent
 import me.melinoe.events.RenderEvent

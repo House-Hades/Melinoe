@@ -3,22 +3,11 @@ package me.melinoe.clickgui
 import me.melinoe.Melinoe
 import me.melinoe.Melinoe.mc
 import me.melinoe.features.impl.ClickGUIModule
-import me.melinoe.network.Companions
-import me.melinoe.network.PlayerClass
-import me.melinoe.network.ProfileException
-import me.melinoe.network.ProfileFetcher
-import me.melinoe.network.StashItem
-import me.melinoe.network.TelosCharacter
-import me.melinoe.network.TelosCharacterDetail
-import me.melinoe.network.TelosProfile
-import me.melinoe.utils.data.ClassData
-import me.melinoe.utils.data.CompanionData
-import me.melinoe.utils.data.SeasonPassData
+import me.melinoe.network.*
 import me.melinoe.utils.Color
-import me.melinoe.utils.data.TelosItems
-import me.melinoe.utils.data.TraitData
-import me.melinoe.utils.render.hollowFill
+import me.melinoe.utils.data.*
 import me.melinoe.utils.handlers.schedule
+import me.melinoe.utils.render.hollowFill
 import me.melinoe.utils.ui.animations.EaseOutAnimation
 import me.melinoe.utils.ui.rendering.Gradient
 import me.melinoe.utils.ui.rendering.NVGPIPRenderer
@@ -27,17 +16,9 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
-import org.lwjgl.glfw.GLFW
 import net.minecraft.network.chat.Component
-import kotlin.math.abs
-import kotlin.math.ceil
-import kotlin.math.cos
-import kotlin.math.floor
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.sign
-import kotlin.math.sin
-import kotlin.math.sqrt
+import org.lwjgl.glfw.GLFW
+import kotlin.math.*
 import me.melinoe.utils.ui.mouseX as rawMouseX
 import me.melinoe.utils.ui.mouseY as rawMouseY
 

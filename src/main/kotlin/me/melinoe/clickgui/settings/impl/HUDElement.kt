@@ -2,8 +2,8 @@ package me.melinoe.clickgui.settings.impl
 
 import me.melinoe.Melinoe
 import me.melinoe.utils.Colors
-import me.melinoe.utils.ui.isAreaHovered
 import me.melinoe.utils.render.hollowFill
+import me.melinoe.utils.ui.isAreaHovered
 import net.minecraft.client.gui.GuiGraphicsExtractor
 
 open class HudElement(

@@ -3,12 +3,12 @@ package me.melinoe
 import me.melinoe.commands.*
 import me.melinoe.events.EventDispatcher
 import me.melinoe.events.core.EventBus
-import me.melinoe.network.TelosDataFetcher
-import me.melinoe.utils.data.TelosData
 import me.melinoe.features.ModuleManager
+import me.melinoe.network.TelosDataFetcher
 import me.melinoe.utils.IrisCompat
 import me.melinoe.utils.LocalAPI
 import me.melinoe.utils.ServerUtils
+import me.melinoe.utils.data.TelosData
 import me.melinoe.utils.data.persistence.DataConfig
 import me.melinoe.utils.handlers.BossDefeatHandler
 import me.melinoe.utils.handlers.TickTasks

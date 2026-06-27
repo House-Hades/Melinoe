@@ -1,17 +1,16 @@
 package me.melinoe.features.impl.visual
 
-import me.melinoe.Melinoe.mc
+import me.melinoe.clickgui.settings.Setting.Companion.withDependency
+import me.melinoe.clickgui.settings.impl.BooleanSetting
+import me.melinoe.clickgui.settings.impl.ColorSetting
+import me.melinoe.clickgui.settings.impl.SelectorSetting
 import me.melinoe.events.RenderEvent
 import me.melinoe.events.core.on
 import me.melinoe.features.Category
 import me.melinoe.features.Module
-import me.melinoe.clickgui.settings.impl.BooleanSetting
-import me.melinoe.clickgui.settings.impl.ColorSetting
-import me.melinoe.clickgui.settings.impl.SelectorSetting
-import me.melinoe.clickgui.settings.Setting.Companion.withDependency
 import me.melinoe.utils.Color
-import me.melinoe.utils.renderBoundingBox
 import me.melinoe.utils.render.drawStyledBox
+import me.melinoe.utils.renderBoundingBox
 import net.minecraft.client.CameraType
 import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.entity.item.ItemEntity
