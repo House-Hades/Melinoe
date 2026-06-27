@@ -1379,7 +1379,7 @@
       "name": "PENDANT_OF_SIN",
       "rarity": "UNHOLY",
       "displayName": "The Pendant of Sin",
-      "texturePath": "telos:material/fragment/cross2",
+      "texturePath": "telos:material/misc/pendant",
       "maxPity": 120,
       "hasShiny": true
     },
