@@ -5,7 +5,8 @@
       "rarity": "IRRADIATED",
       "displayName": "Blunderbow",
       "texturePath": "telos:material/weapon/bow/ut-blunder",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "LOST_TREASURE_SCRIPTURE",
@@ -40,7 +41,8 @@
       "rarity": "IRRADIATED",
       "displayName": "Ayahuasca Flask",
       "texturePath": "telos:material/ability/poison/ut-flask",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "WARTORN_SANDALS",
@@ -229,7 +231,8 @@
       "rarity": "GILDED",
       "displayName": "Demonic Blade",
       "texturePath": "telos:material/weapon/sword/ut-demonic",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "DEMONIC_DAGGER",
@@ -271,7 +274,8 @@
       "rarity": "GILDED",
       "displayName": "Doom Bow",
       "texturePath": "telos:material/weapon/bow/ut-doom",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "HAT_OF_LOST_SOULS",
@@ -299,7 +303,8 @@
       "rarity": "GILDED",
       "displayName": "Frozen Star",
       "texturePath": "telos:material/ability/star/ut-frozen",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "FROSTSPARK_SKULL",
@@ -439,7 +444,8 @@
       "rarity": "GILDED",
       "displayName": "Shield of Glacial Reflection",
       "texturePath": "telos:material/ability/shield/ut-reflection",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "FROST_LEGGINGS",
@@ -572,7 +578,8 @@
       "rarity": "ROYAL",
       "displayName": "Orb of Conflict",
       "texturePath": "telos:material/ability/orb/ut-conflict",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "KUNAI_OF_CONFLICT",
@@ -586,7 +593,8 @@
       "rarity": "ROYAL",
       "displayName": "Crystal Poison",
       "texturePath": "telos:material/ability/poison/ut-crystal",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "CRYSTAL_KUNAI",
@@ -684,7 +692,8 @@
       "rarity": "ROYAL",
       "displayName": "Sceptre of Gloom",
       "texturePath": "telos:material/weapon/sceptre/ut-gloom",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "OMNIPOTENT_ROBE",
@@ -845,7 +854,8 @@
       "rarity": "ROYAL",
       "displayName": "Chronos Sabatons",
       "texturePath": "telos:material/armour/heavy/boots/ut-chronos",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "CHRONOS_HEART",
@@ -1153,42 +1163,48 @@
       "rarity": "BLOODSHOT",
       "displayName": "Calamity",
       "texturePath": "telos:material/weapon/sceptre/ut-onyx",
-      "maxPity": 75
+      "maxPity": 75,
+      "hasShiny": true
     },
     {
       "name": "RETRIBUTION",
       "rarity": "BLOODSHOT",
       "displayName": "Retribution",
       "texturePath": "telos:material/weapon/sword/ut-onyx",
-      "maxPity": 75
+      "maxPity": 75,
+      "hasShiny": true
     },
     {
       "name": "RAPTURE",
       "rarity": "BLOODSHOT",
       "displayName": "Rapture",
       "texturePath": "telos:material/weapon/bow/ut-onyx",
-      "maxPity": 75
+      "maxPity": 75,
+      "hasShiny": true
     },
     {
       "name": "MARTYR",
       "rarity": "BLOODSHOT",
       "displayName": "Martyr",
       "texturePath": "telos:material/weapon/staff/ut-onyx",
-      "maxPity": 75
+      "maxPity": 75,
+      "hasShiny": true
     },
     {
       "name": "REIKON",
       "rarity": "BLOODSHOT",
       "displayName": "Reikon",
       "texturePath": "telos:material/weapon/katana/ut-onyx",
-      "maxPity": 75
+      "maxPity": 75,
+      "hasShiny": true
     },
     {
       "name": "MALICE",
       "rarity": "BLOODSHOT",
       "displayName": "Malice",
       "texturePath": "telos:material/weapon/dagger/ut-onyx",
-      "maxPity": 75
+      "maxPity": 75,
+      "hasShiny": true
     },
     {
       "name": "WRATHGUARD",
@@ -1215,8 +1231,9 @@
       "name": "SOURCESTONE",
       "rarity": "BLOODSHOT",
       "displayName": "Crimson Sourcestone",
-      "texturePath": "telos:material/fragment/onyx",
-      "maxPity": 66
+      "texturePath": "telos:material/misc/sourcestone",
+      "maxPity": 66,
+      "hasShiny": true
     },
     {
       "name": "EXALTLING",
@@ -1257,8 +1274,9 @@
       "name": "FRACTURED_NIHILITY",
       "rarity": "VOIDBOUND",
       "displayName": "Fractured Nihility",
-      "texturePath": "telos:material/fragment/nihility",
-      "maxPity": 120
+      "texturePath": "telos:material/misc/nihility",
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "SHADOW_CHIRP",
@@ -1279,14 +1297,16 @@
       "rarity": "BLOODSHOT",
       "displayName": "Valerion's Poniard",
       "texturePath": "telos:material/weapon/dagger/ut-poniard",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "VALERIONS_BANE",
       "rarity": "BLOODSHOT",
       "displayName": "Valerion's Bane",
       "texturePath": "telos:material/weapon/katana/ut-bane",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "CUSTODIANS_VISOR",
@@ -1300,7 +1320,8 @@
       "rarity": "BLOODSHOT",
       "displayName": "Nebula's Battleaxe",
       "texturePath": "telos:material/weapon/sword/ut-battleaxe",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "DUSK_WEAVER",
@@ -1321,21 +1342,24 @@
       "rarity": "BLOODSHOT",
       "displayName": "Final Destination",
       "texturePath": "telos:material/weapon/staff/ut-destination",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "ORACLES_END",
       "rarity": "BLOODSHOT",
       "displayName": "Oracle's End",
       "texturePath": "telos:material/weapon/bow/ut-oracle",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "CROWN_OF_ETHEREAL_RADIANCE",
       "rarity": "BLOODSHOT",
       "displayName": "Crown of Ethereal Radiance",
       "texturePath": "telos:material/armour/heavy/helmet/ut-crown",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "LUMINE",
@@ -1356,7 +1380,8 @@
       "rarity": "UNHOLY",
       "displayName": "The Pendant of Sin",
       "texturePath": "telos:material/fragment/cross2",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "WARDENS_FACEGUARD",
@@ -1573,14 +1598,16 @@
       "rarity": "UNHOLY",
       "displayName": "The Holy Cross",
       "texturePath": "telos:material/misc/cross",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "CHARM_OF_BLASPHEMY",
       "rarity": "UNHOLY",
       "displayName": "Charm of Blasphemy",
       "texturePath": "telos:material/misc/blasphemy",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "CHERACUBE",
@@ -1608,63 +1635,72 @@
       "rarity": "BLOODSHOT",
       "displayName": "Prominence",
       "texturePath": "telos:material/weapon/sword/ut-prominence",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "FLAME_OF_PENTECOST",
       "rarity": "BLOODSHOT",
-      "displayName": "Flame of Pentecost",
+      "displayName": "Flames of Pentecost",
       "texturePath": "telos:material/weapon/staff/ut-pentecost",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "DAUNTLESS_INFERNO",
       "rarity": "BLOODSHOT",
       "displayName": "Dauntless Inferno",
       "texturePath": "telos:material/armour/heavy/boots/ut-inferno",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "FORBIDDEN_FLEECE",
       "rarity": "BLOODSHOT",
       "displayName": "Forbidden Fleece",
       "texturePath": "telos:material/armour/light/chestplate/ut-forbidden",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "NACHASH_OF_THE_FIRST_LIE",
       "rarity": "BLOODSHOT",
       "displayName": "Nachash of the First Lie",
       "texturePath": "telos:material/weapon/katana/ut-nachash",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "SCEPTRE_OF_THE_FRACTURED_FIRMAMENT",
       "rarity": "BLOODSHOT",
       "displayName": "Sceptre of the Fractured Firmament",
       "texturePath": "telos:material/weapon/sceptre/ut-firmament",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "LEGGINGS_OF_FALSE_GLORY",
       "rarity": "BLOODSHOT",
       "displayName": "Leggings of False Glory",
       "texturePath": "telos:material/armour/magical/leggings/ut-glory",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "CATEGORY_SIX",
       "rarity": "BLOODSHOT",
       "displayName": "Category Six",
       "texturePath": "telos:material/weapon/dagger/ut-six",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "SEARAH",
       "rarity": "BLOODSHOT",
       "displayName": "Se'arah",
       "texturePath": "telos:material/weapon/bow/ut-searah",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "ENGINEERS_BLUEPRINT",
