@@ -4,7 +4,6 @@ import net.minecraft.client.Camera
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
@@ -13,8 +12,10 @@ import kotlin.math.sin
  * Handles HUD-based rendering with world-to-screen projection.
  */
 class RendererHUD(private val mc: Minecraft) {
-    // Cache for HUD rendering
-    private var cachedScreenPos: Vec3? = null
+    // Cached projected screen position
+    private var cachedScreenX = 0.0
+    private var cachedScreenY = 0.0
+    private var hasCachedPos = false
     private var cachedPlayer: Player? = null
     
     /**
@@ -31,26 +32,22 @@ class RendererHUD(private val mc: Minecraft) {
         // In first person, use fixed position
         if (mc.options.cameraType.isFirstPerson && showInFirstPerson) {
             val window = mc.window
-            cachedScreenPos = Vec3(window.guiScaledWidth / 2.0, (window.guiScaledHeight / 2.0) + 30.0, 0.0)
+            cachedScreenX = window.guiScaledWidth / 2.0
+            cachedScreenY = (window.guiScaledHeight / 2.0) + 30.0
+            hasCachedPos = true
             cachedPlayer = player
             return
         }
-        
-        // Calculate world position for third person
-        val playerPos = Vec3(
-            net.minecraft.util.Mth.lerp(tickDelta.toDouble(), player.xOld, player.x),
-            net.minecraft.util.Mth.lerp(tickDelta.toDouble(), player.yOld, player.y),
-            net.minecraft.util.Mth.lerp(tickDelta.toDouble(), player.zOld, player.z)
-        )
-        
-        val targetWorldPos = if (yPosition >= 0) {
-            playerPos.add(0.0, yPosition, 0.0)
-        } else {
-            playerPos
-        }
-        
+
+        // Calculate interpolated world position for third person
+        val td = tickDelta.toDouble()
+        val worldX = net.minecraft.util.Mth.lerp(td, player.xOld, player.x)
+        val worldY = net.minecraft.util.Mth.lerp(td, player.yOld, player.y)
+        val worldZ = net.minecraft.util.Mth.lerp(td, player.zOld, player.z)
+        val targetY = if (yPosition >= 0) worldY + yPosition else worldY
+
         // Project to screen and cache
-        cachedScreenPos = worldToScreen(targetWorldPos, camera, yPosition)
+        hasCachedPos = worldToScreen(worldX, targetY, worldZ, camera, yPosition)
         cachedPlayer = player
     }
     
@@ -74,12 +71,11 @@ class RendererHUD(private val mc: Minecraft) {
         textColor: Int,
         textOutline: Int
     ) {
-        val screenPos = cachedScreenPos ?: return
-        val player = cachedPlayer ?: return
-        
+        if (!hasCachedPos) return
+
         val matrices = guiGraphics.pose()
         matrices.pushMatrix()
-        matrices.translate(screenPos.x.toFloat(), screenPos.y.toFloat())
+        matrices.translate(cachedScreenX.toFloat(), cachedScreenY.toFloat())
         
         val actualWidth = barWidth.toFloat()
         val actualHeight = barHeight.toFloat()
@@ -103,11 +99,11 @@ class RendererHUD(private val mc: Minecraft) {
     /**
      * Project world coordinates to screen coordinates
      */
-    private fun worldToScreen(worldPos: Vec3, camera: Camera, yPosition: Double): Vec3? {
+    private fun worldToScreen(worldX: Double, worldY: Double, worldZ: Double, camera: Camera, yPosition: Double): Boolean {
         val cameraPos = camera.position()
-        val relativeX = worldPos.x - cameraPos.x
-        val relativeY = worldPos.y - cameraPos.y
-        val relativeZ = worldPos.z - cameraPos.z
+        val relativeX = worldX - cameraPos.x
+        val relativeY = worldY - cameraPos.y
+        val relativeZ = worldZ - cameraPos.z
         
         val yaw = Math.toRadians(camera.yRot().toDouble())
         val pitch = Math.toRadians(camera.xRot().toDouble())
@@ -123,7 +119,7 @@ class RendererHUD(private val mc: Minecraft) {
         val y2 = relativeY * cosPitch - z1 * sinPitch
         val z2 = relativeY * sinPitch + z1 * cosPitch
         
-        if (z2 <= 0.1) return null
+        if (z2 <= 0.1) return false
         
         // Project to screen
         val window = mc.window
@@ -135,7 +131,7 @@ class RendererHUD(private val mc: Minecraft) {
         val screenX = (x1 / z2) * scale / aspectRatio
         val screenY = (y2 / z2) * scale
         
-        var finalX = (screenX + 1.0) * 0.5 * window.guiScaledWidth
+        val finalX = (screenX + 1.0) * 0.5 * window.guiScaledWidth
         var finalY = (1.0 - screenY) * 0.5 * window.guiScaledHeight
         
         // Apply screen-space offset for negative Y
@@ -148,12 +144,14 @@ class RendererHUD(private val mc: Minecraft) {
         }
         
         // Check if on screen
-        if (finalX < -100 || finalX > window.guiScaledWidth + 100 || 
+        if (finalX < -100 || finalX > window.guiScaledWidth + 100 ||
             finalY < -100 || finalY > window.guiScaledHeight + 100) {
-            return null
+            return false
         }
-        
-        return Vec3(finalX, finalY, 0.0)
+
+        cachedScreenX = finalX
+        cachedScreenY = finalY
+        return true
     }
     
     /**
@@ -285,7 +283,7 @@ class RendererHUD(private val mc: Minecraft) {
      * Clear cached data
      */
     fun clearCache() {
-        cachedScreenPos = null
+        hasCachedPos = false
         cachedPlayer = null
     }
 }

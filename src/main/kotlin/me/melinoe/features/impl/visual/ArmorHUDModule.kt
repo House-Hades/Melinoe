@@ -7,7 +7,6 @@ import me.melinoe.clickgui.settings.impl.HUDSetting
 import me.melinoe.clickgui.settings.impl.SelectorSetting
 import net.minecraft.core.component.DataComponents
 import net.minecraft.resources.Identifier
-import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 
@@ -21,6 +20,8 @@ object ArmorHUDModule : Module(
 ) {
     private val direction by SelectorSetting("Orientation", "Horizontal", listOf("Horizontal", "Vertical"), "Orientation of the armor being displayed.")
     private const val HORIZONTAL = 0
+
+    private val EXAMPLE_PREVIEW = floatArrayOf(0f, 0.35f, 0.7f, 1f)
     
     private val hud by HUDSetting(
         name = "Armor Display",
@@ -36,7 +37,7 @@ object ArmorHUDModule : Module(
         val isHorizontal = direction == HORIZONTAL
         val player = mc.player
         
-        val armorItems = mutableListOf<ItemStack>()
+        val armorItems = ArrayList<ItemStack>(8)
         
         if (example || player == null) {
             // Helper to create an item with a custom model
@@ -52,7 +53,7 @@ object ArmorHUDModule : Module(
             armorItems.add(createCustomItem(Identifier.fromNamespaceAndPath("telos", "material/armour/heavy/boots/ut-timelost")))
         } else {
             // Each worn slot, followed by any swapped-off pieces of that slot still on cooldown
-            for (slot in listOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)) {
+            for (slot in ArmorCooldownsModule.ARMOR_SLOTS) {
                 armorItems.add(player.getItemBySlot(slot))
                 if (ArmorCooldownsModule.enabled) {
                     armorItems.addAll(ArmorCooldownsModule.extraPieces(slot))
@@ -66,8 +67,6 @@ object ArmorHUDModule : Module(
         val barsOn = example || (ArmorCooldownsModule.enabled && ArmorCooldownsModule.showBars.value)
         // Extra vertical room reserved per icon for the cooldown bar
         val cellExtra = if (barsOn) barGap + barH else 0
-        // Sample values for HUD editor
-        val examplePreview = listOf(0f, 0.35f, 0.7f, 1f)
 
         var currentX = 0
         var currentY = 0
@@ -79,7 +78,7 @@ object ArmorHUDModule : Module(
 
                 val barY = currentY + iconSize + barGap
                 if (example) {
-                    ArmorCooldownsModule.renderArmorBar(this, currentX, barY, iconSize, examplePreview[index % examplePreview.size])
+                    ArmorCooldownsModule.renderArmorBar(this, currentX, barY, iconSize, EXAMPLE_PREVIEW[index % EXAMPLE_PREVIEW.size])
                 } else if (barsOn && ArmorCooldownsModule.hasAbility(stack)) {
                     ArmorCooldownsModule.renderArmorBar(this, currentX, barY, iconSize, ArmorCooldownsModule.progressFor(stack))
                 }

@@ -44,7 +44,6 @@ object CustomRenderLayer {
         "quads",
         RenderSetup.builder(CustomRenderPipelines.QUADS)
             .bufferSize(RenderType.BIG_BUFFER_SIZE)
-            .sortOnUpload()
             .createRenderSetup()
     )
 }

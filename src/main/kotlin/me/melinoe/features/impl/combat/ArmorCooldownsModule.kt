@@ -40,7 +40,7 @@ object ArmorCooldownsModule : Module(
     description = "Tracks armor ability cooldowns with HUD bars, per-slot titles and sounds."
 ) {
 
-    private val ARMOR_SLOTS = listOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)
+    val ARMOR_SLOTS = listOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)
 
     // Bar visuals
     const val BAR_HEIGHT = 5
@@ -102,7 +102,8 @@ object ArmorCooldownsModule : Module(
         val slot: EquipmentSlot,
         var stack: ItemStack,
         var endMs: Long,
-        val isNature: Boolean
+        val isNature: Boolean,
+        val totalMs: Long
     )
     
     private val entries = LinkedHashMap<String, Entry>()
@@ -165,14 +166,11 @@ object ArmorCooldownsModule : Module(
                 val existing = entries[key]
                 if (existing != null) {
                     existing.stack = stack
-                    if (percent > 0f) {
-                        existing.endMs = now + (percent * totalMs(stack)).toLong()
-                    } else if (percent == 0f && now < existing.endMs) {
-                        existing.endMs = now
-                    }
+                    if (percent > 0f) existing.endMs = now + (percent * existing.totalMs).toLong()
                 } else if (percent > 0f) {
                     val isNature = ItemUtils.ItemType.fromItemStack(stack) == ItemUtils.ItemType.UT_NATURE
-                    entries[key] = Entry(key, slot, stack.copy(), now + (percent * totalMs(stack)).toLong(), isNature)
+                    val total = totalMs(stack)
+                    entries[key] = Entry(key, slot, stack.copy(), now + (percent * total).toLong(), isNature, total)
                 }
             }
 
@@ -180,11 +178,7 @@ object ArmorCooldownsModule : Module(
             for (entry in entries.values) {
                 if (entry.key in seenKeys) continue
                 val percent = player.cooldowns.getCooldownPercent(entry.stack, 0f)
-                if (percent > 0f) {
-                    entry.endMs = now + (percent * totalMs(entry.stack)).toLong()
-                } else if (percent == 0f && now < entry.endMs) {
-                    entry.endMs = now
-                }
+                if (percent > 0f) entry.endMs = now + (percent * entry.totalMs).toLong()
             }
 
             // Fire ready notifications and drop finished cooldowns
@@ -270,17 +264,27 @@ object ArmorCooldownsModule : Module(
     // Remaining cooldown progress (0..1) for a stack
     fun progressFor(stack: ItemStack): Float {
         if (stack.isEmpty) return 0f
-        // Always query vanilla cooldown as source of truth
-        val player = mc.player ?: return 0f
-        return player.cooldowns.getCooldownPercent(stack, 0f)
+        val entry = entries[keyOf(stack)] ?: return 0f
+        val remaining = entry.endMs - System.currentTimeMillis()
+        if (remaining <= 0L) return 0f
+        val total = entry.totalMs.toFloat()
+        return (remaining / total).coerceIn(0f, 1f)
     }
 
     // Tracked pieces in [slot] that are still on cooldown but are not the piece currently worn
     fun extraPieces(slot: EquipmentSlot): List<ItemStack> {
+        if (entries.isEmpty()) return emptyList()
         val player = mc.player ?: return emptyList()
         val worn = player.getItemBySlot(slot)
         val wornKey = if (ItemUtils.hasArmorAbility(worn)) keyOf(worn) else null
-        return entries.values.filter { it.slot == slot && it.key != wornKey }.map { it.stack }
+        // Single pass, allocate the result list only if something actually matches
+        var result: MutableList<ItemStack>? = null
+        for (entry in entries.values) {
+            if (entry.slot == slot && entry.key != wornKey) {
+                (result ?: ArrayList<ItemStack>(2).also { result = it }).add(entry.stack)
+            }
+        }
+        return result ?: emptyList()
     }
 
     // Draws a horizontal cooldown bar

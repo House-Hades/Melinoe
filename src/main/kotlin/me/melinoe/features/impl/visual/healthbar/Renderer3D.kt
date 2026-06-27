@@ -71,11 +71,12 @@ class Renderer3D(private val mc: Minecraft) {
         
         matrices.pushPose()
         matrices.translate(renderPos.x, renderPos.y, renderPos.z)
-        
+
         // Billboarding - always face the camera
-        matrices.mulPose(org.joml.Quaternionf().rotationY(Math.toRadians((-camera.yRot() + 180).toDouble()).toFloat()))
-        matrices.mulPose(org.joml.Quaternionf().rotationX(Math.toRadians((-camera.xRot()).toDouble()).toFloat()))
-        
+        val yawAngle = Math.toRadians((-camera.yRot() + 180).toDouble()).toFloat()
+        val pitchAngle = Math.toRadians((-camera.xRot()).toDouble()).toFloat()
+        matrices.mulPose(org.joml.Quaternionf().rotationYXZ(yawAngle, pitchAngle, 0f))
+
         val matrix = matrices.last().pose()
         
         // Render bar if not Text Only
@@ -108,7 +109,10 @@ class Renderer3D(private val mc: Minecraft) {
                 textPosition
             )
         }
-        
+
+        // Flush the bar quads and text together in a single batch
+        bufferSource.endBatch()
+
         matrices.popPose()
     }
     
@@ -141,21 +145,19 @@ class Renderer3D(private val mc: Minecraft) {
         val bottom = -innerHalfH
         
         val filledRight = left + (innerWidth * healthPercentage)
-        
+
+        // The QUADS pipeline has no depth test (ALWAYS_PASS), so these draw in order
         // Border
         drawGradientRect(matrix, bufferSource, -halfWidth, halfWidth, halfHeight, -halfHeight, borderColor, borderColor, 0.001f)
-        bufferSource.endBatch()
-        
-        // Health Fill
-        if (filledRight > left) {
-            drawGradientRect(matrix, bufferSource, left, filledRight, top, bottom, colorTop, colorBottom, 0.002f)
-            bufferSource.endBatch()
-        }
-        
+
         // Background (Solid)
         if (filledRight < right) {
             drawGradientRect(matrix, bufferSource, filledRight, right, top, bottom, backgroundColor, backgroundColor, 0.002f)
-            bufferSource.endBatch()
+        }
+
+        // Health Fill
+        if (filledRight > left) {
+            drawGradientRect(matrix, bufferSource, left, filledRight, top, bottom, colorTop, colorBottom, 0.003f)
         }
     }
     
@@ -275,7 +277,6 @@ class Renderer3D(private val mc: Minecraft) {
             15728880
         )
         
-        bufferSource.endBatch()
         matrices.popPose()
     }
 }

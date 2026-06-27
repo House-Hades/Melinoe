@@ -84,35 +84,39 @@ object HealthBarModule : Module(
             
             val player = mc.player ?: return@on
             
-            if (mc.options.cameraType.isFirstPerson && (renderMode == 0 || !showInFirstPerson)) return@on
+            val mode = renderMode
+            if (mc.options.cameraType.isFirstPerson && (mode == 0 || !showInFirstPerson)) return@on
             
             val currentHealth = player.health
             val maxHealth = player.maxHealth
             val tickDelta = mc.deltaTracker.getGameTimeDeltaPartialTick(false) // Used for smooth animations
+            
+            if (!currentHealth.isFinite() || maxHealth <= 0f) return@on
             
             // Updates the health state so the bar slides smoothly when taking damage
             healthState.initialize(currentHealth)
             healthState.checkDamage(currentHealth, damageFlash)
             healthState.updateHealth(currentHealth, smoothHealth)
             
-            val healthPercentage = (healthState.displayedHealth / maxHealth).coerceIn(0f, 1f)
+            val healthPercentage = safeHealthFraction(healthState.displayedHealth, maxHealth) ?: return@on
             
-            // Figure out what colors to use based on HP and settings
-            val baseBarColor = calculateBarColor(player, healthPercentage, tickDelta)
-            val finalTextColor = if (renderStyle == 2 && !staticTextColor) baseBarColor else textColor.rgba
-            
-            // If gradient is on, make the top lighter and the bottom darker
-            val barColorTop = if (renderStyle == 0) lighten(baseBarColor, 0.2f) else baseBarColor
-            val barColorBottom = if (renderStyle == 0) darken(baseBarColor, 0.2f) else baseBarColor
-            
-            val healthText = getCachedHealthText(player, healthPercentage)
-            
-            // Force text to center if we are only showing text, otherwise use the setting
-            val actualTextPosition = if (renderStyle == 2) 1 else textPosition
-            
-            if (renderMode == 0) {
+            if (mode == 0) {
+                // Only the 3D path draws here
+                val style = renderStyle
+                val baseBarColor = calculateBarColor(player, healthPercentage, tickDelta)
+                val finalTextColor = if (style == 2 && !staticTextColor) baseBarColor else textColor.rgba
+                
+                // If gradient is on, make the top lighter and the bottom darker
+                val barColorTop = if (style == 0) lighten(baseBarColor, 0.2f) else baseBarColor
+                val barColorBottom = if (style == 0) darken(baseBarColor, 0.2f) else baseBarColor
+                
+                val healthText = getCachedHealthText(player, healthPercentage)
+                // Force text to center if we are only showing text, otherwise use the setting
+                val actualTextPosition = if (style == 2) 1 else textPosition
+
                 render3D(context, player, healthPercentage, barColorTop, barColorBottom, finalTextColor, actualTextPosition, healthText, tickDelta)
             } else {
+                // Just project & cache the screen position, the actual draw happens in renderHud()
                 renderHUD(player, healthPercentage, tickDelta)
             }
         }
@@ -143,8 +147,8 @@ object HealthBarModule : Module(
         if (mc.options.cameraType.isFirstPerson && !showInFirstPerson) return
         
         val tickDelta = mc.deltaTracker.getGameTimeDeltaPartialTick(false)
-        val healthPercentage = (healthState.displayedHealth / player.maxHealth).coerceIn(0f, 1f)
-        
+        val healthPercentage = safeHealthFraction(healthState.displayedHealth, player.maxHealth) ?: return
+
         val baseBarColor = calculateBarColor(player, healthPercentage, tickDelta)
         val finalTextColor = if (renderStyle == 2 && !staticTextColor) baseBarColor else textColor.rgba
         
@@ -232,7 +236,13 @@ object HealthBarModule : Module(
         val newR = (r * (1f - fraction)).toInt()
         val newG = (g * (1f - fraction)).toInt()
         val newB = (b * (1f - fraction)).toInt()
-        return (a shl 24) or (newR shl 16) or (g shl 8) or newB
+        return (a shl 24) or (newR shl 16) or (newG shl 8) or newB
+    }
+    
+    private fun safeHealthFraction(displayedHealth: Float, maxHealth: Float): Float? {
+        if (maxHealth <= 0f) return null
+        val fraction = displayedHealth / maxHealth
+        return if (fraction.isFinite()) fraction.coerceIn(0f, 1f) else null
     }
     
     // Formats the health text, only recalculates if the health or settings changed
