@@ -38,7 +38,7 @@ object PityCounterConfig {
                 Item.Rarity.VOIDBOUND -> Constants.ICON_VOIDBOUND
                 Item.Rarity.UNHOLY -> Constants.ICON_UNHOLY
                 Item.Rarity.COMPANION -> Constants.ICON_COMPANION
-                Item.Rarity.RUNE -> Constants.ICON_RUNE
+                Item.Rarity.SHINY -> Constants.ICON_SHINY
             }
             
             // Map the rarity to its text color
@@ -50,18 +50,26 @@ object PityCounterConfig {
                 Item.Rarity.VOIDBOUND -> "<#8D15F0>"
                 Item.Rarity.UNHOLY -> "<#BFBFBF>"
                 Item.Rarity.COMPANION -> "<#FFAA00>"
-                Item.Rarity.RUNE -> "<#616161>"
+                Item.Rarity.SHINY -> "<#00FFFF>"
             }
             
             // Build the hover text displaying each item and its pity count
             val hoverText = items.joinToString("<br>") { item ->
                 val pity = TypeSafeDataAccess.get(TrackingKey.PityCounter(item.name)) ?: 0
-                
+
                 // Prevent MiniMessage from breaking because of items with an apostrophe
                 val safeName = item.displayName.replace("'", "\\'")
-                
+
                 // Add the sprite icon using the item's texture path
-                "<#FFFFFF><sprite:\"minecraft:blocks\":\"${item.texturePath}\"></#FFFFFF> $color$safeName<#AAAAAA>: <#FFFFFF>$pity</#FFFFFF>"
+                val line = "<#FFFFFF><sprite:\"minecraft:blocks\":\"${item.texturePath}\"></#FFFFFF> $color$safeName<#AAAAAA>: <#FFFFFF>$pity</#FFFFFF>"
+
+                // Items with a shiny variant show their separate shiny pity inline beside the normal count
+                if (item.hasShiny) {
+                    val shinyPity = TypeSafeDataAccess.get(TrackingKey.PityCounter("${item.name}-shiny")) ?: 0
+                    "$line <gray>(<gradient:#feb3c7:#959dd6>Shiny</gradient>: <white>$shinyPity</white>)</gray>"
+                } else {
+                    line
+                }
             }
             
             "<hover:show_text:'$hoverText'><#FFFFFF>$icon</#FFFFFF></hover>"

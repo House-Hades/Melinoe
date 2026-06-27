@@ -8,7 +8,8 @@ data class Item(
     val rarity: Rarity,
     val displayName: String,
     val texturePath: String,
-    val maxPity: Int
+    val maxPity: Int,
+    val hasShiny: Boolean = false
 ) {
     /** Item rarity */
     enum class Rarity {
@@ -19,7 +20,7 @@ data class Item(
         VOIDBOUND,
         UNHOLY,
         COMPANION,
-        RUNE
+        SHINY
     }
 
     /** Returns the constant name. */

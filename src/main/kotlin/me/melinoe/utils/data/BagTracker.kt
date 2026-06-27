@@ -1,4 +1,4 @@
-package me.melinoe.utils.data
+﻿package me.melinoe.utils.data
 
 import me.melinoe.Melinoe
 import me.melinoe.events.ChatPacketEvent
@@ -38,11 +38,22 @@ object BagTracker {
     
     private var currentBoss: String = ""
     
+    private data class DropVariant(val item: Item, val shiny: Boolean)
+
+    private const val SHINY_SUFFIX = "-shiny"
+
     // Item scanning state
     private var ticksRemaining = 0
-    private val detectedItems = mutableSetOf<Item>()
-    private val recentPityCache = mutableMapOf<Item, Int>()
-    private val recentPityCacheTime = mutableMapOf<Item, Long>()
+    private val detectedItems = mutableSetOf<DropVariant>()
+    private val recentPityCache = mutableMapOf<DropVariant, Int>()
+    private val recentPityCacheTime = mutableMapOf<DropVariant, Long>()
+
+    /**
+     * Pity counter key for an item variant. Shiny variants are tracked under a separate
+     * "<NAME>_SHINY" key so their pity is independent from the normal variant
+     */
+    private fun pityKeyOf(item: Item, shiny: Boolean): TrackingKey.PityCounter =
+        TrackingKey.PityCounter(if (shiny) "${item.name}$SHINY_SUFFIX" else item.name)
     
     init {
         // Register tick handler for item scanning
@@ -181,9 +192,13 @@ object BagTracker {
         
         // Increment pity for ALL items this boss can drop
         for (item in boss.items) {
-            val pityKey = TrackingKey.PityCounter(item.name)
-            val newCount = TypeSafeDataAccess.increment(pityKey)
-            Melinoe.logger.debug("  ${item.displayName}: $newCount")
+            val newCount = TypeSafeDataAccess.increment(pityKeyOf(item, shiny = false))
+            if (item.hasShiny) {
+                val newShinyCount = TypeSafeDataAccess.increment(pityKeyOf(item, shiny = true))
+                Melinoe.logger.debug("  ${item.displayName}: $newCount (shiny: $newShinyCount)")
+            } else {
+                Melinoe.logger.debug("  ${item.displayName}: $newCount")
+            }
         }
     }
     
@@ -241,27 +256,34 @@ object BagTracker {
             
             Melinoe.logger.debug("Found item entity with texture: $texturePath")
             
+            // Shiny variants carry a "-shiny" suffixed model path
+            val looksShiny = texturePath.endsWith(SHINY_SUFFIX)
+            val baseTexture = if (looksShiny) texturePath.removeSuffix(SHINY_SUFFIX) else texturePath
+
             // Find item by texture path
-            val droppedItem = resolveContextualItem(texturePath)
+            val droppedItem = resolveContextualItem(baseTexture)
             
-            if (droppedItem != null && !detectedItems.contains(droppedItem)) {
+            // Only treat as shiny if the item is flagged hasShiny in items.json
+            val shiny = looksShiny && droppedItem?.hasShiny == true
+            val variant = droppedItem?.let { DropVariant(it, shiny) }
+            if (droppedItem != null && variant != null && !detectedItems.contains(variant)) {
                 // Cache pity before reset (for chat message)
-                val pityKey = TrackingKey.PityCounter(droppedItem.name)
+                val pityKey = pityKeyOf(droppedItem, shiny)
                 val preResetPity = TypeSafeDataAccess.get(pityKey) ?: 0
-                recentPityCache[droppedItem] = preResetPity
-                recentPityCacheTime[droppedItem] = System.currentTimeMillis()
+                recentPityCache[variant] = preResetPity
+                recentPityCacheTime[variant] = System.currentTimeMillis()
                 
                 // Send chat notification
                 if (PityCounterModule.useCustomMsg) {
-                    sendPityResetMessage(droppedItem, preResetPity)
+                    sendPityResetMessage(droppedItem, preResetPity, shiny)
                 }
                 
                 // Reset pity for this item
                 TypeSafeDataAccess.reset(pityKey)
-                Melinoe.logger.info("Detected and reset pity for ${droppedItem.displayName} (was at $preResetPity)")
+                Melinoe.logger.info("Detected and reset pity for ${droppedItem.displayName}${if (shiny) " (shiny)" else ""} (was at $preResetPity)")
                 
                 // Mark as detected
-                detectedItems.add(droppedItem)
+                detectedItems.add(variant)
             }
         }
         
@@ -305,12 +327,19 @@ object BagTracker {
         
         if (droppedItem == null) return
         
+        // Determine if this is the shiny variant from the item model right after the name
+        val afterName = plainText.substring(gotIndex + 5 + droppedItem.displayName.length)
+        
         // Resolve contextual item (hardmode variants)
         droppedItem = resolveContextualItemByDisplayName(droppedItem)
         
+        // Only treat as shiny if the item is flagged hasShiny in items.json
+        val shiny = isShinyDrop(afterName) && droppedItem.hasShiny
+        
         // Only process specific target rarities requested
         val rarity = droppedItem.rarity
-        if (rarity != Item.Rarity.ROYAL &&
+        if (!shiny &&
+            rarity != Item.Rarity.ROYAL &&
             rarity != Item.Rarity.BLOODSHOT &&
             rarity != Item.Rarity.VOIDBOUND &&
             rarity != Item.Rarity.UNHOLY &&
@@ -318,23 +347,24 @@ object BagTracker {
             return
         }
         
-        val alreadyDetected = detectedItems.contains(droppedItem)
+        val variant = DropVariant(droppedItem, shiny)
+        val alreadyDetected = detectedItems.contains(variant)
         val preResetPity: Int
         
         // If not already processed by the entity scanning tick fallback
         if (!alreadyDetected) {
-            val pityKey = TrackingKey.PityCounter(droppedItem.name)
+            val pityKey = pityKeyOf(droppedItem, shiny)
             preResetPity = TypeSafeDataAccess.get(pityKey) ?: 0
-            recentPityCache[droppedItem] = preResetPity
-            recentPityCacheTime[droppedItem] = System.currentTimeMillis()
+            recentPityCache[variant] = preResetPity
+            recentPityCacheTime[variant] = System.currentTimeMillis()
             
             TypeSafeDataAccess.reset(pityKey)
-            Melinoe.logger.info("Detected and reset pity for ${droppedItem.displayName} via chat message (was at $preResetPity)")
+            Melinoe.logger.info("Detected and reset pity for ${droppedItem.displayName}${if (shiny) " (shiny)" else ""} via chat message (was at $preResetPity)")
             
-            detectedItems.add(droppedItem)
+            detectedItems.add(variant)
         } else {
-            preResetPity = recentPityCache[droppedItem] ?: 0
-            Melinoe.logger.debug("Item ${droppedItem.displayName} already detected via entity scan")
+            preResetPity = recentPityCache[variant] ?: 0
+            Melinoe.logger.debug("Item ${droppedItem.displayName}${if (shiny) " (shiny)" else ""} already detected via entity scan")
         }
         
         if (PityCounterModule.useCustomMsg) {
@@ -343,14 +373,15 @@ object BagTracker {
             
             // Only send if the tick fallback didn't already send it
             if (!alreadyDetected) {
-                sendPityResetMessage(droppedItem, preResetPity)
+                sendPityResetMessage(droppedItem, preResetPity, shiny)
             }
         } else {
             hideMessage()
             
             val originalComponent = this.component
             val area = if (LocalAPI.isInDungeon()) LocalAPI.getCurrentCharacterArea() else BossData.findByItem(droppedItem)?.label ?: "Unknown"
-            val shareText = "[${droppedItem.rarity}] Dropped ${droppedItem.displayName} at $preResetPity pity from $area!"
+            val rarityLabel = if (shiny) "SHINY" else droppedItem.rarity.toString()
+            val shareText = "[$rarityLabel] Dropped ${droppedItem.displayName} at $preResetPity pity from $area!"
             
             val buttonMessage = " <click:suggest_command:'${shareText}'><hover:show_text:\"<#AAAAAA>Pity: $preResetPity<br> Click to share in chat!</#AAAAAA>\"><#AAAAAA><b>⧉</b></#AAAAAA></hover></click>"
             val buttonComponent = buttonMessage.toNative()
@@ -427,9 +458,10 @@ object BagTracker {
     }
     
     /**
-     * Send pity reset message for a specific item.
+     * Send pity reset message for a specific item. When [shiny] is true the message uses the
+     * shiny styling regardless of the item's base rarity
      */
-    private fun sendPityResetMessage(item: Item, pityCount: Int) {
+    private fun sendPityResetMessage(item: Item, pityCount: Int, shiny: Boolean = false) {
         val mc = Melinoe.mc
         if (mc.player == null) return
         
@@ -438,7 +470,14 @@ object BagTracker {
         // Configuration for rarity styles
         data class RarityStyle(val indicatorColor: Int, val prefix: String, val itemNameColor: String, val logName: String)
         
-        val style = when (item.rarity) {
+        val shinyStyle = RarityStyle(
+            0x00FFFF,
+            "<#FFFFFF>\uD818\uDE80 </#FFFFFF><bold><gradient:#feb3c7:#959dd6>SHINY</gradient></bold>",
+            "<gradient:#feb3c7:#959dd6>",
+            "SHINY"
+        )
+
+        val style = if (shiny) shinyStyle else when (item.rarity) {
             Item.Rarity.IRRADIATED -> RarityStyle(
                 0x189506,
                 "<#FFFFFF>\uD814\uDF19 </#FFFFFF><bold><gradient:#189506:#15cd15>IRRADIATED</bold>",
@@ -481,12 +520,7 @@ object BagTracker {
                 "<#ae9000>",
                 "COMPANION"
             )
-            Item.Rarity.RUNE -> RarityStyle(
-                0x555555,
-                "<#FFFFFF>\uD815\uDC65 </#FFFFFF><bold><gradient:#555555:#616161>RUNE</bold>",
-                "<#555555>",
-                "RUNE"
-            )
+            Item.Rarity.SHINY -> shinyStyle
         }
         
         val lootBoostStr = if (lootboost > 0) " <#FFFF00>[+$lootboost% LB]" else ""
@@ -496,7 +530,7 @@ object BagTracker {
         // Build message using MiniMessage
         var message = "${style.prefix} $m- <#AAAAAA>Dropped <underlined>${style.itemNameColor}${item.displayName}</underlined> <#AAAAAA>at <#FFFF00>$pityCount</#FFFF00> <#AAAAAA>pity from ${style.itemNameColor}$area$lootBoostStr"
         if (PityCounterModule.showAnnounceButton) {
-            val shareText = "[${item.rarity}] Dropped ${item.displayName} at ${pityCount} pity from $area!"
+            val shareText = "[${style.logName}] Dropped ${item.displayName} at ${pityCount} pity from $area!"
             
             message += " <click:suggest_command:'${shareText}'><hover:show_text:\"<#AAAAAA>Click to share in chat!</#AAAAAA>\"><#AAAAAA><b>⧉</b></#AAAAAA></hover></click>"
         }
@@ -510,7 +544,19 @@ object BagTracker {
         
         mc.gui.chat.addPlayerMessage(message.toNative(), null, chatIndicator)
         
-        val logMessage = "Sent pity reset message: Dropped ${item.displayName} at $pityCount pity${if (lootboost > 0) " [+$lootboost% Loot Boost]" else ""}"
+        val logMessage = "Sent pity reset message: Dropped ${if (shiny) "shiny " else ""}${item.displayName} at $pityCount pity${if (lootboost > 0) " [+$lootboost% Loot Boost]" else ""}"
         Melinoe.logger.info(logMessage)
+    }
+
+    /**
+     * Detects whether a drop is the shiny variant from the trailing text after the item's display name
+     */
+    private fun isShinyDrop(afterName: String): Boolean {
+        val open = afterName.indexOf('[')
+        if (open == -1) return false
+        val close = afterName.indexOf(']', open + 1)
+        if (close == -1) return false
+        val inner = afterName.substring(open + 1, close).substringBefore('.')
+        return inner.endsWith(SHINY_SUFFIX)
     }
 }

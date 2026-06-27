@@ -316,7 +316,7 @@ object PityCounterModule : Module(
             Item.Rarity.VOIDBOUND -> 0xFF8D15F0.toInt()
             Item.Rarity.UNHOLY -> 0xFFBFBFBF.toInt()
             Item.Rarity.COMPANION -> 0xFFFFAA00.toInt()
-            Item.Rarity.RUNE -> 0xFF616161.toInt()
+            Item.Rarity.SHINY -> 0xFF00FFFF.toInt()
         }
     }
     
@@ -340,8 +340,8 @@ object PityCounterModule : Module(
         
         if (!cachedIsOnTelos && !example) return@render cachedRenderPair
         
-        // Determine active items for this frame
-        val currentItems = if (example) {
+        // Determine active items for this frame. Shiny variants are never shown on the HUD
+        val currentItems = (if (example) {
             listOfNotNull(
                 Item.byKey("BLUNDERBOW"), Item.byKey("LOST_TREASURE_SCRIPTURE"),
                 Item.byKey("SLIME_ARCHER"), Item.byKey("GOLDEN_STALLION")
@@ -354,7 +354,7 @@ object PityCounterModule : Module(
             BossData.itemsOf("HIEROPHANT", "APOSTLE", "CHERUBIM")
         } else {
             cachedItemsToDisplay
-        }
+        }).filter { it.rarity != Item.Rarity.SHINY }
         
         // If there are no items, exit cleanly
         if (currentItems.isEmpty()) return@render Pair(100, 50)

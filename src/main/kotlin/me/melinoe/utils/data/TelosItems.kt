@@ -56,7 +56,7 @@ object TelosItems {
         Item.Rarity.VOIDBOUND -> 0xFF8D15F0.toInt()
         Item.Rarity.UNHOLY -> 0xFFBFBFBF.toInt()
         Item.Rarity.COMPANION -> 0xFFFFAA00.toInt()
-        Item.Rarity.RUNE -> 0xFF8A7B5A.toInt()
+        Item.Rarity.SHINY -> 0xFF00FFFF.toInt()
         null -> 0xFF5A5A62.toInt()
     }
     

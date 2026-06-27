@@ -94,7 +94,7 @@ object TelosData {
                 Melinoe.logger.warn("[TelosData] Skipping malformed item: ${raw.name}")
                 null
             } else {
-                Item(raw.name, rarity, raw.displayName, raw.texturePath, raw.maxPity ?: 120)
+                Item(raw.name, rarity, raw.displayName, raw.texturePath, raw.maxPity ?: 120, raw.hasShiny ?: false)
             }
         }
 
@@ -140,7 +140,8 @@ object TelosData {
         val rarity: String?,
         val displayName: String?,
         val texturePath: String?,
-        val maxPity: Int?
+        val maxPity: Int?,
+        val hasShiny: Boolean?
     )
 
     private data class RawBosses(val bosses: List<RawBoss>?)

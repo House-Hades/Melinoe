@@ -91,7 +91,7 @@ val mainCommand = Commodore("melinoe", "m", "mel") {
                             "VOIDBOUND"  -> "<#8d15f0>$name"
                             "UNHOLY"     -> "<#bfbfbf>$name"
                             "COMPANION"  -> "<#ffaa00>$name"
-                            "RUNE"       -> "<#616161>$name"
+                            "SHINY"      -> "<gradient:#feb3c7:#959dd6>$name"
                             else         -> "<#AAAAAA>UNKNOWN</#AAAAAA>"
                         }
                     }
@@ -99,7 +99,11 @@ val mainCommand = Commodore("melinoe", "m", "mel") {
                     val pity = DataConfig.getPityCounter(item.name)
                     val texture = item.texturePath
                     
-                    append("<#FFFFFF><sprite:\"minecraft:blocks\":\"$texture\"></#FFFFFF> $coloredName<#555555>:</#555555> <#AAAAAA>$pity\n")
+                    // Items with a shiny variant show their separate shiny pity inline beside the
+                    // normal count
+                    val shinySuffix = if (item.hasShiny) " <gray>(<gradient:#feb3c7:#959dd6>Shiny</gradient>: <white>${DataConfig.getPityCounter("${item.name}-shiny")}</white>)</gray>" else ""
+
+                    append("<#FFFFFF><sprite:\"minecraft:blocks\":\"$texture\"></#FFFFFF> $coloredName<#555555>:</#555555> <#AAAAAA>$pity$shinySuffix\n")
                 }
             }
             

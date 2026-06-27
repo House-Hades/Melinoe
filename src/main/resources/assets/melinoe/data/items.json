@@ -1313,7 +1313,8 @@
       "rarity": "BLOODSHOT",
       "displayName": "Custodian's Visor",
       "texturePath": "telos:material/armour/light/helmet/ut-sentinel",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "NEBULAS_BATTLEAXE",
@@ -1328,14 +1329,16 @@
       "rarity": "BLOODSHOT",
       "displayName": "Dusk Weaver",
       "texturePath": "telos:material/weapon/sceptre/ut-dusk",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "ARCHONS_GLARE",
       "rarity": "BLOODSHOT",
       "displayName": "Archon's Glare",
       "texturePath": "telos:material/armour/magical/helmet/ut-mage",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "FINAL_DESTINATION",
@@ -1651,16 +1654,14 @@
       "rarity": "BLOODSHOT",
       "displayName": "Dauntless Inferno",
       "texturePath": "telos:material/armour/heavy/boots/ut-inferno",
-      "maxPity": 120,
-      "hasShiny": true
+      "maxPity": 120
     },
     {
       "name": "FORBIDDEN_FLEECE",
       "rarity": "BLOODSHOT",
       "displayName": "Forbidden Fleece",
       "texturePath": "telos:material/armour/light/chestplate/ut-forbidden",
-      "maxPity": 120,
-      "hasShiny": true
+      "maxPity": 120
     },
     {
       "name": "NACHASH_OF_THE_FIRST_LIE",
@@ -1683,8 +1684,7 @@
       "rarity": "BLOODSHOT",
       "displayName": "Leggings of False Glory",
       "texturePath": "telos:material/armour/magical/leggings/ut-glory",
-      "maxPity": 120,
-      "hasShiny": true
+      "maxPity": 120
     },
     {
       "name": "CATEGORY_SIX",
