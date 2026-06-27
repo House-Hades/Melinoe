@@ -43,6 +43,7 @@ object BossDefeatHandler {
     private var bossNameCaptured = false
     
     private var currentDungeon: DungeonData? = null
+    private var lastDefeatedBoss: BossData? = null
     
     // Queue for messages hidden during leaderboard building
     private val queuedMessages: MutableList<Component> by lazy { mutableListOf() }
@@ -94,6 +95,13 @@ object BossDefeatHandler {
         // Hide "Bonus dungeon chest has spawned!" message
         if (strippedValue.contains("Bonus dungeon chest has spawned")) {
             hideMessage()
+        }
+        
+        // Handle "Bonus chest has been unlocked!" message as a dungeon completion
+        // This increments pity for all items from the dungeon's final boss
+        if (strippedValue.contains("Bonus chest has been unlocked")) {
+            hideMessage()
+            handleBonusChestUnlocked()
         }
     }
     
@@ -307,8 +315,29 @@ object BossDefeatHandler {
         // Find the boss data
         val bossData = BossData.findByKey(strippedBossName)
         if (bossData != null) {
+            // Track the last defeated boss for chest completion message
+            lastDefeatedBoss = bossData
+            
             // Track boss defeat for lifetime stats and pity counters
             BagTracker.onBossDefeat(strippedBossName)
         }
+    }
+    
+    /**
+     * Handle bonus chest unlock (when "Bonus chest has been unlocked!" message appears)
+     * Increments pity counters for all items from the most recently defeated boss
+     */
+    private fun handleBonusChestUnlocked() {
+        // Use the last defeated boss instead of the dungeon's final boss
+        // This handles multi-stage dungeons where each boss can spawn a chest
+        val boss = lastDefeatedBoss
+        if (boss == null) {
+            Melinoe.logger.warn("[BossDefeatHandler] Bonus chest unlocked but no boss was recently defeated")
+            return
+        }
+        
+        // Treat this as an additional pity increment for the boss's items
+        Melinoe.logger.info("[BossDefeatHandler] Bonus chest unlocked for ${boss.label}, incrementing pity")
+        BagTracker.onBossDefeat(boss.label)
     }
 }
