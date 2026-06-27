@@ -11,7 +11,6 @@ import me.melinoe.features.impl.misc.*
 import me.melinoe.features.impl.tracking.*
 import me.melinoe.features.impl.tracking.bosstracker.TrackerModule
 import me.melinoe.features.impl.visual.*
-import me.melinoe.features.impl.visual.dungeontimer.TimerModule
 import me.melinoe.features.impl.visual.healthbar.HealthBarModule
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements
@@ -168,7 +167,6 @@ object ModuleManager {
             // Visual
             FullbrightModule,
             PerformanceHUDModule,
-            TimerModule,
             HealthBarModule,
             HealthIndicatorModule,
             PlayerSizeModule,

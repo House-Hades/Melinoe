@@ -4,22 +4,14 @@ import com.github.stivais.commodore.Commodore
 import com.github.stivais.commodore.utils.GreedyString
 import me.melinoe.Melinoe
 import me.melinoe.features.impl.ClickGUIModule
-import me.melinoe.features.impl.visual.dungeontimer.GradientTextBuilder
-import me.melinoe.features.impl.visual.dungeontimer.MessageFormatter
-import me.melinoe.features.impl.visual.dungeontimer.PityCounterConfig
-import me.melinoe.features.impl.visual.dungeontimer.TimerState
 import me.melinoe.utils.*
 import me.melinoe.utils.data.BagTracker
 import me.melinoe.utils.data.BossData
-import me.melinoe.utils.data.DungeonData
 import me.melinoe.utils.data.persistence.TrackingKey
 import me.melinoe.utils.data.persistence.TypeSafeDataAccess
-import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.component.DataComponents
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.network.chat.Component
-import kotlin.random.Random
 
 val devCommand = Commodore("melinoedev", "mdev") {
 
@@ -41,8 +33,6 @@ val devCommand = Commodore("melinoedev", "mdev") {
         Message.dev("""
             <#AAAAAA>Dev Command Help:
             <#555555><bold>›</bold> <#FFD700>/mdev itemid <#555555>- <#AAAAAA>Shows item ID and model data of held item
-            <#555555><bold>›</bold> <#FFD700>/mdev simulate \<dungeon> <#555555>- <#AAAAAA>Simulates a dungeon completion message
-            <#555555>  Available dungeons: <#AAAAAA>${DungeonData.all.joinToString("<#555555>, <#AAAAAA>") { it.name.lowercase() }}
             <#555555><bold>›</bold> <#FFD700>/mdev testbag \<type> <#555555>- <#AAAAAA>Simulates a bag drop and increments stats
             <#555555>  Available types: <#AAAAAA>bloodshot, unholy, voidbound, royal, companion, event
             <#555555><bold>›</bold> <#FFD700>/mdev testboss \<boss> <#555555>- <#AAAAAA>Simulates a boss defeat and increments counters
@@ -330,234 +320,9 @@ val devCommand = Commodore("melinoedev", "mdev") {
         Message.dev(message)
     }
     
-    literal("simulate").executable {
-        param("dungeon") {
-            suggests { DungeonData.all.map { it.name.lowercase() } }
-        }
-        
-        runs { dungeonName: String ->
-            if (!ClickGUIModule.devMode) {
-                Message.error("Dev mode is disabled. Enable it in ClickGUI settings.")
-                return@runs
-            }
-            
-            val dungeon = DungeonData.all.find {
-                it.name.equals(dungeonName, ignoreCase = true)
-            }
-            
-            if (dungeon == null) {
-                Message.error("Unknown dungeon: $dungeonName")
-                return@runs
-            }
-            
-            val player = Melinoe.mc.player
-            if (player == null) {
-                Message.error("Player not found")
-                return@runs
-            }
-            
-            // Check if this is a split dungeon (Rustborn Kingdom or Celestial's Province)
-            val isSplitDungeon = dungeon.name == "RUSTBORN_KINGDOM" || dungeon.name == "CELESTIALS_PROVINCE"
-            
-            if (isSplitDungeon) {
-                // Simulate split dungeon with multiple bosses
-                simulateSplitDungeon(dungeon, player)
-            } else {
-                // Simulate regular dungeon
-                simulateRegularDungeon(dungeon, player)
-            }
-        }
-    }
-    
     literal("copy").runs { greedyString: GreedyString ->
         setClipboardContent(greedyString.string)
         Message.success("Copied to clipboard!")
     }
-    
-}
 
-/**
- * Helper to safely center a Component utilizing string lengths to bypass tag calculation bugs.
- */
-private fun sendCenteredComponent(component: Component) {
-    val plainText = component.string.noControlCodes
-    val spaces = getCenteredText(plainText).takeWhile { it == ' ' }
-    Melinoe.mc.execute {
-        Melinoe.mc.gui.chat.addClientSystemMessage(Component.literal(spaces).append(component))
-    }
-}
-
-/**
- * Helper to safely center a MiniMessage string
- */
-private fun sendCenteredMM(mmString: String) {
-    val plainText = mmString.replace(Regex("<[^>]*>"), "").noControlCodes
-    val spaces = getCenteredText(plainText).takeWhile { it == ' ' }
-    Melinoe.mc.execute {
-        Melinoe.mc.gui.chat.addClientSystemMessage("$spaces$mmString".toNative())
-    }
-}
-
-/**
- * Simulates a regular dungeon completion
- */
-private fun simulateRegularDungeon(dungeon: DungeonData, player: LocalPlayer) {
-    // Generate random time between 1-10 minutes
-    val randomTime = Random.nextFloat() * 540f + 60f // 60-600 seconds (1-10 minutes)
-    
-    // Get current PB (if exists)
-    val currentPB = PersonalBestManager.getDungeonPersonalBest(dungeon)
-    // Randomly decide if this is a new PB (50% chance if PB exists, always true if no PB)
-    val isNewPB = if (currentPB == -1f) {
-        true
-    } else {
-        Random.nextBoolean()
-    }
-
-    // Adjust time based on whether it's a new PB
-    val simulatedTime = if (isNewPB && currentPB != -1f) {
-        // New PB should be faster than current PB
-        currentPB - (Random.nextFloat() * 30f + 1f) // 1-31 seconds faster
-    } else if (!isNewPB && currentPB != -1f) {
-        // Not a PB should be slower than current PB
-        currentPB + (Random.nextFloat() * 60f + 1f) // 1-61 seconds slower
-    } else {
-        randomTime
-    }.coerceAtLeast(1f)
-    
-    // Layout
-    Message.separator()
-    
-    val headerComponent = GradientTextBuilder.buildGradientText(dungeon.areaName, dungeon.dungeonType)
-    sendCenteredComponent(headerComponent)
-    
-    // Show pity counter if applicable (centered)
-    val pityLine = dungeon.finalBoss?.let { buildPityCounterLine(dungeon, it) } ?: ""
-    if (pityLine.isNotEmpty()) {
-        Message.centeredRaw(pityLine)
-    }
-    
-    // Completion messag
-    val compMsg = MessageFormatter.formatCompletionMessage(dungeon, simulatedTime, currentPB, isNewPB)
-    sendCenteredComponent(compMsg)
-    
-    Message.separator()
-    
-    // Simulate Leaderboard damage stat
-    sendCenteredMM("<#FFD700>𕑱 ${player.scoreboardName}<reset> <#555555>—</#555555> <#FF3333>100.0% (5420)<reset>")
-    
-    Message.separator()
-    
-    // Send dev confirmation
-    val timeStr = PersonalBestManager.formatTimeWithDecimals(simulatedTime)
-    val pbStr = if (currentPB == -1f) "None" else PersonalBestManager.formatTimeWithDecimals(currentPB)
-    val statusStr = if (isNewPB) "<#00FF00><bold>NEW PB!</bold>" else "<#FF3333><bold>Not PB</bold>"
-    
-    Message.dev("<#AAAAAA>Simulated <#FFD700>${dungeon.areaName}<#AAAAAA> completion: <#55FFFF>$timeStr <#555555>(PB: $pbStr) <reset>$statusStr")
-}
-
-/**
- * Simulates a split dungeon completion (Rustborn Kingdom or Celestial's Province)
- */
-private fun simulateSplitDungeon(dungeon: DungeonData, player: LocalPlayer) {
-    val bosses = when (dungeon.name) {
-        "RUSTBORN_KINGDOM" -> {
-            // Rustborn Kingdom: Valerion, Nebula, Ophanim (final)
-            listOfNotNull(BossData.byKey("VALERION"), BossData.byKey("NEBULA"), BossData.byKey("OPHANIM"))
-        }
-        "CELESTIALS_PROVINCE" -> {
-            // Celestial's Province: Asmodeus, Seraphim (final)
-            listOfNotNull(BossData.byKey("ASMODEUS"), BossData.byKey("SERAPHIM"))
-        }
-        else -> {
-            Message.error("Not a split dungeon: ${dungeon.areaName}")
-            return
-        }
-    }
-    
-    var totalTime = 0f
-    val bossResults = mutableListOf<String>()
-    val bossDefeats = mutableListOf<TimerState.BossDefeat>()
-    
-    // Simulate each boss defeat
-    for ((index, boss) in bosses.withIndex()) {
-        // Generate random split time (30-180 seconds per boss)
-        val splitTime = Random.nextFloat() * 150f + 30f
-        totalTime += splitTime
-        
-        // Get current PB for this boss
-        val currentPB = PersonalBestManager.getBossPersonalBest(boss)
-        
-        // Randomly decide if this is a new PB
-        val isNewPB = if (currentPB == -1f) {
-            Random.nextBoolean() // 50% chance even for first time
-        } else {
-            Random.nextBoolean()
-        }
-        
-        bossDefeats.add(TimerState.BossDefeat(boss, splitTime, isNewPB, currentPB))
-        
-        val newPbString = if (isNewPB) "<#00FF00><bold>NEW PB!</bold><reset>" else "<#FF3333><bold>Not PB</bold><reset>"
-        bossResults.add("${boss.label}: ${PersonalBestManager.formatTimeWithDecimals(splitTime)} $newPbString")
-        
-        // For intermediate bosses (not the final boss), show the mini split message
-        if (index < bosses.size - 1) {
-            Message.separator()
-            
-            val headerComponent = GradientTextBuilder.buildGradientText(dungeon.areaName, dungeon.dungeonType)
-            sendCenteredComponent(headerComponent)
-            
-            // Add pity counter line for this specific boss (centered)
-            val pityLine = buildPityCounterLine(dungeon, boss)
-            if (pityLine.isNotEmpty()) {
-                Message.centeredRaw(pityLine)
-            }
-            
-            // Show boss split message
-            val splitMsg = MessageFormatter.formatSplitMessage(dungeon, boss, splitTime, currentPB, isNewPB)
-            sendCenteredComponent(splitMsg)
-            
-            Message.separator()
-            sendCenteredMM("<#FFD700>𕑱 ${player.scoreboardName}<reset> <#555555>—</#555555> <#FF3333>100.0% (5420)<reset>")
-            Message.separator()
-        }
-    }
-    
-    Message.separator()
-    
-    val headerComponent = GradientTextBuilder.buildGradientText(dungeon.areaName, dungeon.dungeonType)
-    sendCenteredComponent(headerComponent)
-    
-    // Show pity counter only for the final boss (last defeat in the list)
-    if (bossDefeats.isNotEmpty()) {
-        val finalBoss = bossDefeats.last().boss
-        val pityLine = buildPityCounterLine(dungeon, finalBoss)
-        if (pityLine.isNotEmpty()) {
-            Message.centeredRaw(pityLine)
-        }
-    }
-    
-    // Show all boss defeats in the final summary
-    for (defeat in bossDefeats) {
-        val sumMsg = MessageFormatter.formatSplitSummaryMessage(dungeon, defeat.boss, defeat.splitTime, defeat.oldPB, defeat.wasNewPB)
-        sendCenteredComponent(sumMsg)
-    }
-    
-    Message.separator()
-    sendCenteredMM("<#FFD700>𕑱 ${player.scoreboardName}<reset> <#555555>—</#555555> <#FF3333>100.0% (5420)<reset>")
-    Message.separator()
-    
-    // Send dev confirmation
-    val totalTimeStr = PersonalBestManager.formatTimeWithDecimals(totalTime)
-    Message.dev("<#AAAAAA>Simulated <#FFD700>${dungeon.areaName}<#AAAAAA> split completion: <#55FFFF>$totalTimeStr <#AAAAAA>total")
-    bossResults.forEach { result ->
-        Message.dev("  <#555555>› <#AAAAAA>$result")
-    }
-}
-
-/**
- * Builds the pity counter line for specific dungeons
- */
-private fun buildPityCounterLine(dungeon: DungeonData, boss: BossData): String {
-    return PityCounterConfig.buildPityLine(dungeon, boss)
 }
