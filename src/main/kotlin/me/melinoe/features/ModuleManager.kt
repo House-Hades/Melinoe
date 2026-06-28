@@ -187,7 +187,6 @@ object ModuleManager {
             KeybindsModule,
             HideHeldTooltipsModule,
             ChatModule,
-            ItemShareModule,
 
             // Utility
             AutoSprintModule,

@@ -6,7 +6,6 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import me.melinoe.events.GuiEvent;
 import me.melinoe.events.PacketEvent;
 import me.melinoe.events.core.EventBus;
-import me.melinoe.features.impl.misc.ItemShareModule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -31,22 +30,6 @@ public class ClientPlayNetworkHandlerMixin {
     @ModifyExpressionValue(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;showNetworkCharts()Z"))
     private boolean alwaysSendPing(boolean original) {
         return true;
-    }
-
-    /**
-     * Relays the held item the moment a chat message is actually sent
-     */
-    @Inject(method = "sendChat", at = @At("HEAD"))
-    private void melinoe$shareItemOnChat(String message, CallbackInfo ci) {
-        ItemShareModule.INSTANCE.onOutgoingMessage(message);
-    }
-
-    /**
-     * Same, for messages sent as commands (/msg and /r)
-     */
-    @Inject(method = "sendCommand", at = @At("HEAD"))
-    private void melinoe$shareItemOnCommand(String command, CallbackInfo ci) {
-        ItemShareModule.INSTANCE.onOutgoingMessage(command);
     }
 
     @Inject(method = "handleContainerSetSlot", at = @At("TAIL"))
