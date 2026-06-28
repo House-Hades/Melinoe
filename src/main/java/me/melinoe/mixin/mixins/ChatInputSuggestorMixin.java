@@ -37,17 +37,34 @@ public abstract class ChatInputSuggestorMixin {
         // Bypasses logic entirely if the user is typing standard commands
         if (!EmojiSuggestionProvider.INSTANCE.isTypingEmoji(this.input)) return;
 
+        // Emoji suggestions are computed locally and are always immediately available
         CompletableFuture<Suggestions> emojiSuggestionsFuture = EmojiSuggestionProvider.INSTANCE.provideSuggestions(
                 text, this.input.getCursorPosition()
         );
 
-        // Dynamically combine mod suggestions with the server's live suggestion packet
-        if (this.pendingSuggestions != null) {
-            this.pendingSuggestions = this.pendingSuggestions.thenCombine(emojiSuggestionsFuture, (serverSugs, modSugs) ->
-                    EmojiSuggestionProvider.INSTANCE.mergeAndCheckPerks(serverSugs, modSugs, text)
+        CompletableFuture<Suggestions> serverFuture = this.pendingSuggestions;
+
+        if (serverFuture != null && serverFuture.isDone()) {
+            // Server suggestions are already here
+            this.pendingSuggestions = emojiSuggestionsFuture.thenApply(modSugs ->
+                    EmojiSuggestionProvider.INSTANCE.mergeAndCheckPerks(serverFuture.join(), modSugs, text)
             );
         } else {
+            // Dynamically combine mod suggestions with the server's live suggestion packet and show
+            // suggestions in message commands
             this.pendingSuggestions = emojiSuggestionsFuture;
+
+            if (serverFuture != null) {
+                serverFuture.thenAccept(serverSugs -> {
+                    // Only re-merge if we are still the active suggestion future
+                    if (this.pendingSuggestions == emojiSuggestionsFuture) {
+                        this.pendingSuggestions = CompletableFuture.completedFuture(
+                                EmojiSuggestionProvider.INSTANCE.mergeAndCheckPerks(serverSugs, emojiSuggestionsFuture.join(), text)
+                        );
+                        this.showSuggestions(false);
+                    }
+                });
+            }
         }
 
         this.showSuggestions(false);

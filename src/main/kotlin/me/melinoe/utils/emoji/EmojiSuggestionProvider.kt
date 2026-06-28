@@ -7,9 +7,17 @@ import net.minecraft.client.gui.components.EditBox
 import java.util.concurrent.CompletableFuture
 
 object EmojiSuggestionProvider {
-    
+
     private val emojiTypingRegex = Regex("(?i):[a-z0-9_]*:?")
-    
+
+    // Commands whose message argument should accept emoji shortcodes (chat channels + messages)
+    private val emojiCommandPrefixes = listOf(
+        "/ac ", "/gc ", "/grc ", "/msg ", "/r ", "/reply "
+    )
+
+    private fun isEmojiCommand(text: String): Boolean =
+        emojiCommandPrefixes.any { text.startsWith(it, ignoreCase = true) }
+
     // Walks backwards from cursor to find a valid opening colon
     private fun findOpeningColon(text: String, cursor: Int): Int {
         var start = cursor - 1
@@ -32,13 +40,7 @@ object EmojiSuggestionProvider {
         val cursor = field.cursorPosition
         if (cursor <= 0 || cursor > text.length) return false
         
-        if (text.startsWith("/")) {
-            val isCustomCmd = text.startsWith("/ac ", ignoreCase = true) ||
-                    text.startsWith("/gc ", ignoreCase = true) ||
-                    text.startsWith("/grc ", ignoreCase = true)
-            
-            if (!isCustomCmd) return false
-        }
+        if (text.startsWith("/") && !isEmojiCommand(text)) return false
         
         val start = findOpeningColon(text, cursor)
         if (start < 0) return false
@@ -116,10 +118,8 @@ object EmojiSuggestionProvider {
         val ourShortcodes = finalModSugs.map { it.text.substringBefore("*").substringBefore(" ") }.toSet()
         val merged = finalModSugs.toMutableList()
         
-        val isCustomCmd = inputText.startsWith("/ac ", ignoreCase = true) ||
-                inputText.startsWith("/gc ", ignoreCase = true) ||
-                inputText.startsWith("/grc ", ignoreCase = true)
-        
+        val isCustomCmd = isEmojiCommand(inputText)
+
         for (s in serverSugs.list) {
             val cleanText = s.text
             
