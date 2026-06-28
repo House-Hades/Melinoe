@@ -15,6 +15,7 @@ import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.ChatComponent
+import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
 import org.lwjgl.glfw.GLFW
@@ -55,6 +56,7 @@ object ChatModule : Module(
     description = "Adds tabs, filtering, and hiding of messages"
 ) {
     private val hideUtilityMessages by BooleanSetting("Hide Utility Messages", true, "Hides auction, fame, and auto-sell messages")
+    private val clickToTeleport by BooleanSetting("Click to Teleport", true, "Click chat callouts or realm names to teleport")
     private val enableChatTabs by BooleanSetting("Enable Chat Tabs", true, "Enable the chat tab grouping system")
     
     private val tabsDropdown by DropdownSetting("Chat Tabs", false).withDependency { enableChatTabs }
@@ -124,6 +126,7 @@ object ChatModule : Module(
     
     val isChatTabsEnabled: Boolean get() = enableChatTabs
     val isHideUtilityMessages: Boolean get() = hideUtilityMessages
+    val isClickToTeleport: Boolean get() = clickToTeleport
     
     // Regex patterns used to identify message types
     private val contentRegex = Regex("^(.*?\\[(?:Group|Guild)\\].*?:\\s*)", RegexOption.IGNORE_CASE)
@@ -440,7 +443,7 @@ object ChatModule : Module(
             
             val processed = when {
                 shouldCensor -> censorComponent(original, plainText)
-                isCallout -> KeybindsModule.applyCalloutClickEvent(original)
+                isCallout && clickToTeleport -> KeybindsModule.applyCalloutClickEvent(original)
                 else -> original
             }
             
@@ -627,6 +630,27 @@ object ChatModule : Module(
         setClipboardContent(text)
         Message.info("Copied message to clipboard.")
         return true
+    }
+
+    /**
+     * Right-clicking the realm prefix of a public chat message joins that realm and teleports to the sender
+     */
+    fun handleRealmRightClickAt(mouseX: Double, mouseY: Double): Boolean {
+        if (!enabled || !clickToTeleport) return false
+
+        val chat = Minecraft.getInstance().gui?.chat as? ChatTabs ?: return false
+        val style = chat.`melinoe$getStyleAt`(mouseX, mouseY) ?: return false
+
+        // The realm prefix carries a "/joinq <realm>" click event - this is how we identify it
+        val command = (style.clickEvent as? ClickEvent.RunCommand)?.command ?: return false
+        if (!command.startsWith("/joinq ")) return false
+        val realm = command.removePrefix("/joinq ").trim()
+        if (realm.isEmpty()) return false
+
+        val component = chat.`melinoe$getMessageAt`(mouseX, mouseY) ?: return false
+        val player = KeybindsModule.extractChatPlayer(component.string) ?: return false
+
+        return KeybindsModule.handleRealmTeleport(player, realm)
     }
 
     /**

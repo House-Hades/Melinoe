@@ -6,12 +6,14 @@ import me.melinoe.features.impl.misc.KeybindsModule;
 import me.melinoe.interfaces.ChatTabs;
 import me.melinoe.utils.emoji.EmojiReplacer;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ActiveTextCollector;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.gui.components.ComponentRenderUtils;
 import net.minecraft.client.multiplayer.chat.GuiMessage;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import org.spongepowered.asm.mixin.Final;
@@ -41,6 +43,7 @@ public abstract class ChatComponentMixin implements ChatTabs {
     @Shadow @Final private Minecraft minecraft;
     @Shadow public abstract void scrollChat(int pos);
     @Shadow public abstract int getLinesPerPage();
+    @Shadow public abstract void captureClickableText(ActiveTextCollector collector, int height, int guiTicks, ChatComponent.DisplayMode displayMode);
 
     // Stores the individual chat history for every single tab
     @Unique
@@ -105,6 +108,29 @@ public abstract class ChatComponentMixin implements ChatTabs {
 
         GuiMessage parent = this.trimmedMessages.get(index).parent();
         return parent == null ? null : parent.content();
+    }
+
+    /**
+     * Returns the clickable text Style sitting under the given screen coordinates, so callers can
+     * inspect the click event of the exact part of a message that was clicked.
+     *
+     * Mirrors how vanilla's ChatScreen resolves the hovered component: it feeds a ClickableStyleFinder
+     * through {@code captureClickableText}, which runs the same geometry as rendering against our
+     * tab-populated trimmedMessages list.
+     */
+    @Override
+    public Style melinoe$getStyleAt(double mouseX, double mouseY) {
+        if (this.trimmedMessages.isEmpty() || !this.isChatFocused()) return null;
+
+        ActiveTextCollector.ClickableStyleFinder finder =
+                new ActiveTextCollector.ClickableStyleFinder(this.minecraft.font, (int) mouseX, (int) mouseY);
+        this.captureClickableText(
+                finder,
+                this.minecraft.getWindow().getGuiScaledHeight(),
+                this.minecraft.gui.getGuiTicks(),
+                ChatComponent.DisplayMode.FOREGROUND
+        );
+        return finder.result();
     }
 
     /**
@@ -265,6 +291,8 @@ public abstract class ChatComponentMixin implements ChatTabs {
     )
     private Component melinoe$processIncomingMessage(Component message) {
         Component withEmojis = EmojiReplacer.INSTANCE.replaceIn(message);
-        return KeybindsModule.INSTANCE.applyCalloutClickEvent(withEmojis);
+        if (!ChatModule.INSTANCE.isClickToTeleport()) return withEmojis;
+        Component withRealm = KeybindsModule.INSTANCE.applyRealmJoinClickEvent(withEmojis);
+        return KeybindsModule.INSTANCE.applyCalloutClickEvent(withRealm);
     }
 }

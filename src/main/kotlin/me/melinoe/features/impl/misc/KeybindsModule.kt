@@ -123,6 +123,7 @@ object KeybindsModule : Module(
         .build()
     
     private val CHAT_MESSAGE_REGEX = Regex("^\\[([^\\]]+)\\].*?\\s+([A-Za-z0-9_]+):\\s+(.*)")
+    private val REALM_PREFIX_REGEX = Regex("^\\[([^\\]]+)]")
     private val CALLOUT_TELEPORT_REGEX = Regex("^Teleport for (.+?) - (?:(\\d+)%(?:/\\d+%)? HP|\\d+s left)")
     private val CALLOUT_BOSS_HP_REGEX = Regex("^(.+?) (?:is|are) at (\\d+)%(?:/\\d+%)? HP - .*")
     private val CALLOUT_DUNGEON_REGEX = Regex("^Currently in (.+)")
@@ -273,7 +274,77 @@ object KeybindsModule : Module(
 
         return result
     }
-    
+
+    /**
+     * Makes the realm prefix of a public chat message clickable
+     * Left-click joins the realm; right-click joins and teleports to the sender
+     */
+    fun applyRealmJoinClickEvent(original: Component): Component {
+        val plainText = original.string
+
+        val prefixMatch = REALM_PREFIX_REGEX.find(plainText) ?: return original
+        val realm = prefixMatch.groupValues[1].trim()
+
+        // Shouts carry "region, realm"; channel prefixes carry the channel name - none are joinable
+        if (realm.contains(",")) return original
+        if (realm.equals("Guild", ignoreCase = true) || realm.equals("Group", ignoreCase = true)) return original
+
+        // Only real player chat lines ("[realm] ... player: message") get the realm action
+        val player = extractChatPlayer(plainText) ?: return original
+
+        val prefixEnd = prefixMatch.value.length // index just past the closing ']'
+
+        val clickEvent = ClickEvent.RunCommand("/joinq $realm")
+        val hoverEvent = HoverEvent.ShowText(
+            Component.literal("Left-click to join $realm\nRight-click to join & teleport to $player")
+                .withStyle(net.minecraft.ChatFormatting.YELLOW)
+        )
+
+        val result = Component.empty()
+        var currentLen = 0
+
+        original.visit({ style: Style, text: String ->
+            val segStart = currentLen
+            val segEnd = currentLen + text.length
+            currentLen = segEnd
+
+            when {
+                segStart >= prefixEnd -> {
+                    // Entirely past the prefix - leave it untouched
+                    result.append(Component.literal(text).withStyle(style))
+                }
+                segEnd <= prefixEnd -> {
+                    // Entirely within the prefix - make it the realm action
+                    result.append(Component.literal(text).withStyle(style.withClickEvent(clickEvent).withHoverEvent(hoverEvent)))
+                }
+                else -> {
+                    // Segment straddles the end of the prefix
+                    val splitIdx = prefixEnd - segStart
+                    result.append(Component.literal(text.substring(0, splitIdx)).withStyle(style.withClickEvent(clickEvent).withHoverEvent(hoverEvent)))
+                    result.append(Component.literal(text.substring(splitIdx)).withStyle(style))
+                }
+            }
+            Optional.empty<Unit>()
+        }, Style.EMPTY)
+
+        return result
+    }
+
+    /**
+     * Pulls the sending player's name out of a chat line
+     */
+    fun extractChatPlayer(plainText: String): String? {
+        return CHAT_MESSAGE_REGEX.find(plainText)?.groupValues?.get(2)
+    }
+
+    /**
+     * Joins a realm and teleports to the sender
+     */
+    fun handleRealmTeleport(player: String, realm: String): Boolean {
+        calloutPlayers.put(player.lowercase(), Pair(realm.lowercase(), System.currentTimeMillis()))
+        return handleCalloutTeleport(player)
+    }
+
     private fun getCurrentRealm(): String {
         val now = System.currentTimeMillis()
         // Cache the realm string for 1 second to eliminate GC allocation on the render thread
@@ -287,6 +358,10 @@ object KeybindsModule : Module(
     }
     
     fun handleCalloutTeleport(player: String): Boolean {
+        // Consume the click but do nothing when click-to-teleport is disabled, so we don't fall
+        // through and fire a stray /tp at the server
+        if (!ChatModule.isClickToTeleport) return true
+
         val targetRealm = calloutPlayers.getIfPresent(player.lowercase())?.first
         val currentRealm = getCurrentRealm()
         

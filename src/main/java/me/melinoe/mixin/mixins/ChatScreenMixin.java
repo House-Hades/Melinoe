@@ -83,10 +83,13 @@ public class ChatScreenMixin {
      */
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void melinoe$onMouseClicked(MouseButtonEvent mouseButtonEvent, boolean bl, CallbackInfoReturnable<Boolean> cir) {
-        if (mouseButtonEvent.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT
-                && ChatModule.INSTANCE.copyMessageAt(mouseButtonEvent.x(), mouseButtonEvent.y())) {
-            cir.setReturnValue(true);
-            return;
+        if (mouseButtonEvent.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+            // Right-click the realm prefix to join & teleport; otherwise copy the message
+            if (ChatModule.INSTANCE.handleRealmRightClickAt(mouseButtonEvent.x(), mouseButtonEvent.y())
+                    || ChatModule.INSTANCE.copyMessageAt(mouseButtonEvent.x(), mouseButtonEvent.y())) {
+                cir.setReturnValue(true);
+                return;
+            }
         }
         if (ChatModule.INSTANCE.mouseClicked(mouseButtonEvent.x(), mouseButtonEvent.y(), mouseButtonEvent.button())) {
             cir.setReturnValue(true);
