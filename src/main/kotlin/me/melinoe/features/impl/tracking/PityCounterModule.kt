@@ -60,11 +60,8 @@ object PityCounterModule : Module(
     
     // Current boss tracking
     private var currentBossData: BossData? = null
-    
+
     // Memory Caches to massively improve performance
-    private val cachedPityCounters = mutableMapOf<String, Int>()
-    private val cachedPityStrings = mutableMapOf<String, String>()
-    private val cachedPityWidths = mutableMapOf<String, Int>()
     private val cachedItemStacks = mutableMapOf<Item, ItemStack>()
     
     // Throttling for environment calculations
@@ -115,39 +112,16 @@ object PityCounterModule : Module(
     }
     
     init {
-        
-        // Register callback for instant updates when pity changes
+
+        // Refresh the HUD whenever any pity value changes (values are read live on rebuild)
         DataConfig.registerUpdateCallback {
-            updateCache()
+            forceRenderUpdate = true
         }
-        
-        // Initial cache load
-//        updateCache()
-        
+
         on<DungeonEntryEvent> { handleDungeonEntry(dungeon) } // Listen for dungeon entry
         on<DungeonChangeEvent> { handleDungeonEntry(newDungeon) } // Listen for dungeon changes
         on<DungeonExitEvent> { currentBossData = null; invalidateEnvCache() } // Listen for dungeon exit
         on<BossBarUpdateEvent> { handleBossBarUpdate(bossBarMap) } // Listen for boss bar updates (world bosses)
-    }
-    
-    /**
-     * Update cached pity counters for all items
-     */
-    private fun updateCache() {
-        val font = mc.font
-        Item.all.forEach { item ->
-            val count = TypeSafeDataAccess.get(TrackingKey.PityCounter(item.name)) ?: 0
-            cachedPityCounters[item.name] = count
-            
-            val countStr = count.toString()
-            cachedPityStrings[item.name] = countStr
-            
-            if (font != null) {
-                cachedPityWidths[item.name] = font.width(countStr)
-            }
-        }
-        // Force the render loop to rebuild string caches on the next frame
-        forceRenderUpdate = true
     }
     
     private fun invalidateEnvCache() {
@@ -289,8 +263,11 @@ object PityCounterModule : Module(
                 pityCountStr = exCount.toString()
                 valueWidth = font.width(pityCountStr)
             } else {
-                pityCountStr = cachedPityStrings[item.name] ?: "0"
-                valueWidth = cachedPityWidths[item.name] ?: font.width(pityCountStr)
+                // Read the authoritative value directly so the displayed number can never
+                // drift from the actual values
+                val count = TypeSafeDataAccess.get(TrackingKey.PityCounter(item.name)) ?: 0
+                pityCountStr = count.toString()
+                valueWidth = font.width(pityCountStr)
             }
             
             renderDataList.add(
