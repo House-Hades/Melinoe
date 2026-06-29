@@ -39,8 +39,15 @@ import java.util.Optional
  */
 object BossDefeatHandler {
 
-    /** Matches Telos' built-in timer line, capturing the boss label (e.g. "Malfas"). */
-    private val DEFEAT_LINE = Regex("Defeated\\s+(.+?)\\s+in\\s+\\d")
+    /**
+     * Matches the "Defeated <boss>" line, capturing everything after it.
+     * Dungeons include a timer ("Defeated Malfas in 24s"); world bosses do not
+     * ("Defeated Lotil")
+     */
+    private val DEFEAT_LINE = Regex("Defeated\\s+(.+)")
+
+    /** Trailing " in <time>" suffix on dungeon timer lines (absent for world bosses) */
+    private val TIME_SUFFIX = Regex("\\s+in\\s+\\d.*$")
 
     private var currentDungeon: DungeonData? = null
     private var lastDefeatedBoss: BossData? = null
@@ -100,7 +107,7 @@ object BossDefeatHandler {
         for ((i, line) in strippedLines.withIndex()) {
             val match = DEFEAT_LINE.find(line) ?: continue
             defeatIdx = i
-            bossName = match.groupValues[1].trim()
+            bossName = match.groupValues[1].replace(TIME_SUFFIX, "").trim()
             break
         }
         if (defeatIdx < 0 || bossName == null) return
