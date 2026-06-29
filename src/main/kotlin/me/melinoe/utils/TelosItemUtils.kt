@@ -38,7 +38,7 @@ object TelosItemUtils {
     
     val POUCH_ROYAL = Identifier.fromNamespaceAndPath("telos", "mob/pouch/royal_totem")
     val POUCH_BLOODSHOT = Identifier.fromNamespaceAndPath("telos", "mob/pouch/bloodshot_totem")
-    val POUCH_COMPANION = Identifier.fromNamespaceAndPath("telos", "mob/pouch/companion_totem")
+    val POUCH_COMPANION = Identifier.fromNamespaceAndPath("telos", "mob/pouch/companion")
     val POUCH_UNHOLY = Identifier.fromNamespaceAndPath("telos", "mob/pouch/unholy_totem")
     val POUCH_VOIDBOUND = Identifier.fromNamespaceAndPath("telos", "mob/pouch/voidbound_totem")
     val POUCH_HALLOWEEN = Identifier.fromNamespaceAndPath("telos", "mob/pouch/halloween_totem")
