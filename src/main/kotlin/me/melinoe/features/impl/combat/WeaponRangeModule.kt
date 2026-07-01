@@ -32,6 +32,7 @@ object WeaponRangeModule : Module(
     private val rangeColor by ColorSetting("Color", Color(0x80FF0000.toInt()), desc = "Color of the range circle")
     private val rangeType = registerSetting(SelectorSetting("Type", "Arc", listOf("Arc", "Circle", "Line"), desc = "Shape of the range display"))
     private val showLine by BooleanSetting("Line", false, desc = "Show line from player to range").withDependency { rangeType.selected == "Circle" || rangeType.selected == "Arc" }
+    private val emblemAddition by BooleanSetting("Emblem Addition", false, desc = "Adds +1 range to any weapon to account for emblem buffs")
     
     // Cached values to avoid recalculation
     private var cachedRangeInfo = RangeInfo(-1f)
@@ -110,11 +111,14 @@ object WeaponRangeModule : Module(
             val center = playerPos.add(offsetX, 0.0, offsetZ)
             
             // Use the effective range (maxRange for + modifiers, minRange for - modifiers)
-            val effectiveRange = if (rangeInfo.hasModifier) {
+            val baseEffectiveRange = if (rangeInfo.hasModifier) {
                 if (rangeInfo.maxRange > rangeInfo.baseRange) rangeInfo.maxRange else rangeInfo.minRange
             } else {
                 rangeInfo.baseRange
             }
+
+            // Emblem Addition adds a flat +1 range on top of the base plus trait modifier
+            val effectiveRange = if (emblemAddition) baseEffectiveRange + 1f else baseEffectiveRange
             
             // Draw based on range type
             val type = rangeType.selected
