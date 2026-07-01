@@ -494,7 +494,8 @@
       "rarity": "GILDED",
       "displayName": "Lizardskin Spellcoat",
       "texturePath": "telos:material/armour/magical/chestplate/ut-lizardskin",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "BLADE",
@@ -557,7 +558,8 @@
       "rarity": "ROYAL",
       "displayName": "Spring Seasoned Scripture",
       "texturePath": "telos:material/ability/scripture/ut-spring",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "BOW_OF_THE_FOREST",
@@ -1559,7 +1561,8 @@
       "rarity": "BLOODSHOT",
       "displayName": "Baphomet's Bomb",
       "texturePath": "telos:material/ability/bomb/ut-baphomet",
-      "maxPity": 120
+      "maxPity": 120,
+      "hasShiny": true
     },
     {
       "name": "BLOOD_OF_THE_HERETICS",

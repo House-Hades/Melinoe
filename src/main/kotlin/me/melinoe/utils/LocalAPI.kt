@@ -351,7 +351,7 @@ object LocalAPI {
         -1019671711 -> "Malfas"
         -1659169372 -> "Heptavius"
         -1659167450 -> "Arctic Colossus"
-        -1659168411 -> "Frostgaze"
+        -1659168411 -> "Oog"
         -1659166489 -> "Magnus"
         -1253198526 -> "Pyro"
         -1621485232 -> "Thalor"
