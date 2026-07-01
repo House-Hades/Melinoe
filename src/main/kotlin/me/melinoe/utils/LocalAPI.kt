@@ -33,6 +33,11 @@ object LocalAPI {
     
     private var lastFiredDimension = ""
     private var lastFiredWorld = ""
+
+    // Tracks realm servers only, ignoring hubs/dungeons
+    // lastRealm = most recently visited realm, previousRealm = the one before it.
+    private var lastRealm = ""
+    private var previousRealm = ""
     
     /**
      * Initialize LocalAPI and register event handlers.
@@ -203,7 +208,15 @@ object LocalAPI {
         val isHub = currentDim == "hub" || currentDim == "daily"
         val wasRealm = lastFiredDimension == "realm"
         val isRealm = currentDim == "realm"
-        
+
+        // Track realm history (realms only) for the "Previous Location" button
+        if (isRealm && currentWorld != lastRealm) {
+            if (lastRealm.isNotEmpty()) {
+                previousRealm = lastRealm
+            }
+            lastRealm = currentWorld
+        }
+
         if (wasHub && isRealm) {
             EventBus.post(HubToRealmEvent(lastFiredWorld, currentWorld))
         } else if (wasRealm && isHub) {
@@ -522,6 +535,15 @@ object LocalAPI {
     fun getCurrentCharacterClass(): String = currentCharacterClass
     fun getCurrentCharacterLevel(): Int = currentCharacterLevel
     fun getCurrentCharacterWorld(): String = currentCharacterWorld
+
+    /**
+     * Returns the realm the player was on before their current location.
+     * If the player is currently in a realm, this is the realm visited before it
+     * If the player is elsewhere (hub/dungeon), this is the most recent realm
+     * Returns an empty string if no prior realm is known
+     */
+    fun getPreviousRealm(): String =
+        if (currentCharacterWorld == lastRealm) previousRealm else lastRealm
     fun getCurrentCharacterFighting(): String = currentCharacterFighting
     fun getCurrentCharacterArea(): String = currentCharacterArea
     fun getCurrentPortalCall(): String = currentPortalCall
@@ -546,5 +568,7 @@ object LocalAPI {
         portalCountdownTicks = 0
         lastFiredDimension = ""
         lastFiredWorld = ""
+        lastRealm = ""
+        previousRealm = ""
     }
 }

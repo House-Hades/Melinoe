@@ -21,6 +21,7 @@ object RealmSelectorScreen : Screen(Component.literal("Realm Selector")) {
     
     private val serverButtons = mutableListOf<Button>()
     private val buttonLookup = mutableMapOf<String, Button>()
+    private var previousLocationButton: Button? = null
     
     private enum class Region {
         NA, EU, SG, UNKNOWN
@@ -119,6 +120,36 @@ object RealmSelectorScreen : Screen(Component.literal("Realm Selector")) {
         cachedHubServers = hubs
     }
     
+    /**
+     * Extracts just the server name from a full world string
+     */
+    private fun extractServerName(full: String): String =
+        if (full.contains(", ")) full.substringAfterLast(", ").trim() else full.trim()
+
+    /**
+     * Creates the "Previous Location" button that teleports the player back to the
+     * realm they were on before their current location
+     */
+    private fun createPreviousLocationButton(): Button? {
+        val previousRealmFull = LocalAPI.getPreviousRealm()
+        if (previousRealmFull.isBlank() || !me.melinoe.utils.ServerUtils.isOnTelos()) {
+            return null
+        }
+
+        val prevName = extractServerName(previousRealmFull)
+        val title = "Previous Location ($prevName)"
+
+        return Button.builder(Component.literal(title)) { _ ->
+            val player = minecraft?.player
+            if (player != null && me.melinoe.utils.ServerUtils.isOnTelos()) {
+                player.connection.sendCommand("joinq $prevName")
+                minecraft?.setScreen(null) // Close screen after clicking
+            }
+        }
+            .bounds(0, 0, (font?.width(title) ?: 100) + 20, 20)
+            .build()
+    }
+
     private fun createButtons(servers: List<String>) {
         for (serverName in servers) {
             val button = Button.builder(Component.literal(serverName)) { _ ->
@@ -155,6 +186,10 @@ object RealmSelectorScreen : Screen(Component.literal("Realm Selector")) {
         for (button in serverButtons) {
             addRenderableWidget(button)
         }
+        
+        // Create the "Previous Location" button (in its own row below the hubs)
+        previousLocationButton = createPreviousLocationButton()
+        previousLocationButton?.let { addRenderableWidget(it) }
     }
     
     override fun extractRenderState(guiGraphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
@@ -202,7 +237,10 @@ object RealmSelectorScreen : Screen(Component.literal("Realm Selector")) {
         
         // Calculate grid dimensions
         val regularRows = (regularServers.size + columns - 1) / columns
-        val totalRows = regularRows + if (hubServers.isEmpty()) 0 else 1
+        val hubRowCount = if (hubServers.isEmpty()) 0 else 1
+        // The Previous Location button sits in its own row
+        val prevRowCount = if (previousLocationButton != null) 2 else 0
+        val totalRows = regularRows + hubRowCount + prevRowCount
         val totalGridWidth = (buttonWidth * columns) + (buttonSpacing * (columns - 1))
         val totalGridHeight = (buttonHeight * totalRows) + (buttonSpacing * (totalRows - 1))
         
@@ -257,7 +295,14 @@ object RealmSelectorScreen : Screen(Component.literal("Realm Selector")) {
                 }
             }
         }
-        
+
+        // Position the Previous Location button in its own row
+        previousLocationButton?.let { prevButton ->
+            val prevRow = regularRows + hubRowCount + 1 // +1 skips the empty gap row
+            prevButton.x = centerX + (totalGridWidth - prevButton.width) / 2
+            prevButton.y = gridStartY + (prevRow * (buttonHeight + buttonSpacing))
+        }
+
         // Render current server indicator text (use full server name)
         if (currentServerFull.isNotEmpty() && currentServerFull.lowercase() != "unknown") {
             // "Current:" in bold dark red (0xFF8A0000), server name in bright red (0xFF3333) without bold
