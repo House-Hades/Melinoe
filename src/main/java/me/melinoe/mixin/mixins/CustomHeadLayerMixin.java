@@ -4,34 +4,19 @@ import me.melinoe.features.impl.visual.HideArmorModule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.List;
-
+/**
+ * Hides helmets that render as a head item,oOnly actual armour helmets are hidden
+ */
 @Mixin(LivingEntityRenderer.class)
 public abstract class CustomHeadLayerMixin<T extends LivingEntity, S extends LivingEntityRenderState> {
-
-    // Hidden helmet models
-    @Unique
-    private final List<String> HIDDEN_MODELS = List.of(
-            "material/armour/heavy/helmet/ut-mandorla",
-            "material/armour/heavy/helmet/ut-crown",
-            "material/armour/heavy/helmet/ex-crown",
-            "material/armour/magical/helmet/ut-mage",
-            "material/armour/magical/helmet/ex-mage",
-            "material/armour/light/helmet/ut-sentinel",
-            "material/armour/light/helmet/ex-sentinel",
-            "material/armour/light/helmet/ut-persistent"
-    );
 
     @Inject(method = "extractRenderState", at = @At("TAIL"))
     private void melinoe$hideCustomHeadModel(
@@ -40,15 +25,21 @@ public abstract class CustomHeadLayerMixin<T extends LivingEntity, S extends Liv
             float partialTick,
             CallbackInfo ci
     ) {
-        if (HideArmorModule.INSTANCE.getEnabled()) {
+        ItemStack stack = entity.getItemBySlot(EquipmentSlot.HEAD);
+        if (stack.isEmpty()) return;
+
+        // During a reveal, a worn helmet renders via the 3D armor layer, so drop its flat head item
+        if (HideArmorModule.INSTANCE.revealsAsWorn(stack)) {
+            state.headItem.clear();
+            return;
+        }
+
+        // Hide only real armour helmets, never other models that are also rendered on the head
+        if (HideArmorModule.INSTANCE.getEnabled() && HideArmorModule.getHiding()
+                && HideArmorModule.INSTANCE.getHideHelmet() && !HideArmorModule.isRevealActive()) {
             if (!HideArmorModule.INSTANCE.getHideOthers() && entity.getId() != Minecraft.getInstance().player.getId()) return;
 
-            ItemStack stack = entity.getItemBySlot(EquipmentSlot.HEAD);
-            if (stack.isEmpty()) return;
-
-            Identifier modelID = stack.get(DataComponents.ITEM_MODEL);
-
-            if (modelID != null && HIDDEN_MODELS.contains(modelID.getPath())) {
+            if (HideArmorModule.INSTANCE.isArmorPiece(stack)) {
                 state.headItem.clear();
             }
         }

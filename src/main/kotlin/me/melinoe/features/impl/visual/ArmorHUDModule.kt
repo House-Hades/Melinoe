@@ -47,7 +47,7 @@ object ArmorHUDModule : Module(
                 return stack
             }
 
-            armorItems.add(createCustomItem(Identifier.fromNamespaceAndPath("telos", "material/armour/heavy/helmet/ut-mandorla")))
+            armorItems.add(createCustomItem(Identifier.fromNamespaceAndPath("telos", "material/armour/all/helmet/ut-mandorla")))
             armorItems.add(createCustomItem(Identifier.fromNamespaceAndPath("telos", "material/armour/magical/chestplate/ut-spiritbloom")))
             armorItems.add(createCustomItem(Identifier.fromNamespaceAndPath("telos", "material/armour/light/leggings/ut-onyx")))
             armorItems.add(createCustomItem(Identifier.fromNamespaceAndPath("telos", "material/armour/heavy/boots/ut-timelost")))

@@ -35,7 +35,8 @@ public abstract class HumanoidArmorLayerMixin {
             S humanoidRenderState,
             CallbackInfo ci
     ) {
-        if (HideArmorModule.INSTANCE.getEnabled()) {
+        // While revealing, let the (asset-swapped) true armor render instead of hiding it
+        if (HideArmorModule.INSTANCE.getEnabled() && HideArmorModule.getHiding() && !HideArmorModule.isRevealActive()) {
             // Only hide armor for players (AvatarRenderState)
             // This excludes zombies, skeletons, piglins, and other humanoid mobs
             if (humanoidRenderState instanceof AvatarRenderState avatar) {
