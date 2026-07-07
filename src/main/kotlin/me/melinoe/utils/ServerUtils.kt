@@ -74,7 +74,7 @@ object ServerUtils {
                 Melinoe.logger.info("[Presence] Joined Telos. Announcing presence...")
                 
                 ModWebSocket.connect()
-                RealmFetcher.fetchServers()
+                RealmFetcher.fetchOnlineCounts()
             }
         }
         

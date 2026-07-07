@@ -11,6 +11,7 @@ import me.melinoe.events.core.on
 import me.melinoe.features.Category
 import me.melinoe.features.Module
 import me.melinoe.mixin.accessors.AbstractContainerScreenAccessor
+import me.melinoe.network.RealmFetcher
 import me.melinoe.utils.*
 import me.melinoe.utils.data.PortalData
 import me.melinoe.utils.ui.RealmSelectorScreen
@@ -451,6 +452,9 @@ object KeybindsModule : Module(
                 realmSelectorPressCount = 0
             }
         }
+
+        // Refresh online realm data every time the selector is opened
+        RealmFetcher.fetchOnlineCounts()
 
         // Open realm selector screen on the render thread
         mc.execute {
