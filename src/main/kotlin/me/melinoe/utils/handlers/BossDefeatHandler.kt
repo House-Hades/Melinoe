@@ -49,6 +49,12 @@ object BossDefeatHandler {
     /** Trailing " in <time>" suffix on dungeon timer lines (absent for world bosses) */
     private val TIME_SUFFIX = Regex("\\s+in\\s+\\d.*$")
 
+    /** Arrow the server appends to the local player's row in the kill leaderboard */
+    private const val SELF_ARROW = "⬅" // ⬅
+
+    /** Any percentage value on a leaderboard row */
+    private val PERCENT = Regex("(\\d+(?:\\.\\d+)?)%")
+
     private var currentDungeon: DungeonData? = null
     private var lastDefeatedBoss: BossData? = null
 
@@ -114,6 +120,9 @@ object BossDefeatHandler {
 
         val bossData = BossData.findByKey(bossName)
 
+        // Capture the contribution/damage loot boost
+        BagTracker.setContributionLootBoost(parseLootBoost(strippedLines) ?: 0)
+
         // Count the defeat (pity counters + total runs), regardless of HUD/module state
         if (bossData != null) {
             lastDefeatedBoss = bossData
@@ -129,6 +138,21 @@ object BossDefeatHandler {
         val rebuilt = injectLine(component, defeatIdx, getCenteredText(pityLine).toNative())
         hideMessage()
         Melinoe.mc.execute { Melinoe.mc.gui.chat.addClientSystemMessage(rebuilt) }
+    }
+
+    /**
+     * Extracts the local player's loot boost from the kill leaderboard.
+     */
+    private fun parseLootBoost(strippedLines: List<String>): Int? {
+        val name = Melinoe.mc.player?.gameProfile?.name
+        val row = strippedLines.firstOrNull { it.contains(SELF_ARROW) }
+            ?: name?.let { name -> strippedLines.firstOrNull { it.contains(name) } }
+            ?: return null
+
+        val percents = PERCENT.findAll(row).map { it.groupValues[1] }.toList()
+        if (percents.isEmpty()) return null
+
+        return percents.last().toDoubleOrNull()?.toInt()
     }
 
     /**

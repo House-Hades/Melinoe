@@ -47,6 +47,18 @@ object BagTracker {
     private val detectedItems = mutableSetOf<DropVariant>()
     private val recentPityCache = mutableMapOf<DropVariant, Int>()
     private val recentPityCacheTime = mutableMapOf<DropVariant, Long>()
+    
+    /**
+     * Bonus loot boost granted by the most recent boss kill based on damage/contribution
+     * (parsed from the kill leaderboard)
+     */
+    @Volatile
+    private var contributionLootBoost = 0
+
+    /** Records the contribution-based loot boost from the most recent boss kill leaderboard */
+    fun setContributionLootBoost(percent: Int) {
+        contributionLootBoost = percent.coerceAtLeast(0)
+    }
 
     /**
      * Pity counter key for an item variant. Shiny variants are tracked under a separate
@@ -465,7 +477,8 @@ object BagTracker {
         val mc = Melinoe.mc
         if (mc.player == null) return
         
-        val lootboost = TabListUtils.getLootboostPercentage() ?: 0
+        val baseLootBoost = TabListUtils.getLootboostPercentage() ?: 0
+        val lootboost = baseLootBoost + contributionLootBoost
         
         // Configuration for rarity styles
         data class RarityStyle(val indicatorColor: Int, val prefix: String, val itemNameColor: String, val logName: String)
@@ -523,7 +536,10 @@ object BagTracker {
             Item.Rarity.SHINY -> shinyStyle
         }
         
-        val lootBoostStr = if (lootboost > 0) " <#FFFF00>[+$lootboost% LB]" else ""
+        val lootBoostStr = if (lootboost > 0) {
+            val hover = "<#AAAAAA>Loot Boost:<br><#AAAAAA>• Base: <#FFFF00>+$baseLootBoost%<br><#AAAAAA>• Contribution: <#FFFF00>+$contributionLootBoost%"
+            " <hover:show_text:\"$hover\"><#FFFF00>[+$lootboost% LB]</hover>"
+        } else ""
         val m = Message.Colors.MUTED
         val area = if (LocalAPI.isInDungeon()) LocalAPI.getCurrentCharacterArea() else BossData.findByItem(item)?.label ?: "Unknown"
         
@@ -534,7 +550,8 @@ object BagTracker {
         // Build message using MiniMessage
         var message = "${style.prefix} $m- <#AAAAAA>Dropped $sprite<underlined>${style.itemNameColor}${item.displayName}</underlined> <#AAAAAA>at <#FFFF00>$pityCount</#FFFF00> <#AAAAAA>pity from ${style.itemNameColor}$area$lootBoostStr"
         if (PityCounterModule.showAnnounceButton) {
-            val shareText = "[${style.logName}] Dropped ${item.displayName} at ${pityCount} pity from $area!"
+            val lootBoostShare = if (lootboost > 0) " [$baseLootBoost% (+$contributionLootBoost) LB]" else ""
+            val shareText = "[${style.logName}] Dropped ${item.displayName} at ${pityCount} pity from $area!$lootBoostShare"
             
             message += " <click:suggest_command:'${shareText}'><hover:show_text:\"<#AAAAAA>Click to share in chat!</#AAAAAA>\"><#AAAAAA><b>⧉</b></#AAAAAA></hover></click>"
         }
