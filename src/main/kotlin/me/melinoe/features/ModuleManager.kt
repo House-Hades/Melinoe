@@ -175,7 +175,8 @@ object ModuleManager {
             HitboxModule,
             HideArmorModule,
             ArmorHUDModule,
-            
+            CustomBagsModule,
+
             // Tracking
             LifetimeStatsModule,
             PityCounterModule,

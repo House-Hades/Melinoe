@@ -32,6 +32,9 @@ dependencies {
     
     implementation("dev.firstdark.discordrpc:discord-rpc:1.0.4")
     include("dev.firstdark.discordrpc:discord-rpc:1.0.4")
+    
+    implementation("javazoom:jlayer:1.0.1")
+    include("javazoom:jlayer:1.0.1")
 
     property("commodore_version").let {
         implementation("com.github.stivais:Commodore:$it")

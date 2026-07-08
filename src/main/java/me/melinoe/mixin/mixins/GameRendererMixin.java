@@ -1,7 +1,9 @@
 package me.melinoe.mixin.mixins;
 
 import me.melinoe.Melinoe;
+import me.melinoe.features.impl.visual.CustomBagsModule;
 import me.melinoe.utils.data.BagTracker;
+import me.melinoe.utils.render.CustomBagImages;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemStack;
@@ -25,10 +27,15 @@ public abstract class GameRendererMixin {
 
         var cmd = Objects.requireNonNull(floatingItem.get(DataComponents.ITEM_MODEL));
         String path = cmd.getPath();
-            
-        Melinoe.INSTANCE.getLogger().info("Totem animation: {} (path: {})", 
-            floatingItem.getItem().getDescriptionId(), path);
-            
+
+        // Swap the totem to our custom screen + image (only when the configured)
+        if (CustomBagsModule.INSTANCE.getEnabled()) {
+            CustomBagImages.INSTANCE.applyFor(floatingItem, path);
+        }
+
+        // A preview pop from the Custom Bags module must not count as a real drop
+        if (CustomBagsModule.INSTANCE.getPreviewing()) return;
+
         // Match bag types and trigger handlers
         switch (path) {
             case "mob/pouch/royal_totem":
@@ -39,7 +46,7 @@ public abstract class GameRendererMixin {
                 BagTracker.INSTANCE.onBloodshotBagDrop();
                 break;
                     
-            case "mob/pouch/companion_totem":
+            case "mob/pouch/companion":
                 BagTracker.INSTANCE.onCompanionBagDrop();
                 break;
                     
