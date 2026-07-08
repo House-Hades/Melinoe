@@ -2,7 +2,6 @@ package me.melinoe.utils
 
 import com.mojang.serialization.JsonOps
 import me.melinoe.Melinoe
-import me.melinoe.features.impl.ClickGUIModule
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer
 import net.minecraft.client.gui.components.ChatComponent
@@ -144,7 +143,6 @@ object Message {
 
         // UI & Special colors
         const val COMMAND = "<#FFD700>"
-        const val DEV = "<#FF3333>"
         const val SEPARATOR = "<#606060>"
         const val TEXT = "<#AAAAAA>"
         const val MUTED = "<#808080>"
@@ -262,33 +260,6 @@ object Message {
     fun centeredRaw(message: String) {
         val centeredText = getCenteredText(message)
         raw(centeredText)
-    }
-
-    /**
-     * Sends a dev message (only shows if dev mode is enabled).
-     *
-     * @param message The dev message content (supports MiniMessage formatting)
-     */
-    fun dev(message: String) {
-        if (!ClickGUIModule.devMode) {
-            return
-        }
-
-        val devPrefixStr = "${Colors.DEV}<bold>Dev</bold> ${Colors.SEPARATOR}<bold>›</bold><reset>"
-        val devPrefixComponent = devPrefixStr.toNative()
-
-        Melinoe.mc.execute {
-            val watermark = createMelinoeGradient()
-
-            val text = Component.empty()
-                .append(watermark)
-                .append(Component.literal(" "))
-                .append(devPrefixComponent)
-                .append(Component.literal(" "))
-                .append(message.toNative())
-
-            Melinoe.mc.gui.chat.addPlayerMessage(text, null, Melinoe_MESSAGE_INDICATOR)
-        }
     }
 
     /**

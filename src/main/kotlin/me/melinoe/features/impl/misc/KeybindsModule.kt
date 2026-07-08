@@ -10,13 +10,9 @@ import me.melinoe.events.RenderEvent
 import me.melinoe.events.core.on
 import me.melinoe.features.Category
 import me.melinoe.features.Module
-import me.melinoe.mixin.accessors.AbstractContainerScreenAccessor
 import me.melinoe.utils.*
 import me.melinoe.utils.data.PortalData
 import me.melinoe.utils.ui.RealmSelectorScreen
-import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents
-import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
@@ -101,9 +97,6 @@ object KeybindsModule : Module(
         .withDependency { supporterDropdown }
         .onPress { sendTelosCommand("spawn", "Teleport (Spawn)") }
 
-    private val itemInfoKeySetting =
-        KeybindSetting("Item Info (Dev)", GLFW.GLFW_KEY_I, desc = "Show item ID info for hovered item in any GUI")
-
     // Safety checks
     private var realmSelectorPressCount = 0
     private var realmSelectorLastPress = 0L
@@ -142,18 +135,6 @@ object KeybindsModule : Module(
     private var lastRealmCheckTime = 0L
     
     init {
-        // Register the item info keybind setting
-        registerSetting(itemInfoKeySetting)
-
-        // Register screen keyboard event handler for GUI keybinds
-        ScreenEvents.AFTER_INIT.register { _, screen, _, _ ->
-            if (screen is AbstractContainerScreen<*>) {
-                ScreenKeyboardEvents.afterKeyPress(screen).register { _, keyInput ->
-                    handleScreenKeyPress(screen, keyInput.key())
-                }
-            }
-        }
-        
         on<RenderEvent.Extract> {
             if (pendingCrossRealmTpPlayer != null && pendingCrossRealmTpTargetRealm != null) {
                 val now = System.currentTimeMillis()
@@ -404,18 +385,6 @@ object KeybindsModule : Module(
         }
 
         player.connection.sendCommand(command)
-    }
-
-    /**
-     * Handle keyboard input in screens (GUIs)
-     */
-    private fun handleScreenKeyPress(screen: AbstractContainerScreen<*>, key: Int) {
-        if (!enabled) return
-
-        // Item info keybind - works in any container screen
-        if (key == itemInfoKeySetting.value.value) {
-            handleItemInfo()
-        }
     }
 
     /**
@@ -737,164 +706,6 @@ object KeybindsModule : Module(
             }
             else -> null
         }
-    }
-
-    /**
-     * Handle item info keybind - shows item ID info for hovered item
-     */
-    private fun handleItemInfo() {
-        val player = mc.player ?: return
-
-        // Check if we're in a screen with slots
-        val screen = mc.screen
-        if (screen !is AbstractContainerScreen<*>) {
-            return
-        }
-
-        // Get the hovered slot using accessor
-        val accessor = screen as AbstractContainerScreenAccessor
-        val hoveredSlot = accessor.hoveredSlot ?: return
-
-        val heldItem = hoveredSlot.item
-        if (heldItem.isEmpty) {
-            return
-        }
-
-        // Get the item's base ID
-        val itemId = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(heldItem.item).toString()
-
-        // Get custom model data if present
-        val customModel = heldItem.get(net.minecraft.core.component.DataComponents.ITEM_MODEL)
-
-        // Get plain name (no formatting, but keeps Unicode)
-        val plainName = ItemUtils.getPlainName(heldItem)
-
-        // Get display name without Unicode characters
-        val displayName = ItemUtils.getDisplayName(heldItem)
-
-        // Extract Unicode character from plain name
-        val unicodeChar = if (plainName.length >= 2) {
-            plainName.substring(1, plainName.length - 1)
-        } else {
-            null
-        }
-
-        // Check if this matches an ItemType
-        val itemType = ItemUtils.ItemType.fromItemStack(heldItem)
-
-        // Parse range from lore if available
-        val parsedRangeInfo = ItemUtils.parseItemRange(heldItem)
-
-        // Build the message
-        val message = buildString {
-            append("<#AAAAAA>Item ID Information\n")
-            append("<#555555><bold>›</bold> <#FFD700>Display Name: <#FFFFFF>$displayName\n")
-            append("<#555555><bold>›</bold> <#FFD700>Base ID: <#FFFFFF>$itemId\n")
-
-            // Show Unicode character info
-            if (unicodeChar != null && unicodeChar.isNotEmpty()) {
-                append("<#555555><bold>›</bold> <#FFD700>Unicode Char: <#FFFFFF>$unicodeChar\n")
-
-                // Show Unicode escape sequence (properly handle surrogate pairs)
-                val codePoints = unicodeChar.codePoints().toArray()
-                val escapeSequence = if (codePoints.size == 1 && codePoints[0] > 0xFFFF) {
-                    // Surrogate pair - convert to two \uXXXX sequences
-                    val codePoint = codePoints[0]
-                    val high = ((codePoint - 0x10000) shr 10) + 0xD800
-                    val low = ((codePoint - 0x10000) and 0x3FF) + 0xDC00
-                    "\\u${String.format("%04X", high)}\\u${String.format("%04X", low)}"
-                } else {
-                    // Regular character or already surrogate pairs
-                    unicodeChar.toCharArray().joinToString("") {
-                        "\\u${String.format("%04X", it.code)}"
-                    }
-                }
-                append("<#555555><bold>›</bold> <#FFD700>Unicode Escape: <#FFFFFF>$escapeSequence\n")
-            }
-
-            // Show parsed range from lore
-            if (parsedRangeInfo.baseRange > 0) {
-                if (parsedRangeInfo.hasModifier) {
-                    // Calculate the modifier value
-                    val modifier = if (parsedRangeInfo.maxRange > parsedRangeInfo.baseRange) {
-                        parsedRangeInfo.maxRange - parsedRangeInfo.baseRange
-                    } else {
-                        parsedRangeInfo.minRange - parsedRangeInfo.baseRange
-                    }
-                    val modifierSign = if (modifier >= 0) "+" else ""
-                    append("<#555555><bold>›</bold> <#FFD700>Lore Range: <#00FF00>${parsedRangeInfo.baseRange}f <#AAAAAA>($modifierSign<#00FF00>${modifier}f<#AAAAAA>) = <#00FF00>${if (modifier >= 0) parsedRangeInfo.maxRange else parsedRangeInfo.minRange}f\n")
-                } else {
-                    append("<#555555><bold>›</bold> <#FFD700>Lore Range: <#00FF00>${parsedRangeInfo.baseRange}f\n")
-                }
-            }
-
-            // Show ItemType match status
-            if (itemType != null) {
-                append("<#555555><bold>›</bold> <#FFD700>ItemType: <#00FF00>${itemType.name}\n")
-                val (rangeInfo, offset) = ItemUtils.getItemRangeWithOffset(heldItem)
-                if (rangeInfo.hasModifier) {
-                    // Calculate the modifier value
-                    val modifier = if (rangeInfo.maxRange > rangeInfo.baseRange) {
-                        rangeInfo.maxRange - rangeInfo.baseRange
-                    } else {
-                        rangeInfo.minRange - rangeInfo.baseRange
-                    }
-                    val modifierSign = if (modifier >= 0) "+" else ""
-                    val effectiveRange = if (modifier >= 0) rangeInfo.maxRange else rangeInfo.minRange
-                    append("<#555555><bold>›</bold> <#FFD700>Range: <#00FF00>${rangeInfo.baseRange}f <#AAAAAA>($modifierSign<#00FF00>${modifier}f<#AAAAAA>) = <#00FF00>${effectiveRange}f <#AAAAAA>(offset: <#00FF00>${offset}f<#AAAAAA>)\n")
-                } else {
-                    append("<#555555><bold>›</bold> <#FFD700>Range: <#00FF00>${rangeInfo.baseRange}f <#AAAAAA>(offset: <#00FF00>${offset}f<#AAAAAA>)\n")
-                }
-            } else {
-                append("<#555555><bold>›</bold> <#FFD700>ItemType: <#AAAAAA>Not found\n")
-            }
-
-            // Show custom model info
-            if (customModel != null) {
-                append("<#555555><bold>›</bold> <#FFD700>Custom Model: <#FFFFFF>$customModel\n")
-            }
-
-            // Generate code snippets for ItemUtils if not already added
-            if (itemType == null && unicodeChar != null && unicodeChar.isNotEmpty()) {
-                // Generate enum name suggestion
-                val modelPath = customModel?.toString() ?: ""
-                val enumName = if (modelPath.startsWith("telos:")) {
-                    val shortPath = modelPath.removePrefix("telos:")
-                    val parts = shortPath.split("/")
-                    if (parts.size >= 2) {
-                        val prefix = if (parts.last().startsWith("ut-")) "UT" else if (parts.last().startsWith("ex-")) "EX" else ""
-                        val baseName = parts.last()
-                            .removePrefix("ut-")
-                            .removePrefix("ex-")
-                            .uppercase()
-                            .replace("-", "_")
-                        if (prefix.isNotEmpty()) "${prefix}_${baseName}" else baseName
-                    } else {
-                        "NEW_ITEM"
-                    }
-                } else {
-                    "NEW_ITEM"
-                }
-
-                // Show simplified message with enum name and unicode
-                val codePoints = unicodeChar.codePoints().toArray()
-                val escapeSequence = if (codePoints.size == 1 && codePoints[0] > 0xFFFF) {
-                    val codePoint = codePoints[0]
-                    val high = ((codePoint - 0x10000) shr 10) + 0xD800
-                    val low = ((codePoint - 0x10000) and 0x3FF) + 0xDC00
-                    "\\u${String.format("%04X", high)}\\u${String.format("%04X", low)}"
-                } else {
-                    unicodeChar.toCharArray().joinToString("") {
-                        "\\u${String.format("%04X", it.code)}"
-                    }
-                }
-                append("\n<#AAAAAA>$enumName <#555555>-> <#AAAAAA>\"$escapeSequence\"")
-            } else if (itemType != null) {
-                append("\n<#00FF00>✔ Item matched with utils")
-            }
-        }
-
-        Message.dev(message)
     }
 
     /**
