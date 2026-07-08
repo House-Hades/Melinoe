@@ -41,9 +41,7 @@ object ItemUtils {
         UT_SERAPHS_ESSENCE(6f, 3f, "seraph's essence"),
         UT_AYAHUASCA_FLASK(8f, 0f, "ayahuasca flask"),
         UT_EVENT_HORIZON(8f, 0f, "event horizon"),
-        UT_NATURE(-1f, 0f, "nature's gift"),
-        UT_PROMINENCE(6.5f, 0f, "prominence");
-        
+        UT_NATURE(-1f, 0f, "nature's gift");
         
         val isSeraphsEssence: Boolean
             get() = this == UT_SERAPHS_ESSENCE
