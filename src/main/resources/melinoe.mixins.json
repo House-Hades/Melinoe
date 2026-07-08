@@ -24,6 +24,7 @@
     "mixins.EquipmentAssetManagerMixin",
     "mixins.GameRendererMixin",
     "mixins.GuiMixin",
+    "mixins.HudMixin",
     "mixins.HumanoidArmorLayerMixin",
     "mixins.HumanoidMobRendererMixin",
     "mixins.ItemModelResolverMixin",

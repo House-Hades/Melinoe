@@ -183,6 +183,7 @@ object ModuleManager {
             HitboxModule,
             HideArmorModule,
             ArmorHUDModule,
+            ItemRarityModule,
             CustomBagsModule,
 
             // Tracking
