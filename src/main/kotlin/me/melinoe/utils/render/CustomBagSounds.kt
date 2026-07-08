@@ -4,6 +4,8 @@ import javazoom.jl.decoder.Bitstream
 import javazoom.jl.decoder.Decoder
 import javazoom.jl.decoder.SampleBuffer
 import me.melinoe.Melinoe
+import me.melinoe.utils.render.CustomBagSounds.FADE_MS
+import me.melinoe.utils.render.CustomBagSounds.MAX_PLAY_MS
 import net.minecraft.client.resources.sounds.AbstractSoundInstance
 import net.minecraft.client.resources.sounds.Sound
 import net.minecraft.client.resources.sounds.SoundInstance

@@ -3,6 +3,8 @@ package me.melinoe.utils.render
 import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.RenderSystem
 import me.melinoe.Melinoe
+import me.melinoe.utils.render.CustomBagImages.CENTER_SPRITE
+import me.melinoe.utils.render.CustomBagImages.MAX_FRAME_DIM
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.minecraft.client.renderer.texture.TextureAtlas
 import net.minecraft.client.renderer.texture.TextureAtlasSprite

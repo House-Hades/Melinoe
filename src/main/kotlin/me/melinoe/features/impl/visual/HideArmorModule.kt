@@ -12,11 +12,11 @@ import net.minecraft.core.component.DataComponents
 import net.minecraft.resources.Identifier
 import net.minecraft.resources.ResourceKey
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.equipment.Equippable
 import net.minecraft.world.item.equipment.EquipmentAsset
 import net.minecraft.world.item.equipment.EquipmentAssets
+import net.minecraft.world.item.equipment.Equippable
 import org.lwjgl.glfw.GLFW
-import java.util.Optional
+import java.util.*
 
 /**
  * Hide Armor module - visually hides all equipped armor on the player.

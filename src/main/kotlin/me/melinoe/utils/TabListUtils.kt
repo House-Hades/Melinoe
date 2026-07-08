@@ -1,7 +1,7 @@
 package me.melinoe.utils
 
 import me.melinoe.Melinoe
-import java.util.Locale
+import java.util.*
 import java.util.regex.Pattern
 
 /**

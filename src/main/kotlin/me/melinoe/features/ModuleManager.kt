@@ -1,10 +1,10 @@
 package me.melinoe.features
 
+import com.mojang.blaze3d.platform.InputConstants
 import me.melinoe.Melinoe
 import me.melinoe.clickgui.settings.impl.HUDSetting
 import me.melinoe.clickgui.settings.impl.KeybindSetting
 import me.melinoe.config.ModuleConfig
-import com.mojang.blaze3d.platform.InputConstants
 import me.melinoe.events.InputEvent
 import me.melinoe.events.InputReleaseEvent
 import me.melinoe.events.core.on
