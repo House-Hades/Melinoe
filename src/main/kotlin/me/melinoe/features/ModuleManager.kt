@@ -4,7 +4,9 @@ import me.melinoe.Melinoe
 import me.melinoe.clickgui.settings.impl.HUDSetting
 import me.melinoe.clickgui.settings.impl.KeybindSetting
 import me.melinoe.config.ModuleConfig
+import com.mojang.blaze3d.platform.InputConstants
 import me.melinoe.events.InputEvent
+import me.melinoe.events.InputReleaseEvent
 import me.melinoe.events.core.on
 import me.melinoe.features.impl.combat.*
 import me.melinoe.features.impl.misc.*
@@ -43,6 +45,12 @@ object ModuleManager {
 
     val keybindSettingsCache: ArrayList<KeybindSetting> = arrayListOf()
     val hudSettingsCache: ArrayList<HUDSetting> = arrayListOf()
+
+    /**
+     * Keys currently held down, tracked so a held key fires its keybind only once
+     * on the initial press instead of repeating while held
+     */
+    private val heldKeys: HashSet<InputConstants.Key> = hashSetOf()
 
     private val HUD_LAYER: Identifier = Identifier.fromNamespaceAndPath(Melinoe.MOD_ID, "melinoe_hud")
 
@@ -196,11 +204,18 @@ object ModuleManager {
 
         // Register input event handler for keybinds
         on<InputEvent> {
+            // A held key streams GLFW repeat events; only act on the initial press
+            if (!heldKeys.add(key)) return@on
+
             for (setting in keybindSettingsCache) {
                 if (setting.value == key) {
                     setting.onPress?.invoke()
                 }
             }
+        }
+
+        on<InputReleaseEvent> {
+            heldKeys.remove(key)
         }
 
         HudElementRegistry.attachElementBefore(VanillaHudElements.SLEEP, HUD_LAYER, ModuleManager::render)
