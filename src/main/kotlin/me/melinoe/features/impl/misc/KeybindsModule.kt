@@ -97,6 +97,26 @@ object KeybindsModule : Module(
         .withDependency { supporterDropdown }
         .onPress { sendTelosCommand("spawn", "Teleport (Spawn)") }
 
+    private val auctionHouseKey by KeybindSetting("Auction House", GLFW.GLFW_KEY_UNKNOWN, desc = "Access the auction house")
+        .withDependency { supporterDropdown }
+        .onPress { sendTelosCommand("auction", "Auction house") }
+
+    private val guildsMenuKey by KeybindSetting("Guilds Menu", GLFW.GLFW_KEY_UNKNOWN, desc = "Manage your guild")
+        .withDependency { supporterDropdown }
+        .onPress { sendTelosCommand("guilds", "Guilds menu") }
+
+    private val reskinMenuKey by KeybindSetting("Reskin Menu", GLFW.GLFW_KEY_UNKNOWN, desc = "Open the reskin menu")
+        .withDependency { supporterDropdown }
+        .onPress { sendTelosCommand("reskin", "Reskin menu") }
+
+    private val rerollKey by KeybindSetting("Reroll Traits", GLFW.GLFW_KEY_UNKNOWN, desc = "Reroll your items' traits")
+        .withDependency { supporterDropdown }
+        .onPress { sendTelosCommand("reroll", "Reroll traits") }
+
+    private val fragmentsKey by KeybindSetting("Fragments", GLFW.GLFW_KEY_UNKNOWN, desc = "Turn UTs into fragments")
+        .withDependency { supporterDropdown }
+        .onPress { sendTelosCommand("fragments", "Fragments") }
+
     // Safety checks
     private var realmSelectorPressCount = 0
     private var realmSelectorLastPress = 0L
