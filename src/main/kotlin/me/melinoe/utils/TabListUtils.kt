@@ -1,6 +1,7 @@
 package me.melinoe.utils
 
 import me.melinoe.Melinoe
+import java.util.Locale
 import java.util.regex.Pattern
 
 /**
@@ -15,8 +16,31 @@ object TabListUtils {
     private val LOOTBOOST_PATTERN = Pattern.compile("Loot Boost:\\s*\\+(\\d+)")
     private val SPEED_PATTERN = Pattern.compile("Speed:\\s*\\+(\\d+(?:\\.\\d+)?)")
     private val EVASION_PATTERN = Pattern.compile("Evasion:\\s*\\+(\\d+(?:\\.\\d+)?)")
-    
-    // private val NON_ASCII_REGEX = Regex("[^\\p{ASCII}]")
+
+    /**
+     * Single source of truth for every stat that can appear in the tablist.
+     */
+    data class StatDefinition(
+        val key: String,
+        val label: String,
+        val valuePattern: String = "\\d+(?:\\.\\d+)?"
+    )
+
+    val STAT_DEFINITIONS: List<StatDefinition> = listOf(
+        StatDefinition("attack", "Attack"),
+        StatDefinition("defense", "Defense"),
+        StatDefinition("vitality", "Vitality"),
+        StatDefinition("speed", "Speed"),
+        StatDefinition("evasion", "Evasion"),
+        StatDefinition("critical_chance", "Critical Chance"),
+        StatDefinition("critical_damage", "Critical Damage")
+    )
+
+    // Stat patterns for value extraction, derived from STAT_DEFINITIONS.
+    // Keyed the same way getStatValues() keys its result map.
+    private val STAT_PATTERNS: List<Pair<String, Pattern>> = STAT_DEFINITIONS.map {
+        it.key to Pattern.compile("${it.label}:\\s*\\+(${it.valuePattern})")
+    }
 
     /**
      * Data class to hold parsed tab list information.
@@ -39,7 +63,7 @@ object TabListUtils {
     private fun getTabList(): List<String>? {
         // Only parse tab list on Telos
         if (!ServerUtils.isOnTelos()) return null
-        
+
         val networkHandler = Melinoe.mc.connection ?: return null
         val playerCollection = networkHandler.onlinePlayers
 
@@ -63,7 +87,7 @@ object TabListUtils {
      */
     fun parseTabList(): TabListData {
         val tabList = getTabList() ?: return TabListData()
-        
+
         var charInfo: String? = null
         var server: String? = null
         var tps: String? = null
@@ -71,8 +95,7 @@ object TabListUtils {
         var lootboost: String? = null
         var speed: String? = null
         var evasion: String? = null
-        
-        // Parse all lines in a single pass
+
         for (line in tabList) {
             when {
                 charInfo == null -> {
@@ -83,7 +106,7 @@ object TabListUtils {
                     }
                 }
             }
-            
+
             when {
                 server == null -> {
                     val matcher = SERVER_PATTERN.matcher(line)
@@ -93,7 +116,7 @@ object TabListUtils {
                     }
                 }
             }
-            
+
             when {
                 tps == null -> {
                     val matcher = TPS_PATTERN.matcher(line)
@@ -103,7 +126,7 @@ object TabListUtils {
                     }
                 }
             }
-            
+
             when {
                 fame == null -> {
                     val matcher = FAME_PATTERN.matcher(line)
@@ -113,7 +136,7 @@ object TabListUtils {
                     }
                 }
             }
-            
+
             when {
                 lootboost == null -> {
                     val matcher = LOOTBOOST_PATTERN.matcher(line)
@@ -123,7 +146,7 @@ object TabListUtils {
                     }
                 }
             }
-            
+
             when {
                 speed == null -> {
                     val matcher = SPEED_PATTERN.matcher(line)
@@ -133,7 +156,7 @@ object TabListUtils {
                     }
                 }
             }
-            
+
             when {
                 evasion == null -> {
                     val matcher = EVASION_PATTERN.matcher(line)
@@ -143,7 +166,7 @@ object TabListUtils {
                     }
                 }
             }
-            
+
             // Early exit if we found everything
             if (charInfo != null && server != null && tps != null &&
                 fame != null && lootboost != null && speed != null && evasion != null
@@ -151,7 +174,7 @@ object TabListUtils {
                 break
             }
         }
- 
+
         return TabListData(charInfo, server, tps, fame, lootboost, speed, evasion)
     }
 
@@ -171,39 +194,12 @@ object TabListUtils {
         return null
     }
 
-    /**
-     * Get TPS from tab list.
-     */
     fun getTPS(): String? = getLineMatches(TPS_PATTERN)
-
-    /**
-     * Get server name from tab list.
-     */
     fun getServer(): String? = getLineMatches(SERVER_PATTERN)
-
-    /**
-     * Get character info (class) from tab list.
-     */
     fun getCharInfo(): String? = getLineMatches(LEVEL_PATTERN)
-
-    /**
-     * Get fame from tab list.
-     */
     fun getFame(): String? = getLineMatches(FAME_PATTERN)
-
-    /**
-     * Get loot boost from tab list.
-     */
     fun getLootboost(): String? = getLineMatches(LOOTBOOST_PATTERN)
-    
-    /**
-     * Get speed from tab list.
-     */
     fun getSpeed(): String? = getLineMatches(SPEED_PATTERN)
-
-    /**
-     * Get evasion from tab list.
-     */
     fun getEvasion(): String? = getLineMatches(EVASION_PATTERN)
 
     /**
@@ -224,5 +220,88 @@ object TabListUtils {
      */
     fun stripAllFormatting(input: String): String {
         return input.noControlCodes
+    }
+
+    /**
+     * Formula: (0.5 * Attack) / (50 + 0.2 * Attack) * 100%
+     */
+    fun calculateAttackPercentage(attack: Double): Double {
+        return (0.5 * attack) / (50 + 0.2 * attack) * 100.0
+    }
+
+    /**
+     * Formula: (1 - 100 / (Defense + 100)) * 100%
+     */
+    fun calculateDefensePercentage(defense: Double): Double {
+        return (1.0 - 100.0 / (defense + 100.0)) * 100.0
+    }
+
+    /**
+     * Formula: Speed * 0.8%
+     */
+    fun calculateSpeedPercentage(speed: Double): Double {
+        return speed * 0.8
+    }
+
+    /**
+     * Formula: (Evasion / (Evasion + 75)) * 100%
+     */
+    fun calculateEvasionPercentage(evasion: Double): Double {
+        return (evasion / (evasion + 75.0)) * 100.0
+    }
+
+    /**
+     * Each point of Vitality increases healing by +0.02 HP/s additively.
+     */
+    fun calculateVitalityHPPerSecond(vitality: Double): Double {
+        return vitality * 0.02
+    }
+
+    /**
+     * Formula: (0.5 * Crit) / (50 + 0.2 * Crit) * 100%
+     */
+    fun calculateCriticalChancePercentage(critChance: Double): Double {
+        return (0.5 * critChance) / (50.0 + 0.2 * critChance) * 100.0
+    }
+
+    /**
+     * Formula: 1 + (Critical Damage / 100)
+     * 1:1 ratio
+     */
+    fun calculateCriticalDamageMultiplier(critDamage: Double): Double {
+        return 1.0 + (critDamage / 100.0)
+    }
+
+    fun formatStatValue(key: String, value: Double): String = when (key) {
+        "attack" -> String.format(Locale.ROOT, "(%.1f%%)", calculateAttackPercentage(value))
+        "speed" -> String.format(Locale.ROOT, "(%.1f%%)", calculateSpeedPercentage(value))
+        "defense" -> String.format(Locale.ROOT, "(%.1f%%)", calculateDefensePercentage(value))
+        "vitality" -> String.format(Locale.ROOT, "(%.2f hp/s)", calculateVitalityHPPerSecond(value))
+        "evasion" -> String.format(Locale.ROOT, "(%.1f%%)", calculateEvasionPercentage(value))
+        "critical_chance" -> String.format(Locale.ROOT, "(%.1f%%)", calculateCriticalChancePercentage(value))
+        "critical_damage" -> String.format(Locale.ROOT, "(%.2fx)", calculateCriticalDamageMultiplier(value))
+        else -> ""
+    }
+
+    /**
+     * Get all stat values from tablist as a map.
+     * Keys: "attack", "speed", "defense", "vitality", "evasion", "critical_chance", "critical_damage"
+     */
+    fun getStatValues(): Map<String, Double> {
+        val tabList = getTabList() ?: return emptyMap()
+
+        val stats = mutableMapOf<String, Double>()
+        for (line in tabList) {
+            for ((key, pattern) in STAT_PATTERNS) {
+                if (stats.containsKey(key)) continue
+                val matcher = pattern.matcher(line)
+                if (matcher.find()) {
+                    matcher.group(1).toDoubleOrNull()?.let { stats[key] = it }
+                }
+            }
+            if (stats.size == STAT_PATTERNS.size) break
+        }
+
+        return stats
     }
 }
