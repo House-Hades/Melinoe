@@ -34,6 +34,7 @@ object RealmSelectorScreen : Screen(Component.literal("Realm Selector")) {
     private var cachedHubServers = listOf<String>()
     private var cachedButtonWidth = 0
     private var initialized = false
+    private var lastSeenOnlineVersion = -1
     
     // Melinoe red color (0xFF8A0000)
     private val melinoeRed = 0xFF8A0000.toInt()
@@ -54,7 +55,7 @@ object RealmSelectorScreen : Screen(Component.literal("Realm Selector")) {
     private fun calculateOptimalButtonWidth(): Int {
         val textRenderer = minecraft?.font ?: return 100
         var maxWidth = 0
-        
+
         // Dynamically measure width of all current servers
         for (servers in listOf(RealmFetcher.naServers, RealmFetcher.euServers, RealmFetcher.sgServers)) {
             for (server in servers) {
@@ -64,7 +65,17 @@ object RealmSelectorScreen : Screen(Component.literal("Realm Selector")) {
                 }
             }
         }
-        
+
+        // Also measure online realms with their player count suffix
+        for (realms in RealmFetcher.onlineCounts.values) {
+            for ((realm, count) in realms) {
+                val width = textRenderer.width("$realm ($count)")
+                if (width > maxWidth) {
+                    maxWidth = width
+                }
+            }
+        }
+
         return maxWidth + 20
     }
     
@@ -75,20 +86,40 @@ object RealmSelectorScreen : Screen(Component.literal("Realm Selector")) {
         
         val currentWorld = LocalAPI.getCurrentCharacterWorld()
         val region = classifyRegion(currentWorld)
-        
-        // Only update the cache if a valid region was successfully detected
+
+        // Only update the cached region if a valid one was successfully detected
         if (region != Region.UNKNOWN) {
             lastKnownRegion = region
-            lastKnownServers = when (region) {
+        }
+
+        // Prefer the live list of online realms; fall back to the static lists
+        val online = RealmFetcher.onlineCounts[lastKnownRegion.name]
+        lastKnownServers = if (!online.isNullOrEmpty()) {
+            online.keys.toList()
+        } else {
+            when (lastKnownRegion) {
                 Region.NA -> RealmFetcher.naServers
                 Region.EU -> RealmFetcher.euServers
-                Region.SG -> RealmFetcher.sgServers
                 else -> RealmFetcher.sgServers
             }
         }
-        
+
         // Always return cache so the screen doesn't wait/block upon opening
         return lastKnownServers
+    }
+
+    /**
+     * Returns the live player count for a realm in the current region, or null if unknown
+     */
+    private fun playerCount(serverName: String): Int? =
+        RealmFetcher.onlineCounts[lastKnownRegion.name]?.get(serverName)
+
+    /**
+     * Button label with the live player count appended when available
+     */
+    private fun buttonLabel(serverName: String): String {
+        val count = playerCount(serverName)
+        return if (count != null) "$serverName ($count)" else serverName
     }
     
     private fun classifyRegion(world: String): Region {
@@ -152,7 +183,7 @@ object RealmSelectorScreen : Screen(Component.literal("Realm Selector")) {
 
     private fun createButtons(servers: List<String>) {
         for (serverName in servers) {
-            val button = Button.builder(Component.literal(serverName)) { _ ->
+            val button = Button.builder(Component.literal(buttonLabel(serverName))) { _ ->
                 val player = minecraft?.player
                 if (player != null && me.melinoe.utils.ServerUtils.isOnTelos()) {
                     player.connection.sendCommand("joinq $serverName")
@@ -169,7 +200,10 @@ object RealmSelectorScreen : Screen(Component.literal("Realm Selector")) {
     
     override fun init() {
         super.init()
-        
+
+        // Track the online data version this layout was built from
+        lastSeenOnlineVersion = RealmFetcher.onlineDataVersion
+
         // Recalculate everything on init to handle region changes
         val servers = getServersForRegion()
         cachedButtonWidth = calculateOptimalButtonWidth()
@@ -200,8 +234,11 @@ object RealmSelectorScreen : Screen(Component.literal("Realm Selector")) {
         val currentServerFull = LocalAPI.getCurrentCharacterWorld()
         val currentRegion = classifyRegion(currentServerFull)
         
-        // Rebuild the layout seamlessly if the region updates while the screen is open
-        if (currentRegion != Region.UNKNOWN && currentRegion != lastKnownRegion) {
+        // Rebuild the layout seamlessly if the region updates while the screen is open,
+        // or once freshly fetched online realm data arrives
+        if ((currentRegion != Region.UNKNOWN && currentRegion != lastKnownRegion) ||
+            lastSeenOnlineVersion != RealmFetcher.onlineDataVersion
+        ) {
             init()
         }
         
@@ -217,13 +254,13 @@ object RealmSelectorScreen : Screen(Component.literal("Realm Selector")) {
             if (serverName.equals(currentServerName, ignoreCase = true)) {
                 button.active = false
                 // Set strikethrough text for current server
-                button.message = Component.literal(serverName).withStyle { style ->
+                button.message = Component.literal(buttonLabel(serverName)).withStyle { style ->
                     style.withStrikethrough(true)
                 }
             } else {
                 button.active = true
                 // Reset to normal text for other servers
-                button.message = Component.literal(serverName)
+                button.message = Component.literal(buttonLabel(serverName))
             }
         }
         
