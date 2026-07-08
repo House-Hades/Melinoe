@@ -39,6 +39,7 @@ public class AvatarRendererMixin {
             at = @At("HEAD")
     )
     private void melinoe$extractRenderState(Avatar avatar, AvatarRenderState avatarRenderState, float f, CallbackInfo ci) {
+        if (!PlayerSizeModule.INSTANCE.getEnabled()) return;
         if (!(avatar instanceof AbstractClientPlayer clientAvatarEntity)) return;
         avatarRenderState.setData(PlayerSizeModule.getGAME_PROFILE_KEY(), clientAvatarEntity.getGameProfile());
     }

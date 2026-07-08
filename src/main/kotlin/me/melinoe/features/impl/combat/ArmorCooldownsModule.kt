@@ -191,13 +191,14 @@ object ArmorCooldownsModule : Module(
 
         // World switch: cooldowns persist
         on<WorldLoadEvent> {
+            if (!enabled) return@on
             entries.values.removeIf { it.isNature }
         }
 
         // Realm switch: the server resets all cooldowns
-        on<HubToRealmEvent> { reset() }
-        on<RealmToHubEvent> { reset() }
-        on<RealmToRealmEvent> { reset() }
+        on<HubToRealmEvent> { if (enabled) reset() }
+        on<RealmToHubEvent> { if (enabled) reset() }
+        on<RealmToRealmEvent> { if (enabled) reset() }
     }
     
     // Resolves the armor slot an ability piece belongs to via its Equippable component, or null if it isn't armor

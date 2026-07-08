@@ -139,6 +139,7 @@ object HealthIndicatorModule : Module(
     
     init {
         on<WorldLoadEvent> {
+            if (!enabled) return@on
             lowHpState.apply { ticks = 0; startTime = 0L; triggered = false; lastSoundTime = 0L }
             midHpState.apply { ticks = 0; startTime = 0L; triggered = false; lastSoundTime = 0L }
             wasInLowHp = false

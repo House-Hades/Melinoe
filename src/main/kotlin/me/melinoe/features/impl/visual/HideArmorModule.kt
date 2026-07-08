@@ -79,7 +79,7 @@ object HideArmorModule : Module(
 
     /** Whether the true-item reveal is currently active */
     @JvmStatic
-    fun isRevealActive(): Boolean = System.currentTimeMillis() < revealUntil
+    fun isRevealActive(): Boolean = enabled && System.currentTimeMillis() < revealUntil
 
     /**
      * Called for every item the game is about to resolve a model for (head item, held items,

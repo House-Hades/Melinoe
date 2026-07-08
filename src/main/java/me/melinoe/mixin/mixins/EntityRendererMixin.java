@@ -20,6 +20,7 @@ public abstract class EntityRendererMixin {
             at = @At("RETURN")
     )
     private void melinoe$extractNametag(Entity entity, EntityRenderState state, float partialTick, CallbackInfo ci) {
+        if (!PlayerSizeModule.INSTANCE.getEnabled()) return;
         if (entity instanceof Display.TextDisplay textDisplay) {
             boolean isNametag = PlayerSizeModule.getNametag(textDisplay);
             state.setData(PlayerSizeModule.getREALM_NAMETAG_KEY(), isNametag);

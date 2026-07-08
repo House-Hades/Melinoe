@@ -136,6 +136,7 @@ object KeybindsModule : Module(
     
     init {
         on<RenderEvent.Extract> {
+            if (!enabled) return@on
             if (pendingCrossRealmTpPlayer != null && pendingCrossRealmTpTargetRealm != null) {
                 val now = System.currentTimeMillis()
                 
