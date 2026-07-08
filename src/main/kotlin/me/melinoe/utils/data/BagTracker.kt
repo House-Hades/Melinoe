@@ -527,8 +527,12 @@ object BagTracker {
         val m = Message.Colors.MUTED
         val area = if (LocalAPI.isInDungeon()) LocalAPI.getCurrentCharacterArea() else BossData.findByItem(item)?.label ?: "Unknown"
         
+        // Item sprite shown to the left of the name
+        val spriteTexture = if (shiny) "${item.texturePath}$SHINY_SUFFIX" else item.texturePath
+        val sprite = "<#FFFFFF><sprite:\"minecraft:blocks\":\"$spriteTexture\"></#FFFFFF> "
+
         // Build message using MiniMessage
-        var message = "${style.prefix} $m- <#AAAAAA>Dropped <underlined>${style.itemNameColor}${item.displayName}</underlined> <#AAAAAA>at <#FFFF00>$pityCount</#FFFF00> <#AAAAAA>pity from ${style.itemNameColor}$area$lootBoostStr"
+        var message = "${style.prefix} $m- <#AAAAAA>Dropped $sprite<underlined>${style.itemNameColor}${item.displayName}</underlined> <#AAAAAA>at <#FFFF00>$pityCount</#FFFF00> <#AAAAAA>pity from ${style.itemNameColor}$area$lootBoostStr"
         if (PityCounterModule.showAnnounceButton) {
             val shareText = "[${style.logName}] Dropped ${item.displayName} at ${pityCount} pity from $area!"
             
