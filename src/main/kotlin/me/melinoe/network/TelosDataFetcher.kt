@@ -23,6 +23,7 @@ object TelosDataFetcher {
     private const val COMPANIONS_URL = "${BASE_URL}companions.json"
     private const val SEASON_PASS_URL = "${BASE_URL}season_pass.json"
     private const val CLASSES_URL = "${BASE_URL}classes.json"
+    private const val TRAITS_URL = "${BASE_URL}traits.json"
 
     private val urls: Map<TelosData.Type, String> = mapOf(
         TelosData.Type.ITEMS to ITEMS_URL,
@@ -32,6 +33,7 @@ object TelosDataFetcher {
         TelosData.Type.COMPANIONS to COMPANIONS_URL,
         TelosData.Type.SEASON_PASS to SEASON_PASS_URL,
         TelosData.Type.CLASSES to CLASSES_URL,
+        TelosData.Type.TRAITS to TRAITS_URL,
     )
 
     private val client: HttpClient by lazy {

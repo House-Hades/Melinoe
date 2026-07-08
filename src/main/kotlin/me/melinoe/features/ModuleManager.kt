@@ -196,6 +196,7 @@ object ModuleManager {
             DiscordRPCModule,
             KeybindsModule,
             HideHeldTooltipsModule,
+            TraitDetailsModule,
             ChatModule,
 
             // Utility

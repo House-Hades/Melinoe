@@ -1,0 +1,231 @@
+{
+  "traits": [
+    {
+      "name": "Zenith Ray",
+      "description": "Standing still for 2.5s fires a laser in front of you for %s damage. (10s CD)",
+      "levels": [
+        68, 75, 82, 93, 100
+      ]
+    },
+    {
+      "name": "Incision",
+      "description": "On ability use, draws a line on the ground. Enemies caught on it take %s damage every 0.5 seconds. Line lasts for 5s. (5s CD)",
+      "levels": [
+        2.5, 3, 3.5, 5, 5.5
+      ]
+    },
+    {
+      "name": "Pack Mentality",
+      "description": "Gain +%s 𖄕Atk for every ally within an 8 block radius (Max 10 Players).",
+      "levels": [
+        0.5, 0.75, 1, 1.35, 1.6
+      ]
+    },
+    {
+      "name": "Overkill",
+      "description": "Abilities have a %s% chance to deal double damage on damage.",
+      "levels": [
+        5, 7, 9, 13, 15
+      ]
+    },
+    {
+      "name": "Cataclysm",
+      "description": "On ability use, summons a massive orb in the sky that rains mini orbs, striking enemies within 20 blocks 4 times for %s damage per hit. (30s CD)",
+      "levels": [
+        12, 16, 20, 26, 30
+      ]
+    },
+    {
+      "name": "Firebolt",
+      "description": "On ability use, fires a fireball dealing %s damage on impact. (5s CD)",
+      "levels": [
+        11, 18, 25, 38, 45
+      ]
+    },
+    {
+      "name": "Ragebrew",
+      "description": "Drinking a flask grants +%s 𖄕Atk for 10 seconds.",
+      "levels": [
+        5, 6, 7, 9, 10
+      ]
+    },
+    {
+      "name": "Fortitude",
+      "description": "Drinking a flask grants +%s 𖄏Vit and +%s 𖄖Def for 10 seconds.",
+      "levels": [
+        1.5, 2, 2.5, 4, 5,
+        3, 4, 5, 6.5, 7.5
+      ]
+    },
+    {
+      "name": "Saturation",
+      "description": "Flasks heal %s% more 𖄒Health.",
+      "levels": [
+        25, 30, 35, 45, 50
+      ]
+    },
+    {
+      "name": "Fracture",
+      "description": "Taking damage throws 3 shards outward dealing %s damage. (0.2s CD)",
+      "levels": [
+        3, 4, 5, 7, 8
+      ]
+    },
+    {
+      "name": "Binding",
+      "description": "Enemies within 6 blocks that attack you are tethered, constantly burning for %s damage/sec while within 8 blocks.",
+      "levels": [
+        2, 2.5, 3, 4, 4.5
+      ]
+    },
+    {
+      "name": "Resolve",
+      "description": "When health drops below 50%, gain a surge of +%s 𖄏Vit.",
+      "levels": [
+        5, 7, 9, 12, 14
+      ]
+    },
+    {
+      "name": "Burning Fang",
+      "description": "Damage dealt by your pets ignites enemies for %s damage/s for 8s. (5s CD)",
+      "levels": [
+        0.8, 1, 1.2, 1.4, 1.6
+      ]
+    },
+    {
+      "name": "Rally",
+      "description": "Gain +%s 𖄐Crit DMG and 𖄖Def while playing with atleast 1 ally within 100 blocks.",
+      "levels": [
+        1, 2, 3, 5, 6
+      ]
+    },
+    {
+      "name": "Forsaken",
+      "description": "Gain +%s 𖄐Crit DMG and 𖄖Def while playing less than 3 allies within 100 blocks.",
+      "levels": [
+        1, 2, 3, 5, 6
+      ]
+    },
+    {
+      "name": "Composure",
+      "description": "Avoiding damage for 8s multiplies your weapon by %sx until hit.",
+      "levels": [
+        1.05, 1.075, 1.1, 1.15, 1.175
+      ]
+    },
+    {
+      "name": "Spiritual Bond",
+      "description": "Pets deal %s% more damage or heal for %s% health.",
+      "levels": [
+        7, 8.5, 10, 13.5, 15,
+        12, 15, 18, 22, 25
+      ]
+    },
+    {
+      "name": "Ember Idol",
+      "description": "Places a Phoenix Totem every 10s. Standing near it for 2.5s explodes for %s AoE damage in a 10 block radius. Totem lasts 5s.",
+      "levels": [
+        45, 55, 65, 80, 90
+      ]
+    },
+    {
+      "name": "Aegis Idol",
+      "description": "Places a Guardian Totem every 10s. Standing within 7 blocks of it grants +%s 𖄖Def. Totem lasts 8s.",
+      "levels": [
+        5, 6, 7, 9, 10
+      ]
+    },
+    {
+      "name": "Ambush",
+      "description": "Deal +%s% more damage to enemies above 60% HP.",
+      "levels": [
+        6, 8, 10, 13, 15
+      ]
+    },
+    {
+      "name": "Deathmark",
+      "description": "Deal +%s% more damage to enemies below 40% HP.",
+      "levels": [
+        6, 8, 10, 13, 15
+      ]
+    },
+    {
+      "name": "Airborne",
+      "description": "Jumping in dungeons grants a massive +%s 𖄔Spd burst for 4s. (10s CD)",
+      "levels": [
+        40, 50, 60, 80, 90
+      ]
+    },
+    {
+      "name": "Dodgebreaker",
+      "description": "Evading an attack counters for %s damage to the nearest enemy. (0.2s CD)",
+      "levels": [
+        45, 50, 55, 65, 70
+      ]
+    },
+    {
+      "name": "Burning Spirit",
+      "description": "A flame trails behind you, dealing %s contact damage and igniting enemies for %s damage/s for 5s. (4s CD on impact, burning doesn't stack)",
+      "levels": [
+        8.75, 12.5, 15, 20, 22,
+        1.75, 2.5, 3, 4, 4.5
+      ]
+    },
+    {
+      "name": "Overdrive",
+      "description": "Gain +1 𖄔Spd for every second you move, up to Max %s. Lost after stopping for 2s.",
+      "levels": [
+        10, 15, 20, 30, 35
+      ]
+    },
+    {
+      "name": "Discipline",
+      "description": "Gain +0.5 𖄕Atk every second avoiding damage, up to Max %s. Resets on hit.",
+      "levels": [
+        10, 11, 12, 14, 15
+      ]
+    },
+    {
+      "name": "Feastbound",
+      "description": "Every hit feeds your soul. After 10 stacks, next hit deals %s bonus damage. (1.2s cooldown per stack)",
+      "levels": [
+        56, 61, 66, 73, 78
+      ]
+    },
+    {
+      "name": "Soul Leach",
+      "description": "Every weapon hit lifesteals for %s% of the base damage dealt.",
+      "levels": [
+        0.16, 0.18, 0.2, 0.23, 0.25
+      ]
+    },
+    {
+      "name": "Deep Cut",
+      "description": "Hitting enemies causes them to bleed for %s damage/sec for 4s. Refreshes on hit.",
+      "levels": [
+        2, 2.5, 3, 4.5, 5
+      ]
+    },
+    {
+      "name": "Infernal Surge",
+      "description": "On weapon hit, summons a fiery quake forward dealing %s damage up to 9 blocks away. (5s cooldown)",
+      "levels": [
+        13, 16, 19, 23, 26
+      ]
+    },
+    {
+      "name": "Primed",
+      "description": "Your first hit after not attacking for 6s strikes them a second time, allowing you to deal %sx weapon damage for 1.2s. (Cancels when swapping)",
+      "levels": [
+        1.2, 1.35, 1.5, 1.85, 2
+      ]
+    },
+    {
+      "name": "Starfall",
+      "description": "On hit, summons a meteor dealing massive %s AoE damage in a 5 block radius. (20s cooldown)",
+      "levels": [
+        75, 85, 95, 110, 120
+      ]
+    }
+  ]
+}
