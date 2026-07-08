@@ -634,14 +634,22 @@ object NVGRenderer {
         val w = IntArray(1)
         val h = IntArray(1)
         val channels = IntArray(1)
-        val buffer = stbi_load_from_memory(
+        val decoded = stbi_load_from_memory(
             image.buffer(),
             w,
             h,
             channels,
             4
-        ) ?: throw NullPointerException("Failed to load image: ${image.identifier}")
-        return nvgCreateImageRGBA(vg, w[0], h[0], 0, buffer)
+        ) ?: run {
+            image.freeBuffer()
+            throw NullPointerException("Failed to load image: ${image.identifier}")
+        }
+        try {
+            return nvgCreateImageRGBA(vg, w[0], h[0], 0, decoded)
+        } finally {
+            org.lwjgl.stb.STBImage.stbi_image_free(decoded)
+            image.freeBuffer()
+        }
     }
     
     private fun loadSVG(image: Image): Int {

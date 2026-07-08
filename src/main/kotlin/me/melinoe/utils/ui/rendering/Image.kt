@@ -27,6 +27,15 @@ class Image(
         return buffer ?: throw IllegalStateException("Image has no data")
     }
 
+    /**
+     * Releases the native buffer cached by [buffer]. Safe to call once the image data has been
+     * decoded/uploaded
+     */
+    fun freeBuffer() {
+        buffer?.let { MemoryUtil.memFree(it) }
+        buffer = null
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Image) return false

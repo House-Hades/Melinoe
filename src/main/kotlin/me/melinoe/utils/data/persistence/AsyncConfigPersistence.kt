@@ -27,7 +27,8 @@ class AsyncConfigPersistence(
         saveJobs[key]?.cancel()
         
         // Schedule a new save job with debounce delay
-        saveJobs[key] = scope.launch {
+        lateinit var thisJob: Job
+        thisJob = scope.launch {
             try {
                 delay(debounceDelayMs)
                 saveAction()
@@ -38,9 +39,10 @@ class AsyncConfigPersistence(
             } catch (e: Exception) {
                 Melinoe.logger.error("Failed to save $key: ${e.message}", e)
             } finally {
-                saveJobs.remove(key)
+                saveJobs.remove(key, thisJob)
             }
         }
+        saveJobs[key] = thisJob
     }
     
     /**

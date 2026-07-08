@@ -48,6 +48,7 @@ object ItemRarityModule : Module(
 
     init {
         on<GuiEvent.DrawSlot> {
+            if (!enabled) return@on
             renderIndicator(guiGraphics, slot.item, slot.x, slot.y)
         }
     }
