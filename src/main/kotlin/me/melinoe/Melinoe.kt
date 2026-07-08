@@ -64,7 +64,6 @@ object Melinoe : ClientModInitializer {
         ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
             arrayOf(
                 mainCommand,
-                devCommand,
                 profileCommand,
                 acCommand,
                 gcCommand,
