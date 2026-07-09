@@ -1,6 +1,7 @@
 package me.melinoe.features.impl.tracking.bosstracker
 
 import me.melinoe.Melinoe.mc
+import me.melinoe.features.impl.misc.MapPins
 import me.melinoe.utils.LocalAPI
 import me.melinoe.utils.ServerUtils
 import me.melinoe.utils.render.WaypointCache
@@ -66,19 +67,22 @@ object RendererWaypoints {
                 }
             }
 
+            // A pin from the map screen keeps the waypoint shown, opaque and flashing
+            val pinned = MapPins.isPinned(boss.name)
+            
             // Skip defeated bosses without portals (unless they are Shadowlands bosses returning to idle)
-            if (boss.state == BossState.State.DEFEATED) continue
+            if (boss.state == BossState.State.DEFEATED && !pinned) continue
             
             // Filter by boss state
-            val shouldShow = when {
-                boss.state == BossState.State.SHADOWLANDS_IDLE -> true
-                boss.state == BossState.State.DEFEATED_PORTAL_ACTIVE && !showPortal -> false
-                boss.state == BossState.State.ALIVE && boss.calledPlayerName != null && !showFighting -> false
-                boss.state == BossState.State.ALIVE && boss.calledPlayerName == null && !showAvailable -> false
+            val shouldShow = when (boss.state) {
+                BossState.State.SHADOWLANDS_IDLE -> true
+                BossState.State.DEFEATED_PORTAL_ACTIVE if !showPortal -> false
+                BossState.State.ALIVE if boss.calledPlayerName != null && !showFighting -> false
+                BossState.State.ALIVE if boss.calledPlayerName == null && !showAvailable -> false
                 else -> true
             }
             
-            if (!shouldShow) continue
+            if (!shouldShow && !pinned) continue
             
             val waypoint = BossWaypoint(boss)
             val pos = Vec3(waypoint.pos.x.toDouble(), waypoint.pos.y.toDouble(), waypoint.pos.z.toDouble())
@@ -90,15 +94,17 @@ object RendererWaypoints {
             if (!isInFrustum(pos, camera)) continue
             
             // Calculate fade alpha
-            val fadeAlpha = calculateFadeAlpha(distance)
+            val fadeAlpha = if (pinned) MapPins.proximityAlpha(distance) else calculateFadeAlpha(distance)
             if (fadeAlpha <= 0.01f) continue
 
             // Overlay dark gray text styling for Shadowlands idle bosses
-            val color = if (boss.state == BossState.State.SHADOWLANDS_IDLE) {
+            val baseColor = if (boss.state == BossState.State.SHADOWLANDS_IDLE) {
                 floatArrayOf(0.33f, 0.33f, 0.33f)
             } else {
                 waypoint.getColor()
             }
+            // Pinned waypoints pulse red
+            val color = if (pinned) MapPins.flashColor(baseColor) else baseColor
             
             // Text Calculation
             val textWorldPos = Vec3(pos.x + 0.5, pos.y + 1.5, pos.z + 0.5)
@@ -109,7 +115,7 @@ object RendererWaypoints {
             val text = waypoint.getDisplayText()
             val displayText = if (text.isEmpty()) {
                 ""
-            } else if (isLookingAt || isNearby) {
+            } else if (pinned || isLookingAt || isNearby) {
                 text
             } else {
                 WaypointCache.getTruncatedText(text)
@@ -124,7 +130,7 @@ object RendererWaypoints {
                 alpha = 0.5f * fadeAlpha,
                 textAlpha = fadeAlpha,
                 icon = boss.data.modelIdentifier,
-                isFlashing = boss.state == BossState.State.DEFEATED_PORTAL_ACTIVE
+                isFlashing = boss.state == BossState.State.DEFEATED_PORTAL_ACTIVE && !pinned
             ))
         }
         

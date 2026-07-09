@@ -1,0 +1,58 @@
+{
+  "minibosses": [
+    { "name": "GRIMLEAF", "label": "Grimleaf", "region": "main",
+      "texture": "telos:material/boss/grimleaf",
+      "positions": [
+        { "x": -292, "y": 202, "z": -63 },
+        { "x": -287, "y": 204, "z": 315 },
+        { "x": 439, "y": 203, "z": 301 },
+        { "x": 432, "y": 201, "z": 230 },
+        { "x": 570, "y": 205, "z": -134 }
+      ] },
+    { "name": "NOCS", "label": "Nocs", "region": "main",
+      "texture": "telos:material/boss/nocs",
+      "positions": [
+        { "x": -60, "y": 215, "z": 37 },
+        { "x": -111, "y": 211, "z": 99 }
+      ] },
+    { "name": "HELLMESH", "label": "Hellmesh", "region": "main",
+      "texture": "telos:material/boss/hellmesh",
+      "positions": [
+        { "x": 222, "y": 217, "z": -39 },
+        { "x": 134, "y": 216, "z": -13 }
+      ] },
+    { "name": "BRAKK", "label": "Brakk", "region": "main",
+      "texture": "telos:material/boss/brakk",
+      "positions": [
+        { "x": 701, "y": 196, "z": 128 },
+        { "x": 532, "y": 197, "z": 644 },
+        { "x": -406, "y": 196, "z": 498 },
+        { "x": -571, "y": 196, "z": -303 },
+        { "x": -445, "y": 196, "z": -469 }
+      ] },
+    { "name": "GRAVESBANE", "label": "Gravesbane", "region": "main",
+      "texture": "telos:material/boss/gravesbane",
+      "positions": [
+        { "x": 129, "y": 214, "z": 294 },
+        { "x": -95, "y": 215, "z": 324 }
+      ] },
+    { "name": "AUREHOG", "label": "Aurehog", "region": "radiant_isles",
+      "texture": "telos:material/boss/aurehog",
+      "note": "Can spawn at any locations",
+      "positions": [
+        { "x": 100101, "y": 113, "z": 100305 },
+        { "x": 99884, "y": 200, "z": 100330 },
+        { "x": 99911, "y": 194, "z": 99586 },
+        { "x": 100102, "y": 64, "z": 99646 }
+      ] },
+    { "name": "LUNA", "label": "Luna", "region": "radiant_isles",
+      "texture": "telos:material/boss/luna",
+      "note": "Can spawn at any locations",
+      "positions": [
+        { "x": 100408, "y": 103, "z": 100030 },
+        { "x": 100228, "y": 115, "z": 100131 },
+        { "x": 99798, "y": 9, "z": 99718 },
+        { "x": 99567, "y": 69, "z": 100013 }
+      ] }
+  ]
+}

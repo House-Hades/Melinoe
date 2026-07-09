@@ -198,6 +198,7 @@ object ModuleManager {
             HideHeldTooltipsModule,
             TraitDetailsModule,
             ChatModule,
+            MapModule,
 
             // Utility
             AutoSprintModule,

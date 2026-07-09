@@ -256,6 +256,26 @@ object NVGRenderer {
         nvgFill(vg)
     }
     
+    fun glow(x: Float, y: Float, width: Float, height: Float, blur: Float, spread: Float, radius: Float, color: Int) {
+        color(color, color and 0x00FFFFFF)
+        nvgBoxGradient(
+            vg,
+            x - spread,
+            y - spread,
+            width + 2 * spread,
+            height + 2 * spread,
+            radius + spread,
+            blur,
+            nvgColor,
+            nvgColor2,
+            nvgPaint
+        )
+        nvgBeginPath(vg)
+        nvgRect(vg, x - spread - blur, y - spread - blur, width + 2 * (spread + blur), height + 2 * (spread + blur))
+        nvgFillPaint(vg, nvgPaint)
+        nvgFill(vg)
+    }
+    
     fun circle(x: Float, y: Float, radius: Float, color: Int) {
         nvgBeginPath(vg)
         nvgCircle(vg, x, y, radius)
@@ -609,10 +629,10 @@ object NVGRenderer {
         return true
     }
     
-    fun createImage(resourcePath: String): Image {
+    fun createImage(resourcePath: String, nearest: Boolean = false): Image {
         val image = images.keys.find { it.identifier == resourcePath } ?: Image(resourcePath)
         if (image.isSVG) images.getOrPut(image) { NVGImage(0, loadSVG(image)) }.count++
-        else images.getOrPut(image) { NVGImage(0, loadImage(image)) }.count++
+        else images.getOrPut(image) { NVGImage(0, loadImage(image, if (nearest) NVG_IMAGE_NEAREST else 0)) }.count++
         return image
     }
     
@@ -630,7 +650,7 @@ object NVGRenderer {
         return images[image]?.nvg ?: throw IllegalStateException("Image (${image.identifier}) doesn't exist")
     }
     
-    private fun loadImage(image: Image): Int {
+    private fun loadImage(image: Image, flags: Int = 0): Int {
         val w = IntArray(1)
         val h = IntArray(1)
         val channels = IntArray(1)
@@ -645,7 +665,7 @@ object NVGRenderer {
             throw NullPointerException("Failed to load image: ${image.identifier}")
         }
         try {
-            return nvgCreateImageRGBA(vg, w[0], h[0], 0, decoded)
+            return nvgCreateImageRGBA(vg, w[0], h[0], flags, decoded)
         } finally {
             org.lwjgl.stb.STBImage.stbi_image_free(decoded)
             image.freeBuffer()

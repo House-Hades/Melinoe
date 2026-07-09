@@ -22,7 +22,9 @@ object TelosData {
         COMPANIONS("assets/melinoe/data/companions.json", "companions.json"),
         SEASON_PASS("assets/melinoe/data/season_pass.json", "season_pass.json"),
         CLASSES("assets/melinoe/data/classes.json", "classes.json"),
-        TRAITS("assets/melinoe/data/traits.json", "traits.json");
+        TRAITS("assets/melinoe/data/traits.json", "traits.json"),
+        MAP("assets/melinoe/data/map.json", "map.json"),
+        MINIBOSSES("assets/melinoe/data/minibosses.json", "minibosses.json");
 
         val cacheFile: File get() = File(File(Melinoe.configFile, "data"), cacheFileName)
     }
@@ -76,6 +78,8 @@ object TelosData {
             Type.SEASON_PASS -> SeasonPassData.load(json)
             Type.CLASSES -> ClassData.load(json)
             Type.TRAITS -> TraitDetailsData.load(json)
+            Type.MAP -> MapData.load(json)
+            Type.MINIBOSSES -> MinibossData.load(json)
         }
     } catch (e: Exception) {
         Melinoe.logger.warn("[TelosData] Failed to parse $type payload: ${e.message}")

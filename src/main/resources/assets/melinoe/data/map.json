@@ -1,0 +1,13 @@
+{
+  "tiles": [
+    { "name": "telos_main", "fileName": "map/main.png", "region": "main",
+      "x1": -768, "z1": -768, "x2": 895, "z2": 895,
+      "md5": "9ddb323fc917ae3834004682a970ec10" },
+    { "name": "telos_shadowlands", "fileName": "map/shadowlands.png", "region": "shadowlands",
+      "x1": -354, "z1": -354, "x2": 486, "z2": 494,
+      "md5": "86b3201237b3ffeed2e213e368ff1937" },
+    { "name": "telos_radiant_isles", "fileName": "map/radiant_isles.png", "region": "radiant_isles",
+      "x1": 99432, "z1": 99475, "x2": 100502, "z2": 100461,
+      "md5": "6ecf5206a921f500dc075dfbc7e1cb2c" }
+  ]
+}
