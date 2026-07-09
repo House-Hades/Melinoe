@@ -335,10 +335,15 @@ object CustomBagImages {
                 reader.input = iis
                 val count = reader.getNumImages(true)
                 val (lw, lh) = logicalSize(reader) ?: (reader.getWidth(0) to reader.getHeight(0))
-                // When the GIF has more frames than we keep, sample them evenly across the
-                // animation; null means keep everything
-                val keep: Set<Int>? = if (count > MAX_FRAMES) {
-                    (0 until MAX_FRAMES).mapTo(HashSet()) { it * count / MAX_FRAMES }
+                // Read every frame's metadata up front so we know the animation's total
+                // duration before deciding which frames to keep
+                val metas = (0 until count).map { gifFrameMeta(reader.getImageMetadata(it)) }
+                val totalMs = metas.sumOf { it.delayMs }
+                // Cap the effective frame rate at MAX_FPS: when the GIF packs more frames
+                // than that into its runtime, sample them evenly
+                val maxFrames = (totalMs * MAX_FPS / 1000).coerceAtLeast(1)
+                val keep: Set<Int>? = if (count > maxFrames) {
+                    (0 until maxFrames).mapTo(HashSet()) { it * count / maxFrames }
                 } else null
                 var canvas: BufferedImage? = null
                 var prevDisposal = "none"
@@ -346,7 +351,7 @@ object CustomBagImages {
 
                 for (i in 0 until count) {
                     val frame = reader.read(i)
-                    val meta = gifFrameMeta(reader.getImageMetadata(i))
+                    val meta = metas[i]
                     if (canvas == null) {
                         canvas = BufferedImage(maxOf(lw, frame.width), maxOf(lh, frame.height), BufferedImage.TYPE_INT_ARGB)
                     }
@@ -379,7 +384,7 @@ object CustomBagImages {
     }
     
     private const val MAX_FRAME_DIM = 512
-    private const val MAX_FRAMES = 30
+    private const val MAX_FPS = 30
 
     /** Copy [canvas], downscaled to at most [MAX_FRAME_DIM] on each side */
     private fun snapshotFrame(canvas: BufferedImage): BufferedImage {
