@@ -23,9 +23,6 @@ object TraitDetailsModule : Module(
     /** Level indicator glyphs preceding trait names in lore, level 1 to 5 in order */
     private val LEVEL_GLYPHS = listOf("𖉉", "𖉈", "𖉇", "𖉆", "𖉅")
 
-    /** Max characters per inserted description line */
-    private const val WRAP_WIDTH = 36
-
     init {
         ItemTooltipCallback.EVENT.register { _, _, _, lines ->
             if (enabled && isShiftDown()) insertDescriptions(lines)
@@ -42,6 +39,8 @@ object TraitDetailsModule : Module(
      * Finds trait name lines and inserts the formatted description one line under each
      */
     private fun insertDescriptions(lines: MutableList<Component>) {
+        // The title is the widest line of the tooltip
+        val maxWidth = lines.firstOrNull()?.let { Melinoe.mc.font.width(it) } ?: return
         var i = 0
         while (i < lines.size) {
             val text = lines[i].string
@@ -51,7 +50,7 @@ object TraitDetailsModule : Module(
                 val trait = TraitDetailsData.get(name)
                 if (trait != null) {
                     val style = nameStyle(lines[i], name)
-                    val descLines = wrap(format(trait, level))
+                    val descLines = wrap(format(trait, level), style, maxWidth)
                     descLines.forEachIndexed { offset, line ->
                         lines.add(i + 1 + offset, Component.literal(line).withStyle(style))
                     }
@@ -87,17 +86,21 @@ object TraitDetailsModule : Module(
     private fun formatStat(value: Double): String =
         if (value % 1.0 == 0.0) value.toLong().toString() else value.toString()
 
-    /** Word-wraps text to [WRAP_WIDTH] characters per line */
-    private fun wrap(text: String): List<String> {
+    /** Word-wraps text so each line fits within [maxWidth] pixels */
+    private fun wrap(text: String, style: Style, maxWidth: Int): List<String> {
+        val font = Melinoe.mc.font
         val result = ArrayList<String>()
         val sb = StringBuilder()
         for (word in text.split(' ')) {
-            if (sb.isNotEmpty() && sb.length + 1 + word.length > WRAP_WIDTH) {
+            val candidate = if (sb.isEmpty()) word else "$sb $word"
+            if (sb.isNotEmpty() && font.width(Component.literal(candidate).withStyle(style)) > maxWidth) {
                 result.add(sb.toString())
                 sb.setLength(0)
+                sb.append(word)
+            } else {
+                sb.setLength(0)
+                sb.append(candidate)
             }
-            if (sb.isNotEmpty()) sb.append(' ')
-            sb.append(word)
         }
         if (sb.isNotEmpty()) result.add(sb.toString())
         return result
