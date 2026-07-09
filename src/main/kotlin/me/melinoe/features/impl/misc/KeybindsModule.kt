@@ -123,7 +123,7 @@ object KeybindsModule : Module(
     private var realmSelectorLastPress = 0L
     
     private var lastUsedTime: Long = 0L
-    private val PORTAL_REGEX = Regex("-=\\[(.*?)]=-")
+    private val PORTAL_REGEX = Regex("-=\\[(\\d+)]=-")
 
     private const val APOSTLE_BAR_HASH = -1329808852
     private const val HIEROPHANT_BAR_HASH = -1329807891
@@ -523,6 +523,7 @@ object KeybindsModule : Module(
                         val itemModel = headItem.get(DataComponents.ITEM_MODEL)?.toString()
                         
                         val rawName = if (itemModel == null) {
+                            if (currentArea != "Radiant Isles") return@mapNotNull null
                             "NEO_EDEN"
                         } else {
                             itemModel.substringAfterLast("/").uppercase(Locale.ROOT)
