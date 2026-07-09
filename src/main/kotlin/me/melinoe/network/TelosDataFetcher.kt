@@ -2,6 +2,7 @@ package me.melinoe.network
 
 import me.melinoe.Melinoe
 import me.melinoe.utils.data.TelosData
+import java.io.File
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -56,25 +57,49 @@ object TelosDataFetcher {
 
     private fun fetch(type: TelosData.Type, url: String) {
         try {
-            val request = HttpRequest.newBuilder()
+            val builder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .timeout(Duration.ofSeconds(10))
                 .header("Accept", "application/json")
                 .GET()
-                .build()
 
-            val response = client.send(request, HttpResponse.BodyHandlers.ofString())
-            if (response.statusCode() == 200) {
-                if (TelosData.reload(type, response.body())) {
-                    Melinoe.logger.info("[TelosDataFetcher] Updated $type from GitHub.")
-                } else {
-                    Melinoe.logger.warn("[TelosDataFetcher] Rejected invalid $type payload; keeping existing data.")
+            // Only ask for a 304 if we still have the cached payload the ETag belongs to
+            val cachedEtag = readEtag(type)
+            if (cachedEtag != null) builder.header("If-None-Match", cachedEtag)
+
+            val response = client.send(builder.build(), HttpResponse.BodyHandlers.ofString())
+            when (response.statusCode()) {
+                304 -> Melinoe.logger.info("[TelosDataFetcher] $type unchanged; keeping cached data.")
+                200 -> {
+                    if (TelosData.reload(type, response.body())) {
+                        response.headers().firstValue("ETag").ifPresent { writeEtag(type, it) }
+                        Melinoe.logger.info("[TelosDataFetcher] Updated $type from GitHub.")
+                    } else {
+                        Melinoe.logger.warn("[TelosDataFetcher] Rejected invalid $type payload; keeping existing data.")
+                    }
                 }
-            } else {
-                Melinoe.logger.warn("[TelosDataFetcher] Failed to fetch $type. HTTP Status: ${response.statusCode()}")
+                else -> Melinoe.logger.warn("[TelosDataFetcher] Failed to fetch $type. HTTP Status: ${response.statusCode()}")
             }
         } catch (e: Exception) {
             Melinoe.logger.error("[TelosDataFetcher] Error fetching $type from web", e)
         }
+    }
+
+    private fun etagFile(type: TelosData.Type): File =
+        File(type.cacheFile.parentFile, "${type.cacheFile.name}.etag")
+
+    private fun readEtag(type: TelosData.Type): String? {
+        if (!type.cacheFile.isFile) return null
+        return runCatching { etagFile(type).takeIf(File::isFile)?.readText()?.trim() }
+            .getOrNull()
+            ?.takeIf { it.isNotEmpty() }
+    }
+
+    private fun writeEtag(type: TelosData.Type, etag: String) {
+        runCatching {
+            val file = etagFile(type)
+            file.parentFile?.mkdirs()
+            file.writeText(etag)
+        }.onFailure { Melinoe.logger.warn("[TelosDataFetcher] Failed to save ETag for $type: ${it.message}") }
     }
 }
