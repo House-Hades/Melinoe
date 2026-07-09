@@ -9,6 +9,7 @@
         "z": -467
       },
       "bossType": "WORLD",
+      "bossBarHash": -342545608,
       "items": [
         "ANUBIS_STAFF",
         "JEWEL_OF_THE_NILE"
@@ -23,6 +24,7 @@
         "z": 100000
       },
       "bossType": "WORLD",
+      "bossBarHash": -1370503157,
       "items": [
         "ENGINEERS_BLUEPRINT",
         "COGWHEEL_SHIELD",
@@ -38,6 +40,7 @@
         "z": 60
       },
       "bossType": "WORLD",
+      "bossBarHash": -1253632898,
       "items": [
         "ORB_OF_CONFLICT",
         "KUNAI_OF_CONFLICT"
@@ -52,6 +55,7 @@
         "z": -490
       },
       "bossType": "WORLD",
+      "bossBarHash": -168181711,
       "items": [
         "CARROT_ON_A_STICK",
         "SPRING_SEASONED_SCRIPTURE"
@@ -66,6 +70,7 @@
         "z": 653
       },
       "bossType": "WORLD",
+      "bossBarHash": -1343349613,
       "items": [
         "EXOSKELETON_HOOD",
         "FREDDYS_MICROPHONE"
@@ -80,6 +85,7 @@
         "z": 558
       },
       "bossType": "WORLD",
+      "bossBarHash": -168176906,
       "items": [
         "CRYSTAL_POISON",
         "CRYSTAL_KUNAI"
@@ -94,6 +100,7 @@
         "z": -44
       },
       "bossType": "WORLD",
+      "bossBarHash": 1368623635,
       "items": [
         "BOW_OF_THE_FOREST",
         "CURSED_BRIGADINE"
@@ -108,6 +115,7 @@
         "z": 17
       },
       "bossType": "WORLD",
+      "bossBarHash": -1254008649,
       "items": [
         "SHIELD_OF_OGMUR",
         "CLOAK_OF_THE_WARLORD"
@@ -122,6 +130,7 @@
         "z": 91
       },
       "bossType": "WORLD",
+      "bossBarHash": -1907114029,
       "items": [
         "DIMENSIONAL_STAR",
         "DIRK_OF_CHRONOS"
@@ -136,6 +145,7 @@
         "z": 364
       },
       "bossType": "WORLD",
+      "bossBarHash": 1368934038,
       "items": [
         "EMBLEM_OF_THE_JUGGERNAUT",
         "GREAVES_OF_THE_JUGGERNAUT"
@@ -150,6 +160,7 @@
         "z": 307
       },
       "bossType": "WORLD",
+      "bossBarHash": -1622056066,
       "items": [
         "CLOAK_OF_BLOODY_SURPRISES",
         "SPOOKY_SANDALS"
@@ -164,6 +175,7 @@
         "z": 703
       },
       "bossType": "WORLD",
+      "bossBarHash": -1240191621,
       "items": []
     },
     {
@@ -175,6 +187,7 @@
         "z": -122
       },
       "bossType": "WORLD",
+      "bossBarHash": -1048713371,
       "items": []
     },
     {
@@ -186,6 +199,7 @@
         "z": -122
       },
       "bossType": "WORLD",
+      "bossBarHash": -1370656917,
       "items": [
         "WARDENS_FACEGUARD",
         "WARDENS_GARMENT",
@@ -201,6 +215,7 @@
         "z": -176
       },
       "bossType": "WORLD",
+      "bossBarHash": -1370655956,
       "items": [
         "HERALDIC_HEELGUARDS",
         "LUMINOUS_FLAME",
@@ -216,6 +231,7 @@
         "z": 323
       },
       "bossType": "WORLD",
+      "bossBarHash": -1370654995,
       "items": [
         "SOULLESS_SHOES",
         "CHALICE_OF_ROT",
@@ -231,6 +247,7 @@
         "z": 64
       },
       "bossType": "WORLD",
+      "bossBarHash": -1370654034,
       "items": [
         "SHROUDED_SHIELD",
         "PHANTASMIC_GREAVES",
@@ -242,6 +259,7 @@
       "label": "Eddie",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -167372549,
       "items": [
         "BLUNDERBOW",
         "LOST_TREASURE_SCRIPTURE",
@@ -254,6 +272,7 @@
       "label": "Zhum",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -1381648356,
       "items": [
         "ASTEROID_STAFF",
         "AYAHUASCA_FLASK",
@@ -267,6 +286,7 @@
       "label": "Drayruk",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -1659173216,
       "items": [
         "TITANIUM_CLEAVER",
         "DRAYRUKS_BATTLE_GREAVES",
@@ -280,6 +300,7 @@
       "label": "Miraj",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -973820290,
       "items": [
         "SCEPTRE_OF_THORNS",
         "SANDSTONE_EMBLEM",
@@ -292,6 +313,7 @@
       "label": "Khufu",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": 230865898,
       "items": [
         "KHUFUS_SKULL",
         "VEIL_OF_SHADOWS",
@@ -305,6 +327,7 @@
       "label": "Choji",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -167370627,
       "items": [
         "KENDO_STICK",
         "CHOJIS_TUNIC",
@@ -317,6 +340,7 @@
       "label": "Flora",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": 291455870,
       "items": [
         "FLORA_BOOTS",
         "CROSS_GRASS_DAGGER",
@@ -330,6 +354,7 @@
       "label": "Malfas",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -1019671711,
       "items": [
         "DEMONIC_BLADE",
         "DEMONIC_DAGGER",
@@ -343,6 +368,7 @@
       "label": "Heptavius",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -1659169372,
       "items": [
         "DOOM_KATANA",
         "DOOM_BOW",
@@ -356,6 +382,7 @@
       "label": "Arctic Colossus",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -1659167450,
       "items": [
         "FROZEN_STAR",
         "FROSTSPARK_SKULL",
@@ -369,6 +396,7 @@
       "label": "Oog",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -1659168411,
       "items": [
         "DWARVEN_KUNAI",
         "DWARVEN_EMBLEM",
@@ -382,6 +410,7 @@
       "label": "Magnus",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -1659166489,
       "items": [
         "LIGHTNING_BOW",
         "LIGHTNING_CHAPS",
@@ -395,6 +424,7 @@
       "label": "Pyro",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -1253198526,
       "items": [
         "ORB_OF_TORMENT",
         "BOMB_OF_TORMENT",
@@ -408,6 +438,7 @@
       "label": "Thalor",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -1621485232,
       "items": [
         "SHIELD_OF_GLACIAL_REFLECTION",
         "FROST_LEGGINGS",
@@ -421,6 +452,7 @@
       "label": "Ashenclaw",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -167373510,
       "items": [
         "EMBERHEART_STAFF",
         "VENOMFANG_SERUM",
@@ -434,6 +466,7 @@
       "label": "Corvack",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": 832610318,
       "items": [
         "CORVUS_SCEPTRE",
         "CORVUS_TRAP",
@@ -447,6 +480,7 @@
       "label": "Omnipotent",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -1254007688,
       "items": [
         "SCEPTRE_OF_GLOOM",
         "OMNIPOTENT_ROBE",
@@ -461,6 +495,7 @@
       "label": "Prismara",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -708336010,
       "items": [
         "CRYSTAL_TRAP",
         "CRYSTAL_SHIELD",
@@ -475,6 +510,7 @@
       "label": "Thalassar",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -1621744702,
       "items": [
         "SPIRIT_DAGGER",
         "ETHEREAL_LONGBOW",
@@ -489,6 +525,7 @@
       "label": "Golden Freddy",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -422985676,
       "items": [
         "ENDOSKELETON_SCEPTRE",
         "CARL_TRAP",
@@ -502,6 +539,7 @@
       "label": "Chronos",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": 290925398,
       "items": [
         "CHRONOS_SABATONS",
         "CHRONOS_HEART",
@@ -516,6 +554,7 @@
       "label": "Kurvaros",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -342534076,
       "items": [
         "MECHANICAL_CUTLASS",
         "BLACKHOLE_SANDALS",
@@ -530,6 +569,7 @@
       "label": "Silex",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -1643392642,
       "items": [
         "SOULREND_RAVAGER",
         "STAFF_OF_UNHOLY_SACRIFICE",
@@ -544,6 +584,7 @@
       "label": "Loa",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -1382454635,
       "items": [
         "BLOSSOM_BLADE",
         "DILAPIDATED_SKULL",
@@ -558,6 +599,7 @@
       "label": "Solarflare",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": 1824190226,
       "items": [
         "AERIAL_STAFF",
         "ORB_OF_PURITY",
@@ -579,10 +621,19 @@
       ]
     },
     {
+      "name": "ORION_AND_OSIRIS",
+      "label": "Orion & Osiris",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "bossBarHash": 2131893865,
+      "items": []
+    },
+    {
       "name": "AETHERIS",
       "label": "Aetheris",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -828991878,
       "items": [
         "LIGHTS_PULL",
         "DAGGER_OF_DISSONANCE",
@@ -597,6 +648,7 @@
       "label": "Malthar",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": 1420701227,
       "items": [
         "CINDER_REACH",
         "CINDER_SKULL",
@@ -614,6 +666,7 @@
         "z": 88
       },
       "bossType": "DUNGEON",
+      "bossBarHash": 254038329,
       "items": [
         "CALAMITY",
         "RETRIBUTION",
@@ -634,6 +687,7 @@
       "label": "Voided Omnipotent",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -1253581965,
       "items": [
         "EVENT_HORIZON",
         "OBLIVIONS_REACH",
@@ -648,6 +702,7 @@
       "label": "Valerion",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -132746136,
       "items": [
         "VALERIONS_PONIARD",
         "VALERIONS_BANE",
@@ -655,10 +710,19 @@
       ]
     },
     {
+      "name": "MITHRION",
+      "label": "Mithrion",
+      "spawnPosition": null,
+      "bossType": "DUNGEON",
+      "bossBarHash": -707883379,
+      "items": []
+    },
+    {
       "name": "NEBULA",
       "label": "Nebula",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -829226362,
       "items": [
         "NEBULAS_BATTLEAXE",
         "DUSK_WEAVER",
@@ -670,6 +734,7 @@
       "label": "Ophanim",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -132585649,
       "items": [
         "FINAL_DESTINATION",
         "ORACLES_END",
@@ -683,6 +748,7 @@
       "label": "True Ophan",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -132915272,
       "items": [
         "VALERIONS_PONIARD",
         "VALERIONS_BANE",
@@ -703,6 +769,7 @@
       "label": "Sylvaris",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": 230903377,
       "items": [
         "SCRIPTURE_OF_THE_TOTEM_MASTER",
         "NATURES_GIFT",
@@ -716,6 +783,7 @@
       "label": "Asmodeus",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -1622067598,
       "items": [
         "VISAGE_OF_THE_NIGHT",
         "BAPHOMETS_BOMB",
@@ -727,6 +795,7 @@
       "label": "Seraphim",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -1643406096,
       "items": [
         "FEATHERS_OF_THE_SERAPH",
         "SERAPHS_ESSENCE",
@@ -740,6 +809,7 @@
       "label": "True Seraph",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -1643245609,
       "items": [
         "VISAGE_OF_THE_NIGHT",
         "BAPHOMETS_BOMB",
@@ -757,6 +827,7 @@
       "label": "Unrest",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": 1301379752,
       "items": [
         "SONIC_DOOM",
         "ECHOLURKATOR",
@@ -770,6 +841,7 @@
       "label": "Apostle",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -1329808852,
       "items": [
         "SEARAH",
         "CATEGORY_SIX",
@@ -781,6 +853,7 @@
       "label": "Hierophant",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -1329807891,
       "items": [
         "PROMINENCE",
         "FLAME_OF_PENTECOST",
@@ -792,6 +865,7 @@
       "label": "Cherubim",
       "spawnPosition": null,
       "bossType": "DUNGEON",
+      "bossBarHash": -132588532,
       "items": [
         "SCEPTRE_OF_THE_FRACTURED_FIRMAMENT",
         "NACHASH_OF_THE_FIRST_LIE",

@@ -10,6 +10,7 @@ data class BossData(
     val label: String,
     val spawnPosition: BlockPos?,
     val bossType: BossType,
+    val bossBarHash: Int? = null,
     val itemKeys: List<String> = emptyList()
 ) {
     /** The items this boss can drop. */
@@ -28,6 +29,10 @@ data class BossData(
         @Volatile
         private var bossItemMap: Map<String, BossData> = emptyMap()
 
+        // boss-bar name hash -> boss
+        @Volatile
+        private var hashMap: Map<Int, BossData> = emptyMap()
+
         /** All bosses, in file order. */
         val all: List<BossData> get() = nameMap.values.toList()
 
@@ -40,6 +45,9 @@ data class BossData(
         /** Find a boss by one of its items. */
         fun findByItem(item: Item): BossData? = bossItemMap[item.name]
 
+        /** Find a boss by the hash of its boss-bar name. */
+        fun findByHash(hash: Int): BossData? = hashMap[hash]
+
         /** Find a boss by its key, ignoring case. */
         fun fromString(name: String): BossData? = nameMap[name.uppercase()]
 
@@ -51,6 +59,7 @@ data class BossData(
             nameMap = bosses.associateBy { it.name }
             labelMap = bosses.associateBy { it.label }
             bossItemMap = bosses.flatMap { boss -> boss.itemKeys.map { it to boss } }.toMap()
+            hashMap = bosses.mapNotNull { boss -> boss.bossBarHash?.let { it to boss } }.toMap()
         }
     }
 }

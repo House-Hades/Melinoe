@@ -112,7 +112,7 @@ object TelosData {
                 null
             } else {
                 val spawnPosition = raw.spawnPosition?.let { BlockPos(it.x, it.y, it.z) }
-                BossData(raw.name, raw.label, spawnPosition, bossType, raw.items.orEmpty())
+                BossData(raw.name, raw.label, spawnPosition, bossType, raw.bossBarHash, raw.items.orEmpty())
             }
         }
 
@@ -156,6 +156,7 @@ object TelosData {
         val label: String?,
         val spawnPosition: RawPos?,
         val bossType: String?,
+        val bossBarHash: Int?,
         val items: List<String>?
     )
 
