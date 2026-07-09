@@ -38,8 +38,8 @@ object RealmFetcher {
             .build()
     }
     
-    fun fetchOnlineCounts() {
-        CompletableFuture.runAsync {
+    fun fetchOnlineCounts(): CompletableFuture<Void> {
+        return CompletableFuture.runAsync {
             try {
                 val response = authedGet(ONLINE_COUNT_URL)
 

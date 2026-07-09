@@ -239,7 +239,7 @@ object RealmSelectorScreen : Screen(Component.literal("Realm Selector")) {
         if ((currentRegion != Region.UNKNOWN && currentRegion != lastKnownRegion) ||
             lastSeenOnlineVersion != RealmFetcher.onlineDataVersion
         ) {
-            init()
+            rebuildWidgets()
         }
         
         // Extract just the server name (after comma and space, e.g., "Germany, Draskov" -> "Draskov")

@@ -72,9 +72,13 @@ object ServerUtils {
             
             if (serverAddress.contains("telosrealms.com", ignoreCase = true)) {
                 Melinoe.logger.info("[Presence] Joined Telos. Announcing presence...")
-                
-                ModWebSocket.connect()
-                RealmFetcher.fetchOnlineCounts()
+
+                // Fetch before connecting the websocket both run a Mojang joinServer handshake,
+                // running them  concurrently makes one side's verification 401.
+                // later authed requests skip the handshake entirely.
+                RealmFetcher.fetchOnlineCounts().whenComplete { _, _ ->
+                    ModWebSocket.connect()
+                }
             }
         }
         
