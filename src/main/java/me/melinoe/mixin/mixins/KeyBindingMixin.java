@@ -19,7 +19,9 @@ public class KeyBindingMixin {
 
     @Inject(method = "set", at = @At("HEAD"))
     private static void onKeyStateChanged(InputConstants.Key key, boolean pressed, CallbackInfo ci) {
-        if (!pressed) {
+        if (pressed) {
+            new me.melinoe.events.InputEvent(key).postAndCatch();
+        } else {
             new me.melinoe.events.InputReleaseEvent(key).postAndCatch();
         }
     }

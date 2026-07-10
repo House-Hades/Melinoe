@@ -35,4 +35,12 @@ public class ScreenMixin {
             ci.cancel();
         }
     }
+
+    @Inject(method = "onClose", at = @At("HEAD"), cancellable = true)
+    protected void melinoe$onScreenClose(CallbackInfo ci) {
+        Screen screen = (Screen) (Object) this;
+        if (new GuiEvent.Close(screen).postAndCatch()) {
+            ci.cancel();
+        }
+    }
 }

@@ -221,6 +221,11 @@ object ModuleManager {
             heldKeys.remove(key)
         }
 
+        // Clear all held keys when a screen closes to prevent stuck key states
+        on<me.melinoe.events.GuiEvent.Close> {
+            heldKeys.clear()
+        }
+
         HudElementRegistry.attachElementBefore(VanillaHudElements.SLEEP, HUD_LAYER, ModuleManager::render)
     }
 }
