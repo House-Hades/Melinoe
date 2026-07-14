@@ -199,6 +199,8 @@ object ModuleManager {
             TraitDetailsModule,
             ChatModule,
             MapModule,
+            TooltipScaleModule,
+            ViewModelModule,
 
             // Utility
             AutoSprintModule,
