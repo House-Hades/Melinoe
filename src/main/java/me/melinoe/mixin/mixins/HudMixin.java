@@ -35,4 +35,25 @@ public abstract class HudMixin {
 
         ItemRarityModule.drawHotbarIndicator(stack, graphics, x, y);
     }
+
+    @Inject(
+        method = "extractItemHotbar",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/gui/Gui;extractSlot(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IILnet/minecraft/client/DeltaTracker;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/item/ItemStack;I)V",
+            ordinal = 1
+        )
+    )
+    private void melinoe$drawOffhandRarityIndicatorLeft(
+        CallbackInfo ci,
+        @Local(name = "graphics") GuiGraphicsExtractor graphics,
+        @Local(name = "screenCenter") int screenCenter,
+        @Local(name = "y") int y,
+        @Local(name = "offhand") ItemStack offhand
+    ) {
+        if (offhand.isEmpty()) return;
+
+        int x = screenCenter - 91 - 26;
+        ItemRarityModule.drawHotbarIndicator(offhand, graphics, x, y);
+    }
 }
