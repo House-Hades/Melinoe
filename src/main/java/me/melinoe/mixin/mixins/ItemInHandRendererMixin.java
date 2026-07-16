@@ -80,11 +80,18 @@ public class ItemInHandRendererMixin {
         CallbackInfo ci
     ) {
         if (!ViewModelModule.INSTANCE.getEnabled()) return;
-        
+
+        float rotY = (float) ViewModelModule.INSTANCE.getRotY();
+        float rotZ = (float) ViewModelModule.INSTANCE.getRotZ();
+        if (hand == InteractionHand.OFF_HAND) {
+            rotY = -rotY;
+            rotZ = -rotZ;
+        }
+
         // Apply rotation
         matrices.mulPose(Axis.XP.rotationDegrees((float) ViewModelModule.INSTANCE.getRotX()));
-        matrices.mulPose(Axis.YP.rotationDegrees((float) ViewModelModule.INSTANCE.getRotY()));
-        matrices.mulPose(Axis.ZP.rotationDegrees((float) ViewModelModule.INSTANCE.getRotZ()));
+        matrices.mulPose(Axis.YP.rotationDegrees(rotY));
+        matrices.mulPose(Axis.ZP.rotationDegrees(rotZ));
         
         // Apply scale
         matrices.scale(
@@ -131,11 +138,18 @@ public class ItemInHandRendererMixin {
         CallbackInfo ci
     ) {
         if (!ViewModelModule.INSTANCE.getEnabled() || !ViewModelModule.INSTANCE.getApplyToHand()) return;
-        
+
+        float rotY = (float) ViewModelModule.INSTANCE.getRotY();
+        float rotZ = (float) ViewModelModule.INSTANCE.getRotZ();
+        if (arm == HumanoidArm.LEFT) {
+            rotY = -rotY;
+            rotZ = -rotZ;
+        }
+
         // Apply rotation
         matrices.mulPose(Axis.XP.rotationDegrees((float) ViewModelModule.INSTANCE.getRotX()));
-        matrices.mulPose(Axis.YP.rotationDegrees((float) ViewModelModule.INSTANCE.getRotY()));
-        matrices.mulPose(Axis.ZP.rotationDegrees((float) ViewModelModule.INSTANCE.getRotZ()));
+        matrices.mulPose(Axis.YP.rotationDegrees(rotY));
+        matrices.mulPose(Axis.ZP.rotationDegrees(rotZ));
         
         // Apply scale
         matrices.scale(
