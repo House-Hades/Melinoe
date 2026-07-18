@@ -127,7 +127,7 @@ object RealmSelectorScreen : Screen(Component.literal("Realm Selector")) {
         if (lower.isEmpty() || lower == "unknown") return Region.UNKNOWN
         
         return when (lower[0]) {
-            'n' -> Region.NA
+            'f' -> Region.NA
             'g' -> Region.EU
             'a' -> Region.SG
             else -> Region.SG
