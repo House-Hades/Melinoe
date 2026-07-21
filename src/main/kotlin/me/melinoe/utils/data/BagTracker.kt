@@ -187,6 +187,7 @@ object BagTracker {
     /**
      * Increment pity counters for all items that a boss can drop.
      * Uses Item-based tracking (TrackingKey.PityCounter(item.name)).
+     * Topha and Tsera only increase pity for their unholy items.
      */
     private fun incrementPityCounters(bossName: String) {
         val boss = BossData.findByKey(bossName)
@@ -200,10 +201,20 @@ object BagTracker {
             return
         }
         
-        Melinoe.logger.info("Incrementing pity counters for ${boss.items.size} items from boss: $bossName")
+        val itemsToIncrement = if (bossName == "True Ophan" || bossName == "True Seraph") {
+            boss.items.filter { it.rarity == Item.Rarity.UNHOLY }
+        } else {
+            boss.items
+        }
         
-        // Increment pity for ALL items this boss can drop
-        for (item in boss.items) {
+        if (itemsToIncrement.isEmpty()) {
+            Melinoe.logger.debug("Boss $bossName has no items to increment pity for, skipping")
+            return
+        }
+        
+        Melinoe.logger.info("Incrementing pity counters for ${itemsToIncrement.size} items from boss: $bossName")
+        
+        for (item in itemsToIncrement) {
             val newCount = TypeSafeDataAccess.increment(pityKeyOf(item, shiny = false))
             if (item.hasShiny) {
                 val newShinyCount = TypeSafeDataAccess.increment(pityKeyOf(item, shiny = true))
